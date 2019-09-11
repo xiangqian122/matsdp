@@ -4,7 +4,6 @@ The materials simulation and data processing toolkit.
 ## Basic information
 
 MATSDP--The materials simulation and data processing toolkit.
-For more information please contact dianwuwang@163.com.
 
 ### Requirements
 
