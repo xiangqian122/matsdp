@@ -4,6 +4,7 @@ The materials simulation and data processing toolkit.
 ## Basic information
 
 MATSDP--The materials simulation and data processing toolkit.
+For more information please contact dianwuwang@163.com.
 
 ### Requirements
 
@@ -34,9 +35,9 @@ pip install matsdp
 
 ### Release note
 
-- version 0.1.0
+- version 0.1.1
 
- * Date: 20190912
+ * Date: 20190916
 
 ## Usage
 
@@ -58,6 +59,6 @@ modules to import before using the apt package
  * from matsdp.apt import apt_read
  * from matsdp.apt import apt_plot
 
-## tests
+## Tests
 
-To run the tests. Please run the runtest.py.
+To run the tests. Please run the runtests.py.

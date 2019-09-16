@@ -33,9 +33,9 @@ pip install matsdp
 
 Release note
 ------------
-- version 0.1.0
+- version 0.1.1
 
- * Date: 20190912
+ * Date: 20190916
 
 ======
 Usage
@@ -61,6 +61,6 @@ Running with Python environment
  * from matsdp.apt import apt_plot
 
 ======
-tests
+Tests
 ======
-To run the tests. Please run the runtest.py.
+To run the tests. Please run the runtests.py.

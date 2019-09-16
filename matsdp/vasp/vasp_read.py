@@ -1,6 +1,4 @@
-###################################################
-# Extract information from the input POSCAR file
-###################################################
+# -*- coding: utf-8 -*-
 def read_poscar(poscar_dir):
     '''
     Description:
@@ -129,9 +127,6 @@ def read_poscar(poscar_dir):
         poscar_dict['l_arr'] = l_arr
     return poscar_dict
 
-###################################################
-# Extract information from the OUTCAR file
-###################################################
 def read_outcar(outcar_dir):
     '''
     Description:
@@ -181,9 +176,6 @@ def read_outcar(outcar_dir):
     outcar_params_dict['force_arr'] = force_arr
     return incar_params_dict, outcar_params_dict
 
-###################################################
-# Extract information from the DOSCAR file
-###################################################
 def read_doscar(doscar_dir, atom_indx, save_dos_arr = False):
     '''
     Description:
@@ -351,9 +343,6 @@ def read_doscar(doscar_dir, atom_indx, save_dos_arr = False):
             doscar_dict['LDOS_dw'] = doscar_dict['s_dw'] + doscar_dict['p_dw'] + doscar_dict['d_dw'] + doscar_dict['f_dw']
     return doscar_dict
 
-########################################
-#Extract information from OSZICAR
-########################################
 def read_oszicar(OSZICAR_Dir):
     '''Read OSZICAR'''
     import numpy as np

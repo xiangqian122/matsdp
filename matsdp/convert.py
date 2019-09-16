@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 def atomname2indx(poscar_dir,atom_name):
     '''Convert atom name to atom index according to POSCAR file of vasp'''
     from .vasp import vasp_read as RFV

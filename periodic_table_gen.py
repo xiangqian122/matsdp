@@ -78,7 +78,8 @@ def periodic_tab_gen():
     # write the periodic_table_dict to the periodic_table_pyfile
     #############################################################
     with open(periodic_table_pyfile,'w') as f:
-        f.write('def periodic_tab():' + '\n' +
+        f.write('# -*- coding: utf-8 -*-' + '\n' +
+                'def periodic_tab():' + '\n' +
                 '  periodic_table_dict = {}' + '\n' +
                 '  periodic_table_dict[\'atomic_number\']=' + str(periodic_table_dict['atomic_number']) + '\n' + 
                 '  periodic_table_dict[\'symbol\']=' + str(periodic_table_dict['symbol']) + '\n' +

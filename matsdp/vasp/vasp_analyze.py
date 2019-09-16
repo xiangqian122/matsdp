@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 def nn_map(poscar_dir, a0, n_shell = 1):
     '''
     Description:

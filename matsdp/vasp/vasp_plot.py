@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import matplotlib
 matplotlib.use("Agg")
 
@@ -487,7 +488,7 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
                 plot_cell_basis_vector_label = False, plot_atom_label = True, fig_format = 'png', fig_dpi = 100):
     '''
     - Descriptions
-     * Visualization of POSCAR model. Euler angles are used to rotate the view of the model.
+     * Plot POSCAR model. Euler angles are used to rotate the view of the model.
      * Viewer direction is in x direction. The original orientation: x direction is perpendicular to the paper, z direction is in the paper and point to upper direction
      * Reference for Eulerian angles: Herbert Goldstein and Charles P. Poole Jr. and John L. Safko,Classical Mechanics (3rd Edition),2001.
 
@@ -507,7 +508,7 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
      * phi, theta, psi: float formats. The first, second, and third rotation Eulerian angles, units in degrees.
      * draw_mirror_atom: Logical value. Whether to plot the mirror atoms at the periodic boundary
      * box_on: Logical value. Whether to plot the box or not
-     * axis_indicator: Logic value. Whethether to plot the axis indicator
+     * axis_indicator: Logical value. Whethether to plot the axis indicator
      * plot_cell_basis_vector_label: Logical value. Whether to plot the cell basis vector labels( i.e., to label the three basis vectors of the cell as a, b, and c)
      * plot_atom_label: Logical value. If true, then plot the atom name of each atom.
      * fig_format: String format. Figformat is a string that defines output figure format. Supported fig_format: 'png', 'eps', 'pdf', 'tif', 'tiff', 'jpg', 'jpeg', 'svg', 'svgz', 'pgf', 'ps', 'raw', 'rgba'     * fig_dpi: float format. The DPI for non-vector graphics.
@@ -834,8 +835,6 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
         max_angstrom_width = box_length_vec_list[hori_indx]
         fig_aspect_ratio = box_length_vec_list[vert_indx] / max_angstrom_width
 
-
-
     ##########################
     #Initialize pyplot figure
     ##########################
@@ -930,8 +929,6 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
         plt.plot(line10_xs, line10_ys, linestyle = '-',linewidth = 0.5, color = 'black')
         plt.plot(line11_xs, line11_ys, linestyle = '-',linewidth = 0.5, color = 'black')
         plt.plot(line12_xs, line12_ys, linestyle = '-',linewidth = 0.5, color = 'black')
-##        ax.set(aspect=fig_height/fig_length)
-##        print(ax.get_aspect())
         ax.set(aspect='equal')
         #draw bounding box for TikZ figure
         with open(tikz_texfile,'a') as f1:
@@ -979,7 +976,7 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
                      linestyle = '',
                      )
             if fig_format == 'eps' or fig_format == 'ps' :
-                # the transparent white fore ground does not work with the eps and the ps figures. This the shiny sphere effect won't work.
+                # the transparent white fore ground does not work with the eps and the ps figures. Thus the shiny sphere effect won't work for eps and ps format figures.
                 pass
             else:
                 #white foreground
@@ -1108,7 +1105,6 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
     funcs.write_log(logfile, 'fig_filePyplot = ' + str(fig_file) + '\n' +
                    'fig_fileTikZ = ' + str(tikz_texfile) + '\n' +
                    '##################################')
-##    plt.show()
 ##    os.system('pdflatex ' + tikz_texfile)
     return 0
 

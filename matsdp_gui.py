@@ -34,7 +34,7 @@ formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time_start))
 funcs.write_log(logfile,'Job started at ' + formatted_time)
 
 program_name = 'matsdp'
-version = '0.1.0'
+version = '0.1.1'
 authors = 'dianwuwang@163.com'
 
 root = tk.Tk()

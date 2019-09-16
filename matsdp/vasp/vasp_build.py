@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 def substitution(substitution_list_file, poscar_dir):
     '''
     Description:

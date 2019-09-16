@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 def read_proxigram_csv(proxigram_csv_dir):
     '''
     read the proxigram csv file.
