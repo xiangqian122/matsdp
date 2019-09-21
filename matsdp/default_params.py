@@ -10,4 +10,5 @@ def default_params():
     '''
     defaults_dict = {}
     defaults_dict['logfile'] = 'matsdp.log'
+    defaults_dict['output_dir_name'] = 'outputs'
     return defaults_dict

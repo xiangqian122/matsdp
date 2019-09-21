@@ -93,6 +93,22 @@ def write_log(logfile,output_str):
         with open(logfile,'a') as logfile_object:
             logfile_object.write(output_str + '\n')
 
+def rm_empty_lines_in_file(in_file):
+    '''
+    remove emtpy lines in a file
+    '''
+    import os
+    in_file = os.path.abspath(in_file)
+    fpath,fname = os.path.split(in_file)
+    fname_temp = fname + '.temp'
+    ftemp = os.path.join(fpath,fname_temp)
+    with open(in_file) as f1, open(ftemp, 'w') as f2:
+        for line in f1:
+            if not line.strip():
+                continue
+            f2.write(line)
+    mv(ftemp,in_file)
+
 ##########################################
 #String manipulation
 ##########################################
@@ -133,6 +149,20 @@ def split_line(line, separator = ' '):
 ##########################################
 #Other functions
 ##########################################
+def convert_bool(var):
+    '''
+    tackle the problem: bool('False') returns True
+    convert var to real boolean type variable
+    '''
+    if type(var) == str:
+        if var == 'False':
+            var = False
+        elif var == 'True':
+            var = True
+    if type(var) == bool:
+        pass
+    return var
+
 def logic_retn_val(input_logic_val,true_return_val,false_return_val):
     '''Return value according to the input logic value
     If input logic value is True then return true_return_val
@@ -161,6 +191,140 @@ def sigmoid(x, a, b, c, d):
     import numpy as np
     return a / (1. + np.exp(-c * (x - d))) + b
 
+def data_normalize(input_data_value, data_list, colormap_vmin = None, colormap_vmax = None):
+    '''
+    data normalization
+    '''
+    if min(data_list) != max(data_list):
+        if colormap_vmin == None or colormap_vmax == None:
+            colormap_vmin = min(data_list)
+            colormap_vmax = max(data_list)
+        elif colormap_vmin != None and colormap_vmax != None and colormap_vmin >= colormap_vmax:
+            colormap_vmin = min(data_list)
+            colormap_vmax = max(data_list)        
+        elif colormap_vmin != None and colormap_vmax != None and colormap_vmin < colormap_vmax:
+            if (colormap_vmin <= min(data_list)) and (colormap_vmax >= max(data_list)):
+                pass
+            elif (colormap_vmin > min(data_list)) and (colormap_vmax >= max(data_list)):
+                colormap_vmin = min(data_list)
+            elif (colormap_vmin <= min(data_list)) and (colormap_vmax < max(data_list)):
+                colormap_vmax = max(data_list)
+            elif (colormap_vmin > min(data_list)) and (colormap_vmax < max(data_list)):
+                colormap_vmin = min(data_list)
+                colormap_vmax = max(data_list)
+        normalized_value = (input_data_value - colormap_vmin) / (colormap_vmax - colormap_vmin)
+    else:
+        real_data_value = min(data_list)
+        if colormap_vmin == None or colormap_vmax == None:
+            colormap_vmin = real_data_value - 1
+            colormap_vmax = real_data_value + 1          
+        elif colormap_vmin != None and colormap_vmax != None and colormap_vmin >= colormap_vmax:
+            colormap_vmin = real_data_value - 1
+            colormap_vmax = real_data_value + 1          
+        elif colormap_vmin != None and colormap_vmax != None and colormap_vmin < colormap_vmax:
+            if colormap_vmax < real_data_value:
+                colormap_vmin = real_data_value - 1
+                colormap_vmax = real_data_value + 1          
+            elif colormap_vmin > real_data_value:
+                colormap_vmin = real_data_value - 1
+                colormap_vmax = real_data_value + 1          
+            elif colormap_vmin <= real_data_value and colormap_vmax >= real_data_value:
+                pass
+        normalized_value = (real_data_value - colormap_vmin) / (colormap_vmax - colormap_vmin)
+    return normalized_value, colormap_vmin, colormap_vmax
+
+def userdefined_colormap(data_list , colormap_vmin = None, colormap_vmax = None, vmax_color = 'red', vmin_color = 'blue',
+                         alignment = 'horizontal', left = None, bottom = None, width = None, height = None):
+    '''
+    plot colormap by color mixing
+    '''
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter
+
+    color_marker_num = 100
+    # get colormap_vmin and colormap_vmax
+    colormap_normalized_data, colormap_vmin, colormap_vmax = data_normalize(input_data_value = data_list[0],
+                                                                            data_list = data_list,
+                                                                            colormap_vmin = colormap_vmin,
+                                                                            colormap_vmax = colormap_vmax)
+
+    y_dense_arr = np.linspace(colormap_vmin, colormap_vmax, num = color_marker_num,endpoint=True)
+    x_dense_arr = [0] * len(y_dense_arr)
+
+    af = plt.gcf()
+    ax = plt.gca()
+##    fig_number = plt.gcf().number
+    # define subplot position: [left, bottom, width, height]
+    if left == None or bottom == None or width == None or height == None:
+##        subplot_position = [0.1, 0.1, 0.8, 0.8]
+        if alignment == 'vertical':
+            subplot_position = [0.52, 0.17, 0.7, 0.7]
+        elif alignment == 'horizontal':
+            subplot_position = [0.08, -0.28, 0.7, 0.7]
+    else:
+        subplot_position = [left, bottom, width, height]
+    af.add_axes(subplot_position)
+    if alignment == 'vertical':
+        pass
+    elif alignment == 'horizontal':
+        temp = y_dense_arr.copy()
+        y_dense_arr = x_dense_arr.copy()
+        x_dense_arr = temp.copy()
+    colormap_marker_size = 30
+    plt.plot(0, 0, color = 'white', markersize = 0)
+    for i in range(0,color_marker_num):
+        if alignment == 'vertical':
+            colormap_normalized_data, colormap_vmin, colormap_vmax = data_normalize(input_data_value = y_dense_arr[i],
+                                                                                    data_list = y_dense_arr,
+                                                                                    colormap_vmin = colormap_vmin,
+                                                                                    colormap_vmax = colormap_vmax)
+        elif alignment == 'horizontal':
+            colormap_normalized_data, colormap_vmin, colormap_vmax = data_normalize(input_data_value = x_dense_arr[i],
+                                                                                    data_list = x_dense_arr,
+                                                                                    colormap_vmin = colormap_vmin,
+                                                                                    colormap_vmax = colormap_vmax)
+        # higher spectrum of the colormap
+        plt.plot(x_dense_arr[i],
+                 y_dense_arr[i],
+                 marker = 's',
+                 markersize = colormap_marker_size,
+                 markeredgecolor = 'None',
+                 color = vmax_color,
+                 alpha = colormap_normalized_data,
+                 linestyle = '',
+                 )
+        # lower spectrum of the colormap
+        plt.plot(x_dense_arr[i],
+                 y_dense_arr[i],
+                 marker = 's',
+                 markersize = colormap_marker_size,
+                 markeredgecolor = 'None',
+                 color = vmin_color,
+                 alpha = (1 - colormap_normalized_data),
+                 linestyle = '',
+                 )
+    ax_add = plt.gca()
+    ax_add.set(title='')
+    ax_add.margins(x=0.0, y=0.0)
+    ax_add.xaxis.set_major_locator(plt.MaxNLocator(5))
+    ax_add.yaxis.set_major_locator(plt.MaxNLocator(5))
+    ax_add.xaxis.set_minor_locator(AutoMinorLocator(5))
+    ax_add.yaxis.set_minor_locator(AutoMinorLocator(5))
+    colormap_aspect_len = (colormap_vmax - colormap_vmin) * 0.02
+    if alignment == 'vertical':        
+        plt.xlim(-colormap_aspect_len,colormap_aspect_len)
+        plt.ylim(colormap_vmin, colormap_vmax)
+        ax_add.yaxis.tick_right()
+        plt.xticks([])
+    elif alignment == 'horizontal':
+        plt.xlim(colormap_vmin, colormap_vmax)
+        plt.ylim(-colormap_aspect_len,colormap_aspect_len)
+        ax_add.xaxis.tick_bottom()
+        plt.yticks([])
+    ax_add.set(aspect='equal')
+    plt.sca(ax)
+##    plt.show()
 #############################################################
 #axis rotation matrix calculation based on Eulerian angles
 #############################################################

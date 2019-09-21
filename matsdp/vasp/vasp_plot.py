@@ -4,7 +4,7 @@ matplotlib.use("Agg")
 
 def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palette_list, atom_subplot_arg_list,
              subplot_arg_list, subplot_xlo_list, subplot_xhi_list, subplot_ylo_list, subplot_yhi_list,
-             subplot_xtick_list, subplot_ytick_list, subplot_xlabel_list, subplot_ylable_list, subplot_share_xy_list = [False, False] , mainplot_axis_label_list = [False, False],
+             subplot_xtick_list, subplot_ytick_list, subplot_xlabel_list, subplot_ylabel_list, subplot_share_xy_list = [False, False] , mainplot_axis_label_list = [False, False],
              dos_mode = None, fermi_shift_zero = True, peak_analyzer = False, fig_format = 'png', fig_size = [15,10], fig_dpi = 600):
     '''
     - Descriptions
@@ -49,6 +49,8 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
+    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    funcs.mkdir(output_dir)
     periodic_table_dict = periodic_table.periodic_tab()
     #Default values
     if dos_mode == None:
@@ -181,7 +183,7 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
             subplot_dict['xtick'][subplot_dict_indx] = subplot_xtick_list[i_subplot]
             subplot_dict['ytick'][subplot_dict_indx] = subplot_ytick_list[i_subplot]
             subplot_dict['xlabel'][subplot_dict_indx] = subplot_xlabel_list[i_subplot]
-            subplot_dict['ylabel'][subplot_dict_indx] = subplot_ylable_list[i_subplot]
+            subplot_dict['ylabel'][subplot_dict_indx] = subplot_ylabel_list[i_subplot]
     subplot_arg_unique_count_list = []
     CounterList = []
     for i in range(len(subplot_arg_unique_list)):
@@ -302,7 +304,7 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
                 FigDOS.add_subplot(atom_subplot_arg_list[dos_file_indx])       
             
             CounterList[subplot_indx] += 1
-            sysnameList.append(''.join(str(poscar_dict['ElmtSpeciesArr'][i])+str(poscar_dict['elmt_num_arr'][i]) for i in range(len(poscar_dict['ElmtSpeciesArr'])-1,-1,-1)))
+            sysnameList.append(''.join(str(poscar_dict['elmt_species_arr'][i])+str(poscar_dict['elmt_num_arr'][i]) for i in range(len(poscar_dict['elmt_species_arr'])-1,-1,-1)))
             dos_atomname_list.append('TDOS')
             e_fermi_list.append(e_fermi_mod)
             energy = doscar_dict['energy'] + outcar_params_dict['alpha+bet'] - e_fermi_mod*funcs.logic_retn_val(fermi_shift_zero,1,0)
@@ -336,13 +338,13 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
                 FigDOS.add_subplot(atom_subplot_arg_list[dos_file_indx])     
             CounterList[subplot_indx] += 1
             i_elmtName = poscar_dict['atomname_list'][atom_indx - 1]
-            sysnameList.append(''.join(str(poscar_dict['ElmtSpeciesArr'][i])+str(poscar_dict['elmt_num_arr'][i]) for i in range(len(poscar_dict['ElmtSpeciesArr'])-1,-1,-1)))
+            sysnameList.append(''.join(str(poscar_dict['elmt_species_arr'][i])+str(poscar_dict['elmt_num_arr'][i]) for i in range(len(poscar_dict['elmt_species_arr'])-1,-1,-1)))
             dos_atomname_list.append(i_elmtName)
             e_fermi_list.append(e_fermi_mod)
             energy = doscar_dict['energy']  + outcar_params_dict['alpha+bet'] - e_fermi_mod*funcs.logic_retn_val(fermi_shift_zero,1,0)
             orbits = dos_mode[str(poscar_dict['atom_species_arr'][atom_indx - 1])]
             if len(orbits) == 0:
-                print('Error: The value of the dos_mode is None. The dos_mode must be defined!')                
+                print('## Error: The value of the dos_mode is None. The dos_mode must be defined!')                
             orbitname_list = ['f','d','dxy','dyz','dz2','dxz','dx2','p','py','pz','px','s','LDOS']
             #Subplot x axis limit
             if subplot_xlo_list[subplot_arg_list.index(subplot_dict['Arg'][subplot_indx])] == None or subplot_xhi_list[subplot_arg_list.index(subplot_dict['Arg'][subplot_indx])] == None:
@@ -420,7 +422,7 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
             elif 'LDOS' in orbits and len(orbits) > 1:
                 ylabel_str = 'DOS (arb. units)'
             elif len(orbits) == 0:
-                print('Error: The value of the dos_mode is None. The dos_mode must be defined!')
+                print('## Error: The value of the dos_mode is None. The dos_mode must be defined!')
         subplot_xlabel_on_off_str = funcs.logic_retn_val(subplot_dict['xlabel'][subplot_indx], xlabel_str,'')
         subplot_ylabel_on_off_str = funcs.logic_retn_val(subplot_dict['ylabel'][subplot_indx], ylabel_str,'')
         ax.set_xlabel(funcs.logic_retn_val(mult_plot_logic, subplot_xlabel_on_off_str, xlabel_str),fontsize=font_size)
@@ -443,49 +445,52 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
             sysindx_list.append(sysindx)
             Uniquee_fermi_list.append(e_fermi_list[sysindx - 1])
             sysindx += 1
-##    fig_dir = funcs.logic_retn_val(len(atom_doscar_dir_list) == 1, workdir, os.getcwd()) + '/outputs'
-    fig_dir = os.getcwd() + '/outputs'
-    funcs.mkdir(fig_dir)
     formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time.time()))
-    fig_file = fig_dir + '\Fig_' + str(formatted_time) + '_Sys' + ''.join([str(x) for x in sysindx_list]) + '_' + ''.join(dos_atomname_list) + '.' + fig_format
+    fig_file = output_dir + '\Fig_' + str(formatted_time) + '_sys' + ''.join([str(x) for x in sysindx_list]) + '_' + ''.join(dos_atomname_list) + '.' + fig_format
     plt.savefig(fig_file,dpi = fig_dpi)
     plt.close()
     #Write Figure information into logfile
-    SysList = []
+    sys_list = []
     for iSys in range(0,len(atom_indx_list)):
-        SysList.append('Sys' + str(sysindx_list[iSys]))
-    funcs.write_log(logfile, 'The above information correspond to ' + str(SysList) + '. The corresponding system directorie(s) are given below:')
+        sys_list.append('sys' + str(sysindx_list[iSys]))
+    funcs.write_log(logfile, '## The system directorie(s) are given below:')
     for i_unique_sys in range(0,len(unique_atom_doscar_dir_list)):
-        funcs.write_log(logfile,'    Sys' + str(Uniquesysindx_list[i_unique_sys]) + ' = ' + str(unique_atom_doscar_dir_list[i_unique_sys]) + ' e_fermi_mod = ' + str(e_fermi_list[i_unique_sys]))
-    funcs.write_log(logfile, 'dos_mode = ' + str(dos_mode) + '\n' +
-                   'plot_dos(atom_doscar_dir_list=' + str(SysList) + '\n' +
-                   ', atom_sysname_list=' + str(atom_sysname_list) + '\n' +
-                   ', atom_indx_list=' + str(atom_indx_list) + '\n' +
-                   ', atom_palette_list=' + str(atom_palette_list) + '\n' +
-                   ', atom_subplot_arg_list=' + str(atom_subplot_arg_list) + '\n' +
-                   ', subplot_arg_list=' + str(subplot_arg_list) + '\n' +
-                   ', subplot_share_xy_list=' + str(subplot_share_xy_list) + '\n' +
-                   ', subplot_xlo_list=' + str(subplot_xlo_list) + '\n' +
-                   ', subplot_xhi_list=' + str(subplot_xhi_list) + '\n' +
-                   ', subplot_ylo_list=' + str(subplot_ylo_list) + '\n' +
-                   ', subplot_yhi_list=' + str(subplot_yhi_list) + '\n' +
-                   ', subplot_xtick_list=' + str(subplot_xtick_list) + '\n' +                   
-                   ', subplot_ytick_list=' + str(subplot_ytick_list) + '\n' +
-                   ', subplot_xlabel_list=' + str(subplot_xlabel_list) + '\n' +                   
-                   ', subplot_xlabel_list=' + str(subplot_ylable_list) + '\n' +
-                   ', mainplot_axis_label_list=' + str(mainplot_axis_label_list) + '\n' +
-                   ', dos_mode' + '\n' +
-                   ', fermi_shift_zero=' + str(fermi_shift_zero) + '\n' +
-                   ', peak_analyzer=' + str(peak_analyzer) + '\n' +
-                   ', fig_format=' + str(fig_format) + '\n' +
-                   ', fig_size=' + str(fig_size) + '\n' +
-                   'fig_file= ' + fig_file)
-    funcs.write_log(logfile, '################################################')
+        funcs.write_log(logfile,
+                        'sys' + str(Uniquesysindx_list[i_unique_sys]) + ' = r\'' + str(unique_atom_doscar_dir_list[i_unique_sys]) + '\'' + '\n'
+                        'e_fermi_mod = ' + str(e_fermi_list[i_unique_sys]))
+    funcs.write_log(logfile,
+                    'dos_mode = ' + str(dos_mode) + '\n' +
+                   'vasp_plot.plot_dos(' + '\n' +
+                   '    atom_doscar_dir_list=' + ('[' + ','.join(sys_list) + ']') + ',\n' +
+                   '    atom_sysname_list=' + str(atom_sysname_list) + ',\n' +
+                   '    atom_indx_list=' + str(atom_indx_list) + ',\n' +
+                   '    atom_palette_list=' + str(atom_palette_list) + ',\n' +
+                   '    atom_subplot_arg_list=' + str(atom_subplot_arg_list) + ',\n' +
+                   '    subplot_arg_list=' + str(subplot_arg_list) + ',\n' +
+                   '    subplot_xlo_list=' + str(subplot_xlo_list) + ',\n' +
+                   '    subplot_xhi_list=' + str(subplot_xhi_list) + ',\n' +
+                   '    subplot_ylo_list=' + str(subplot_ylo_list) + ',\n' +
+                   '    subplot_yhi_list=' + str(subplot_yhi_list) + ',\n' +
+                   '    subplot_xtick_list=' + str(subplot_xtick_list) + ',\n' +             
+                   '    subplot_ytick_list=' + str(subplot_ytick_list) + ',\n' +
+                   '    subplot_xlabel_list=' + str(subplot_xlabel_list) + ',\n' +              
+                   '    subplot_ylabel_list=' + str(subplot_ylabel_list) + ',\n' +
+                   '    subplot_share_xy_list=' + str(subplot_share_xy_list) + ',\n' +
+                   '    mainplot_axis_label_list=' + str(mainplot_axis_label_list) + ',\n' +
+                   '    dos_mode=dos_mode' + ',\n' +
+                   '    fermi_shift_zero=' + str(fermi_shift_zero) + ',\n' +
+                   '    peak_analyzer=' + str(peak_analyzer) + ',\n' +
+                   '    fig_format=' + '\'' + str(fig_format) + '\'' + ',\n' +
+                   '    fig_size=' + str(fig_size) + ',\n' +
+                   '    fig_dpi=' + str(fig_dpi) + ')\n' +
+                   'fig_file= ' + 'r\'' + fig_file + '\'' + '\n' +
+                   '################################################\n')
     return subplot_dict
 
 
-def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi = 0, elmt_color = None, draw_mirror_atom = True, box_on = True, axis_indicator = True,
-                plot_cell_basis_vector_label = False, plot_atom_label = True, fig_format = 'png', fig_dpi = 100):
+def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 5, psi = 0, elmt_color = None, draw_mirror_atom = True, box_on = True, axis_indicator = True,
+                plot_cell_basis_vector_label = False, plot_atom_label = True, fig_format = 'png', fig_dpi = 100,
+                draw_colormap = False, colormap_column_indx = 1, colormap_vmin = None, colormap_vmax = None, vmin_color = 'blue', vmax_color = 'red', colorbar_alignment = 'vertical'):
     '''
     - Descriptions
      * Plot POSCAR model. Euler angles are used to rotate the view of the model.
@@ -526,6 +531,8 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
+    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    funcs.mkdir(output_dir)
     ##########################
     #User defined params
     ##########################
@@ -653,20 +660,26 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
         #Rotation of axis indicator point in counter-clockwise manner
         for i in range(0,3):
             t_indic_vec_shift_arr[i,:] = np.dot(t_inv, indic_vec_shift_arr[i,:])
-        funcs.write_log(logfile, 'poscar_dir = ' + str(poscar_dir) + '\n' +
-                       'plot_poscar(poscar_dir, view_axis=' + str(view_axis) + ', phi=' + str(phi) + ', theta=' + str(theta) + ', psi=' + str(psi) +
-                       ', draw_mirror_atom=' + str(draw_mirror_atom) + ', box_on=' + str(box_on) + ', axis_indicator=' + str(axis_indicator) +
-                       ', plot_cell_basis_vector_label=' + str(plot_cell_basis_vector_label) + ', plot_atom_label=' + str(plot_atom_label) + ', fig_format=' + str(fig_format) +
-                       ', logfile=' + logfile + '\n' +
-                       'Original Origin vector = ' + str(origin_arr) + '\n' +
-                       'Original Diagonal vector = ' + str(diagonal_arr) + '\n' +
-                       'Shifted Origin vector = ' + ' '.join([str(x) for x in shifted_origin_arr]) +  '\n' +
-                       'Shifted Diagonal vector = ' + ' '.join([str(x) for x in shifted_diagonal_arr]) + '\n' +
-                       'Original RotCenter =  ' + ' '.join([str(x) for x in rot_center_arr]) + '\n' +
-                       'Shifted 8 Vertices =  ' + '\n' + str(vertex) + '\n' +
-                       'T = ' + '\n' + str(t) + '\n' +
-                       'Shifted and rotated 8 Vertices = ' + '\n' + str(t_vertex)
-                       )            
+        write_log_logic = False
+        if write_log_logic == True:
+            funcs.write_log(
+                logfile,
+                'poscar_dir = ' + str(poscar_dir) + '\n' +
+                'plot_poscar(poscar_dir, view_axis=' + str(view_axis) + ', phi=' + str(phi) + ', theta=' + str(theta) + ', psi=' + str(psi) +
+                ', draw_mirror_atom=' + str(draw_mirror_atom) + ', box_on=' + str(box_on) + ', axis_indicator=' + str(axis_indicator) +
+                ', plot_cell_basis_vector_label=' + str(plot_cell_basis_vector_label) + ', plot_atom_label=' + str(plot_atom_label) + ', fig_format=' + str(fig_format) +
+                ', logfile=' + logfile + '\n' +
+                'Original Origin vector = ' + str(origin_arr) + '\n' +
+                'Original Diagonal vector = ' + str(diagonal_arr) + '\n' +
+                'Shifted Origin vector = ' + ' '.join([str(x) for x in shifted_origin_arr]) +  '\n' +
+                'Shifted Diagonal vector = ' + ' '.join([str(x) for x in shifted_diagonal_arr]) + '\n' +
+                'Original RotCenter =  ' + ' '.join([str(x) for x in rot_center_arr]) + '\n' +
+                'Shifted 8 Vertices =  ' + '\n' + str(vertex) + '\n' +
+                'T = ' + '\n' + str(t) + '\n' +
+                'Shifted and rotated 8 Vertices = ' + '\n' + str(t_vertex)
+                )
+        else:
+            pass
         return pos_shift_arr, t, t_pos_shift_arr, d_pos_shift_arr, t_vertex, t_vertex_min, t_vertex_max, shifted_origin_arr, shifted_diagonal_arr, t_axis_indic_origin_shift_arr, t_indic_vec_shift_arr, axis_indic_ref_length
 
     pos_shift_arr, t, t_pos_shift_arr, d_pos_shift_arr, t_vertex, t_vertex_min, t_vertex_max, shifted_origin_arr, shifted_diagonal_arr, t_axis_indic_origin_shift_arr, t_indic_vec_shift_arr, axis_indic_ref_length = disp_and_rotation(poscar_dir, phi, theta, psi)
@@ -678,12 +691,24 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
     ###############################################
     #Find equivalent mirror atoms at the boundary
     ###############################################
-    # Find mirror atoms at periodic boundary. D_ donotes 'displaced'
+    # Find mirror atoms at periodic boundary. d_ donotes 'displaced'
     # Find equivalent mirror atoms at the boundary. One atom can have 1, 3, or 7 equivalent atoms at the boundary due to periodic boundary conditions          
     t_pos_shift_add_mirror_atoms_arr = t_pos_shift_arr.copy()
     atom_species_add_mirror_atoms_arr = poscar_dict['atom_species_arr'].copy()
     atomname_arr = np.array(poscar_dict['atomname_list'])
     atomname_add_mirror_atom_arr = atomname_arr.copy()
+    if len(poscar_dict['added_atom_data'][0,:]) != 0:
+        if colormap_column_indx > len(poscar_dict['added_atom_data'][0,:]) or colormap_column_indx <= 0:
+            funcs.write_log(logfile, '## Error: colormap_column_indx out of range.' +
+                            ' The value of colormap_column_indx should be within the range: 0--' + str(len(poscar_dict['added_atom_data'][0,:])) +
+                            '. We now set colormap_column_indx = 1. The data in the first column of the added atom data will be plotted.'
+                            )
+            colormap_column_indx = 1
+        selected_added_atom_data_arr = poscar_dict['added_atom_data'][:, colormap_column_indx - 1].copy()
+        if min(selected_added_atom_data_arr) == max(selected_added_atom_data_arr):
+            zero_color_gradient = True
+        else:
+            zero_color_gradient = False
     for i in range(0,len(poscar_dict['atom_species_arr'])):
         if draw_mirror_atom == True:
             pos_dup1_arr = d_pos_shift_arr[i,:].copy()        
@@ -732,6 +757,8 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
                 t_pos_shift_add_mirror_atoms_arr = np.concatenate((t_pos_shift_add_mirror_atoms_arr,t_pos_dup1_arr),axis = 0)
                 atom_species_add_mirror_atoms_arr = np.concatenate((atom_species_add_mirror_atoms_arr,np.array([poscar_dict['atom_species_arr'][i]])),axis = 0)
                 atomname_add_mirror_atom_arr = np.concatenate((atomname_add_mirror_atom_arr,np.array([poscar_dict['atomname_list'][i]])),axis = 0)
+                if len(poscar_dict['added_atom_data'][0,:]) != 0:
+                    selected_added_atom_data_arr = np.concatenate((selected_added_atom_data_arr,np.array([poscar_dict['added_atom_data'][i, colormap_column_indx - 1]])),axis = 0)
             elif n_dup == 3:
                 t_pos_dup1_arr = np.array([np.dot(t_inv,pos_dup1_arr[:])])
                 t_pos_dup2_arr = np.array([np.dot(t_inv,pos_dup2_arr[:])])
@@ -745,6 +772,10 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
                 atomname_add_mirror_atom_arr = np.concatenate((atomname_add_mirror_atom_arr,np.array([poscar_dict['atomname_list'][i]])),axis = 0)
                 atomname_add_mirror_atom_arr = np.concatenate((atomname_add_mirror_atom_arr,np.array([poscar_dict['atomname_list'][i]])),axis = 0)
                 atomname_add_mirror_atom_arr = np.concatenate((atomname_add_mirror_atom_arr,np.array([poscar_dict['atomname_list'][i]])),axis = 0)
+                if len(poscar_dict['added_atom_data'][0,:]) != 0:
+                    selected_added_atom_data_arr = np.concatenate((selected_added_atom_data_arr,np.array([poscar_dict['added_atom_data'][i, colormap_column_indx - 1]])),axis = 0)
+                    selected_added_atom_data_arr = np.concatenate((selected_added_atom_data_arr,np.array([poscar_dict['added_atom_data'][i, colormap_column_indx - 1]])),axis = 0)
+                    selected_added_atom_data_arr = np.concatenate((selected_added_atom_data_arr,np.array([poscar_dict['added_atom_data'][i, colormap_column_indx - 1]])),axis = 0)
             elif n_dup == 7:
                 t_pos_dup1_arr = np.array([np.dot(t_inv,pos_dup1_arr[:])])
                 t_pos_dup2_arr = np.array([np.dot(t_inv,pos_dup2_arr[:])])
@@ -774,6 +805,14 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
                 atomname_add_mirror_atom_arr = np.concatenate((atomname_add_mirror_atom_arr,np.array([poscar_dict['atomname_list'][i]])),axis = 0)
                 atomname_add_mirror_atom_arr = np.concatenate((atomname_add_mirror_atom_arr,np.array([poscar_dict['atomname_list'][i]])),axis = 0)
                 atomname_add_mirror_atom_arr = np.concatenate((atomname_add_mirror_atom_arr,np.array([poscar_dict['atomname_list'][i]])),axis = 0)
+                if len(poscar_dict['added_atom_data'][0,:]) != 0:
+                    selected_added_atom_data_arr = np.concatenate((selected_added_atom_data_arr,np.array([poscar_dict['added_atom_data'][i, colormap_column_indx - 1]])),axis = 0)
+                    selected_added_atom_data_arr = np.concatenate((selected_added_atom_data_arr,np.array([poscar_dict['added_atom_data'][i, colormap_column_indx - 1]])),axis = 0)
+                    selected_added_atom_data_arr = np.concatenate((selected_added_atom_data_arr,np.array([poscar_dict['added_atom_data'][i, colormap_column_indx - 1]])),axis = 0)
+                    selected_added_atom_data_arr = np.concatenate((selected_added_atom_data_arr,np.array([poscar_dict['added_atom_data'][i, colormap_column_indx - 1]])),axis = 0)
+                    selected_added_atom_data_arr = np.concatenate((selected_added_atom_data_arr,np.array([poscar_dict['added_atom_data'][i, colormap_column_indx - 1]])),axis = 0)
+                    selected_added_atom_data_arr = np.concatenate((selected_added_atom_data_arr,np.array([poscar_dict['added_atom_data'][i, colormap_column_indx - 1]])),axis = 0)
+                    selected_added_atom_data_arr = np.concatenate((selected_added_atom_data_arr,np.array([poscar_dict['added_atom_data'][i, colormap_column_indx - 1]])),axis = 0)
 
     #Build KDTree:
     # Define the point where the viewer(our eyes) is
@@ -800,6 +839,8 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
     view_atom_indx_arr = indices[0][:]
     atom_species_add_mirror_atoms_arr = np.concatenate((atom_species_add_mirror_atoms_arr,np.array(['Vi','Vi','Vi'])),axis = 0) #Add dimension to atom_species_add_mirror_atoms_arr due to the viwer point is added.
     atomname_add_mirror_atom_arr = np.concatenate((atomname_add_mirror_atom_arr,np.array(['Vi','Vi','Vi'])),axis = 0) #Add dimension to atomname_add_mirror_atom_arr due to the viwer point is added.
+##    if len(poscar_dict['added_atom_data'][0,:]) != 0:
+##        selected_added_atom_data_arr = np.concatenate((selected_added_atom_data_arr,np.array([0,0,0])),axis = 0)
 
     #################################
     #Plotting
@@ -850,11 +891,11 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
     #Initialize TikZ figure
     ##########################
     #Define TikZ file directory
-    tikz_dir = os.getcwd() + '/TikZ_LatexFiles'
+    tikz_dir = output_dir + '/poscar_tikz_latex_files'
     funcs.mkdir(tikz_dir)
     formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time.time()))
     system_folder = str(str(os.path.abspath(poscar_dir)).split('/')).split('\\\\')[-2]
-    tikz_texfile = tikz_dir + '/TikZ_' + str(formatted_time) + '_' + system_folder + '_' + str(euler_angle_type) + '_phi' + str(phi) + '_theta' + str(theta) + '_psi' + str(psi) + '_' + funcs.logic_retn_val(box_on,'box_on','BoxOff') + '_' + funcs.logic_retn_val(axis_indicator,'axisOn','axisOff') + '.tex' 
+    tikz_texfile = tikz_dir + '/TikZ_' + str(formatted_time) + '_' + system_folder + '_' + str(euler_angle_type) + '_phi' + str(phi) + '_theta' + str(theta) + '_psi' + str(psi) + '_' + funcs.logic_retn_val(box_on,'BoxOn','BoxOff') + '_' + funcs.logic_retn_val(axis_indicator,'AxisOn','AxisOff') + '.tex' 
     
     #Define scaled element radius according to Atomic Radius. This is for the purpose of plotting. 
     reference_atom_radius = periodic_table_dict['atomic_radius'][model_basis_elmt]
@@ -881,7 +922,7 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
                  r'\usepackage{tikz}' + '\n' +
                  r'\begin{document}' + '\n'
                  )
-    for i in range(0, len(poscar_dict['ElmtSpeciesArr'])):
+    for i in range(0, len(poscar_dict['elmt_species_arr'])):
         j = elmt_color_tikz[i]
         with open(tikz_texfile,'a') as f1:
             f1.write('\pgfdeclareradialshading{ballshading' +
@@ -957,26 +998,71 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
     ##################
     #Draw atoms
     ##################
+    plt.axis('off')
+##    # the plt.scatter only aims at plotting the color bar 
+##    # Use plt.scatter won't ensure the atom colors plotted according to the order of the view_atom_indx_arr
+##    plt.scatter(t_pos_shift_add_mirror_atoms_and_viewer_point_arr[view_atom_indx_arr[1:][::-1],hori_indx],
+##                t_pos_shift_add_mirror_atoms_and_viewer_point_arr[view_atom_indx_arr[1:][::-1],vert_indx],
+##                c = selected_added_atom_data_arr[view_atom_indx_arr[1:][::-1]],
+##                cmap = colormap_mode,
+##                vmin = colormap_vmin,
+##                vmax = colormap_vmax,
+##                s = 0,
+##                alpha = 1,
+##                )
+##    plt.colorbar()
+    if vmin_color == None or vmin_color == 'None' or vmax_color == None or vmax_color == 'None':
+        vmin_color = 'blue'
+        vmax_color = 'red'
     with open(tikz_texfile,'a') as f1:
         for i in view_atom_indx_arr[1:][::-1]:
-            elmtindx = int(np.argwhere(poscar_dict['ElmtSpeciesArr'] == atom_species_add_mirror_atoms_arr[i]))
-##                plt.scatter(t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,hori_indx],
-##                            t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,vert_indx],
-##                            color=periodic_table_dict['elmt_color'][atom_species_add_mirror_atoms_arr[i]],
-##                            s=scaled_atomic_radius_for_pyplot_dict[atom_species_add_mirror_atoms_arr[i]])
+            elmtindx = int(np.argwhere(poscar_dict['elmt_species_arr'] == atom_species_add_mirror_atoms_arr[i]))
+##              plt.scatter(t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,hori_indx],
+##                      t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,vert_indx],
+##                      color=periodic_table_dict['elmt_color'][atom_species_add_mirror_atoms_arr[i]],
+##                      s=scaled_atomic_radius_for_pyplot_dict[atom_species_add_mirror_atoms_arr[i]])
             #Draw atoms for pyplot figure (with shiny shpere effect)
             original_ball_size = scaled_atomic_radius_for_pyplot_dict[atom_species_add_mirror_atoms_arr[i]]
+            if len(poscar_dict['added_atom_data'][0,:]) != 0:
+                colormap_normalized_data, colormap_vmin, colormap_vmax = funcs.data_normalize(input_data_value = selected_added_atom_data_arr[i],
+                                                                                              data_list = selected_added_atom_data_arr,
+                                                                                              colormap_vmin = colormap_vmin,
+                                                                                              colormap_vmax = colormap_vmax)
             #Real color background
-            plt.plot(t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,hori_indx],
-                     t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,vert_indx],
-                     marker = '.',
-                     markersize = original_ball_size,
-                     color = periodic_table_dict['elmt_color'][atom_species_add_mirror_atoms_arr[i]],
-                     alpha = 1,
-                     linestyle = '',
-                     )
+            if draw_colormap == False or (draw_colormap == True and len(poscar_dict['added_atom_data'][0,:]) == 0):
+                plt.plot(t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,hori_indx],
+                         t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,vert_indx],
+                         marker = '.',
+                         markersize = original_ball_size,
+                         markeredgecolor = 'None',
+                         color = periodic_table_dict['elmt_color'][atom_species_add_mirror_atoms_arr[i]],
+                         alpha = 1,
+                         linestyle = '',
+                         )
+            if draw_colormap == True and len(poscar_dict['added_atom_data'][0,:]) != 0:
+                # higher spectrum of the colormap
+                plt.plot(t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,hori_indx],
+                         t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,vert_indx],
+                         marker = '.',
+                         markersize = original_ball_size,
+                         markeredgecolor = 'None',
+                         color = vmax_color,
+                         alpha = colormap_normalized_data,
+                         linestyle = '',
+                         )
+                # lower spectrum of the colormap
+                plt.plot(t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,hori_indx],
+                         t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,vert_indx],
+                         marker = '.',
+                         markersize = original_ball_size,
+                         markeredgecolor = 'None',
+                         color = vmin_color,
+                         alpha = (1 - colormap_normalized_data),
+                         linestyle = '',
+                         )
+
             if fig_format == 'eps' or fig_format == 'ps' :
-                # the transparent white fore ground does not work with the eps and the ps figures. Thus the shiny sphere effect won't work for eps and ps format figures.
+                # the transparent white foreground does not work with the eps and the ps figures. Thus the shiny sphere effect won't work for eps and ps format figures.
                 pass
             else:
                 #white foreground
@@ -986,11 +1072,11 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
                              t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,vert_indx],
                              marker = '.',
                              markersize = scaled_ball_size,
+                             markeredgecolor = 'None',
                              color = 'white',
                              alpha = istep,
                              linestyle = ''
                              )
-            plt.axis('off')
             #Draw atoms for TikZ figure
             f1.write('\pgfpathcircle{\pgfpoint{' +
                      str(round(t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,hori_indx],round_digits)) +
@@ -1008,6 +1094,15 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
                 #Draw atoms for TikZ figure
                 f1.write(r'\node [above] at (' + str(round(t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,hori_indx],round_digits)) + ','
                          + str(round(t_pos_shift_add_mirror_atoms_and_viewer_point_arr[i,vert_indx],round_digits)) + r') {\scriptsize ' + atomname_add_mirror_atom_arr[i] + '};' + '\n')
+    # add the colorbar of the colormap
+    if draw_colormap == True and len(poscar_dict['added_atom_data'][0,:]) != 0:
+        if colorbar_alignment == 'vertical':
+            plt.subplots_adjust(bottom = 0, left = 0, top = 1, right = 0.97, wspace = 0, hspace = 0)
+        elif colorbar_alignment == 'horizontal':
+            plt.subplots_adjust(bottom = 0.09, left = 0, top = 1, right = 1, wspace = 0, hspace = 0)
+        funcs.userdefined_colormap(selected_added_atom_data_arr , colormap_vmin = colormap_vmin, colormap_vmax = colormap_vmax, vmax_color = vmax_color, vmin_color = vmin_color,
+                 alignment = colorbar_alignment, left = None, bottom = None, width = None, height = None)
+
     ####################
     #Add axis indicator
     ####################
@@ -1095,21 +1190,55 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 4, psi =
     ###############
     # Dump figures
     ###############
-    fig_dir = os.getcwd() + '/outputs'
-    funcs.mkdir(fig_dir)
     (tikz_parent_path , tikz_full_filename) = os.path.split(tikz_texfile)
     (tikz_filename , tikz_file_extension) = os.path.splitext(tikz_full_filename)
-    fig_file = fig_dir + '\Fig_' + tikz_filename.strip('TikZ_')  + '.' + fig_format
+    if poscar_dict['added_atom_property'] == None:
+        fig_file = output_dir + '\Fig_' + tikz_filename.strip('TikZ_')  + '.' + fig_format
+    elif poscar_dict['added_atom_property'] != None and draw_colormap == False:
+        fig_file = output_dir + '\Fig_' + tikz_filename.strip('TikZ_')  + '.' + fig_format
+    elif poscar_dict['added_atom_property'] != None and draw_colormap == True:
+        added_atom_property_columns_str = funcs.split_line(line = poscar_dict['added_atom_property_columns'], separator = ' ')[colormap_column_indx - 1]
+        fig_file = output_dir + '\Fig_' + tikz_filename.strip('TikZ_')  + '_' + poscar_dict['added_atom_property'] + '_' + added_atom_property_columns_str + '.' + fig_format
     plt.savefig(fig_file,dpi = fig_dpi)
     plt.close()
-    funcs.write_log(logfile, 'fig_filePyplot = ' + str(fig_file) + '\n' +
-                   'fig_fileTikZ = ' + str(tikz_texfile) + '\n' +
-                   '##################################')
+
+    funcs.write_log(
+        logfile,
+        'elmt_color = ' + str(elmt_color) + '\n' +
+        'vasp_plot.plot_poscar(' + '\n' +
+        '    poscar_dir=' + 'r\'' + str(poscar_dir) + '\'' + ',\n' +
+        '    euler_angle_type=' + '\'' + str(euler_angle_type) + '\'' + ',\n' +
+        '    phi=' + str(phi) + ',\n' +
+        '    theta=' + str(theta) + ',\n' +
+        '    psi=' + str(psi) + ',\n' +
+        '    elmt_color=elmt_color' + ',\n' +
+        '    draw_mirror_atom=' + str(draw_mirror_atom) + ',\n' +
+        '    box_on=' + str(box_on) + ',\n' +
+        '    axis_indicator=' + str(axis_indicator) + ',\n' +
+        '    plot_cell_basis_vector_label=' + str(plot_cell_basis_vector_label) + ',\n' +
+        '    plot_atom_label=' + str(plot_atom_label) + ',\n' +                 
+        '    fig_format=' + '\'' + str(fig_format) + '\'' + ',\n' +
+        '    fig_dpi=' + str(fig_dpi) + ',\n' +                
+        '    draw_colormap=' + str(draw_colormap) + ',\n' +
+        '    colormap_column_indx=' + str(colormap_column_indx) + ',\n' +
+        '    colormap_vmin=' + str(colormap_vmin) + ',\n' +
+        '    colormap_vmax=' + str(colormap_vmax) + ',\n' +
+        '    vmin_color=' + '\'' + str(vmin_color) + '\'' + ',\n' +
+        '    vmax_color=' + '\'' + str(vmax_color) + '\'' + ',\n' +
+        '    colorbar_alignment=' + '\'' + str(colorbar_alignment) + '\'' + ')\n' +
+        'fig_file= ' + 'r\'' + fig_file + '\'' + '\n')
+    funcs.write_log(
+        logfile,
+        'fig_filePyplot = ' + 'r\'' + str(fig_file) + '\'' + '\n' +
+        'fig_fileTikZ = ' + 'r\'' + str(tikz_texfile) + '\'' + '\n' +
+        '##################################\n')
 ##    os.system('pdflatex ' + tikz_texfile)
     return 0
 
 def plot_poscar_for_workdir(workdir, euler_angle_type, phi, theta, psi, elmt_color = None, draw_mirror_atom = True, box_on = True, axis_indicator = True,
-                            plot_cell_basis_vector_label = False, plot_atom_label = True, poscar_or_contcar = 'POSCAR', fig_format = 'png', fig_dpi = 100):
+                            plot_cell_basis_vector_label = False, plot_atom_label = True, poscar_or_contcar = 'POSCAR', fig_format = 'png', fig_dpi = 100,
+                            draw_colormap = False, colormap_column_indx = 1, colormap_vmin = None, colormap_vmax = None, vmin_color = 'blue', vmax_color = 'red', colorbar_alignment = 'vertical'):
+
     '''
     - Descriptions
      * Visualization of POSCARs. 
@@ -1148,30 +1277,53 @@ def plot_poscar_for_workdir(workdir, euler_angle_type, phi, theta, psi, elmt_col
 
     workdir = os.path.abspath(workdir)
     if os.path.exists(workdir) == False:
-        funcs.write_log(logfile, 'ERROR:' + workdir +
-                       ' does not exist.' +
-                       '####################################')
-        print('ERROR:' + workdir +
-                       ' does not exist.' +
-                       '####################################')
+        funcs.write_log(logfile, '## ERROR:' + workdir +
+                       ' does not exist.')
     workdir_list = [x[0] for x in os.walk(workdir)]
     
     if poscar_or_contcar != 'POSCAR' and poscar_or_contcar != 'CONTCAR':
-        print('Error:  whether POSCAR or CONTCAR will be plotted must be defined.')
+        funcs.write_log(logfile,'## Error: The value of the poscar_or_contcar is not correct. Whether POSCAR or CONTCAR will be plotted must be defined.')
     for i in range(0,len(workdir_list)):
         iposcar_file = workdir_list[i] + '/' + poscar_or_contcar
         if os.path.exists(iposcar_file) == False:
-            funcs.write_log(logfile, 'ERROR:' + iposcar_file +
-                           ' does not exist.' +
-                           '####################################')
+            funcs.write_log(logfile, '## WARNING:' + iposcar_file +
+                           ' does not exist.')
         else:
             plot_poscar(iposcar_file, euler_angle_type, phi, theta, psi, elmt_color, draw_mirror_atom, box_on, axis_indicator,
-                        plot_cell_basis_vector_label, plot_atom_label, fig_format, fig_dpi)
+                        plot_cell_basis_vector_label, plot_atom_label, fig_format, fig_dpi,
+                        draw_colormap, colormap_column_indx, colormap_vmin, colormap_vmax, vmax_color, vmin_color, colorbar_alignment)
+    funcs.write_log(
+        logfile,
+        'elmt_color = ' + str(elmt_color) + '\n' +
+        'vasp_plot.plot_poscar_for_workdir(' + '\n' +
+        '    workdir=' + 'r\'' + str(workdir) + '\'' + ',\n' +
+        '    euler_angle_type=' + '\'' + str(euler_angle_type) + '\'' + ',\n' +
+        '    phi=' + str(phi) + ',\n' +
+        '    theta=' + str(theta) + ',\n' +
+        '    psi=' + str(psi) + ',\n' +
+        '    elmt_color=elmt_color' + ',\n' +
+        '    draw_mirror_atom=' + str(draw_mirror_atom) + ',\n' +
+        '    box_on=' + str(box_on) + ',\n' +
+        '    axis_indicator=' + str(axis_indicator) + ',\n' +
+        '    plot_cell_basis_vector_label=' + str(plot_cell_basis_vector_label) + ',\n' +
+        '    plot_atom_label=' + str(plot_atom_label) + ',\n' +
+        '    poscar_or_contcar=' + '\'' + str(poscar_or_contcar) + '\'' + ',\n' +
+        '    fig_format=' + '\'' + str(fig_format) + '\'' + ',\n' +
+        '    fig_dpi=' + str(fig_dpi) + ',\n' +               
+        '    draw_colormap=' + str(draw_colormap) + ',\n' +
+        '    colormap_column_indx=' + str(colormap_column_indx) + ',\n' +
+        '    colormap_vmin=' + str(colormap_vmin) + ',\n' +
+        '    colormap_vmax=' + str(colormap_vmax) + ',\n' +
+        '    vmin_color=' + '\'' + str(vmin_color) + '\'' + ',\n' +
+        '    vmax_color=' + '\'' + str(vmax_color) + '\'' + ',\n' +
+        '    colorbar_alignment=' + '\'' + str(colorbar_alignment) + '\'' + ')\n' +
+        '###############################\n')
     return workdir_list
 
 
-def plot_poscar_for_Sysname(sysname_file, euler_angle_type = 'zyx', phi = -3, theta = 4, psi = 0, elmt_color = None, draw_mirror_atom = True, box_on = True, axis_indicator = True,
-                            plot_cell_basis_vector_label = False, plot_atom_label = True, fig_format = 'png', fig_dpi = 100):
+def plot_poscar_for_sysname(sysname_file, euler_angle_type = 'zyx', phi = -3, theta = 4, psi = 0, elmt_color = None, draw_mirror_atom = True, box_on = True, axis_indicator = True,
+                            plot_cell_basis_vector_label = False, plot_atom_label = True, fig_format = 'png', fig_dpi = 100,
+                            draw_colormap = False, colormap_column_indx = 1, colormap_vmin = None, colormap_vmax = None, vmin_color = 'blue', vmax_color = 'red', colorbar_alignment = 'vertical'):
     '''
     Description:
         Visualization of POSCAR models for systems in .sysname file. Euler angles are used to rotate the view of the model
@@ -1206,9 +1358,9 @@ def plot_poscar_for_Sysname(sysname_file, euler_angle_type = 'zyx', phi = -3, th
         lines = f.readlines()
         n_lines = len(lines)
     if os.path.exists(filename) == False:
-        funcs.write_log(logfile, 'ERROR: sysname file folder ' + str(filename) +
+        funcs.write_log(logfile, '## ERROR: sysname file folder ' + str(filename) +
                        ' does not exist. Please check whether you have generated models according to the input .subst file ' + str(filename) + '.subst' + '\n' +
-                       'Hints: Please first run ST.substitution() or RE.rep_elmt() to generate models with substituted atoms, then run plot_poscar_for_Sysname()' + '\n' +
+                       'Hints: Please first run ST.substitution() or RE.rep_elmt() to generate models with substituted atoms, then run plot_poscar_for_sysname()' + '\n' +
                        '####################################')
     else:
         for i_line in range(0,n_lines):
@@ -1217,4 +1369,29 @@ def plot_poscar_for_Sysname(sysname_file, euler_angle_type = 'zyx', phi = -3, th
             poscar_dir = workdir + '/POSCAR'
             plot_poscar(poscar_dir, euler_angle_type, phi, theta, psi, elmt_color, draw_mirror_atom, box_on, axis_indicator,
                         plot_cell_basis_vector_label, plot_atom_label, fig_format, fig_dpi)
+    funcs.write_log(
+        logfile,
+        'elmt_color = ' + str(elmt_color) + '\n' +
+        'vasp_plot.plot_poscar_for_workdir(' + '\n' +
+        '    sysname_file=' + 'r\'' + str(sysname_file) + '\'' + ',\n' +
+        '    euler_angle_type=' + '\'' + str(euler_angle_type) + '\'' + ',\n' +
+        '    phi=' + str(phi) + ',\n' +
+        '    theta=' + str(theta) + ',\n' +
+        '    psi=' + str(psi) + ',\n' +
+        '    elmt_color=elmt_color' + ',\n' +
+        '    draw_mirror_atom=' + str(draw_mirror_atom) + ',\n' +
+        '    box_on=' + str(box_on) + ',\n' +
+        '    axis_indicator=' + str(axis_indicator) + ',\n' +
+        '    plot_cell_basis_vector_label=' + str(plot_cell_basis_vector_label) + ',\n' +
+        '    plot_atom_label=' + str(plot_atom_label) + ',\n' +
+        '    fig_format=' + '\'' + str(fig_format) + '\'' + ',\n' +
+        '    fig_dpi=' + str(fig_dpi) + ',\n' +              
+        '    draw_colormap=' + str(draw_colormap) + ',\n' +
+        '    colormap_column_indx=' + str(colormap_column_indx) + ',\n' +
+        '    colormap_vmin=' + str(colormap_vmin) + ',\n' +
+        '    colormap_vmax=' + str(colormap_vmax) + ',\n' +
+        '    vmin_color=' + '\'' + str(vmin_color) + '\'' + ',\n' +
+        '    vmax_color=' + '\'' + str(vmax_color) + '\'' + ',\n' +
+        '    colorbar_alignment=' + '\'' + str(colorbar_alignment) + '\'' + ')\n' +
+        '###############################\n')
     return 0

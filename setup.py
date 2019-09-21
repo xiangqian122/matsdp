@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(name =  'matsdp',
-      version = '0.1.1',
+      version = '0.1.2',
       description = 'The materials simulation and data processing toolkit',
       long_description = open('README.rst.txt').read(),
       author = 'Dianwu Wang',
@@ -35,6 +35,9 @@ setup(name =  'matsdp',
           'Programming Language :: Python'
           ],
       keywords = [
-          'VASP', 'DOS', 'APT', 'data processing'
+          'VASP',
+          'DOS',
+          'APT',
+          'data processing'
           ],          
       )

@@ -8,10 +8,12 @@ from matsdp.vasp import vasp_read
 from matsdp.vasp import vasp_plot
 from matsdp.vasp import vasp_analyze
 from matsdp.vasp import vasp_build
+from matsdp.vasp import vasp_write
 from matsdp.apt import apt_read
 from matsdp.apt import apt_plot
 
 run_nn_map = True
+run_simple_cna = True
 run_substitute = True
 run_replace_elmt = True
 run_get_doscar = True
@@ -20,6 +22,7 @@ run_plot_poscar = True
 run_plot_poscar_for_workdir = True
 run_overlap_peak_analyzer = True
 run_estruct = True
+run_write_poscar_with_force = True
 run_plot_concentration_profile = True
 
 ###############
@@ -31,6 +34,60 @@ if run_nn_map == True:
         a0 = 3.545,
         n_shell = 2,
         )
+########################
+# simple_common_neighbor
+########################
+if run_simple_cna == True:
+    vasp_analyze.simple_cna(
+        poscar_dir = './tests/vasp/POSCAR',
+        a0 = 3.545,
+        common_neighbor_elmt_list = ['Re', 'W', 'Ta','Ni']
+        )
+    vasp_plot.plot_poscar(
+        poscar_dir = './outputs/POSCAR_simple_common_neighbor_pair_count_ReNi',
+        euler_angle_type = 'zyz',
+        phi = -3,
+        theta = 5,
+        psi = 0,
+        elmt_color = {'Ni':'red','Re':'blue'},
+        draw_mirror_atom = True,
+        box_on = True,
+        axis_indicator =True,
+        plot_cell_basis_vector_label = True,
+        plot_atom_label = True,
+        fig_format = 'png',
+        fig_dpi = 100,
+        draw_colormap = True,
+        colormap_column_indx = 2,
+        colormap_vmin = None,
+        colormap_vmax = None,
+        vmin_color = 'blue',
+        vmax_color = 'red',
+        colorbar_alignment = 'vertical'
+        )
+    vasp_plot.plot_poscar(
+        poscar_dir = './outputs/POSCAR_simple_common_neighbor_pair_count_ReNi',
+        euler_angle_type = 'zyz',
+        phi = -3,
+        theta = 5,
+        psi = 0,
+        elmt_color = {'Ni':'red','Re':'blue'},
+        draw_mirror_atom = True,
+        box_on = True,
+        axis_indicator =True,
+        plot_cell_basis_vector_label = True,
+        plot_atom_label = True,
+        fig_format = 'png',
+        fig_dpi = 100,
+        draw_colormap = True,
+        colormap_column_indx = 2,
+        colormap_vmin = None,
+        colormap_vmax = None,
+        vmin_color = 'blue',
+        vmax_color = 'red',
+        colorbar_alignment = 'horizontal'
+        )
+
 #################
 # run_substitute
 #################
@@ -46,7 +103,7 @@ if run_replace_elmt == True:
     vasp_build.rep_elmt(
         substitution_list_file = './tests/vasp/example.subst',
         poscar_dir = './tests/vasp/POSCAR_NoDope',
-        old_elmtt= 'Re',
+        old_elmt= 'Re',
         elmt_group = ['W','Cr'],
         )
 ###########
@@ -68,7 +125,7 @@ if run_plot_dos == True:
         subplot_xtick_list = [True],
         subplot_ytick_list = [True],
         subplot_xlabel_list = [False],
-        subplot_ylable_list = [False],
+        subplot_ylabel_list = [False],
         subplot_share_xy_list = [False, False],
         mainplot_axis_label_list = [True, True],
         dos_mode = None,
@@ -92,7 +149,7 @@ if run_plot_dos == True:
         subplot_xtick_list = [True],
         subplot_ytick_list = [True],
         subplot_xlabel_list = [False],
-        subplot_ylable_list = [False],
+        subplot_ylabel_list = [False],
         subplot_share_xy_list = [False, False],
         mainplot_axis_label_list = [True, True],
         dos_mode = {'Ni':['d'], 'Re':['d']},
@@ -117,7 +174,7 @@ if run_plot_dos == True:
         subplot_xtick_list = [True, True],
         subplot_ytick_list = [True, True],
         subplot_xlabel_list = [False, False],
-        subplot_ylable_list = [False, False],
+        subplot_ylabel_list = [False, False],
         subplot_share_xy_list = [False, False],
         mainplot_axis_label_list = [True, True],
         dos_mode = {'Ni':['d'], 'Re':['d']},
@@ -142,7 +199,7 @@ if run_plot_dos == True:
         subplot_xtick_list = [False, True],
         subplot_ytick_list = [True, True],
         subplot_xlabel_list = [False, False],
-        subplot_ylable_list = [False, False],
+        subplot_ylabel_list = [False, False],
         subplot_share_xy_list = [True, False],
         mainplot_axis_label_list = [True, True],
         dos_mode = {'Ni':['d'], 'Re':['d']},
@@ -168,7 +225,7 @@ if run_plot_dos == True:
         subplot_xtick_list = [True, True, True, True],
         subplot_ytick_list = [True, True, True, True],
         subplot_xlabel_list = [False, False, False, False],
-        subplot_ylable_list = [False, False, False, False],
+        subplot_ylabel_list = [False, False, False, False],
         subplot_share_xy_list = [False, False],
         mainplot_axis_label_list = [True, True],
         dos_mode = {'Ni':['d'], 'Re':['d']},
@@ -192,7 +249,7 @@ if run_plot_dos == True:
         subplot_xtick_list = [False, False, True, True],
         subplot_ytick_list = [True, False, True, False],
         subplot_xlabel_list = [False, False, False, False],
-        subplot_ylable_list = [False, False, False, False],
+        subplot_ylabel_list = [False, False, False, False],
         subplot_share_xy_list = [True, True],
         mainplot_axis_label_list = [True, True],
         dos_mode = {'Ni':['d'], 'Re':['d']},
@@ -231,12 +288,12 @@ if run_get_doscar == True:
 #########################
 #Visualization of POSCAR
 #########################
-if run_plot_poscar == True:    
+if run_plot_poscar == True:
     vasp_plot.plot_poscar(
         poscar_dir = './tests/vasp/POSCAR',
         euler_angle_type = 'zyz',
         phi = -3,
-        theta = 4,
+        theta = 5,
         psi = 0,
         elmt_color = {'Ni':'red','Re':'blue'},
         draw_mirror_atom = True,
@@ -246,16 +303,79 @@ if run_plot_poscar == True:
         plot_atom_label = True,
         fig_format = 'png',
         fig_dpi = 100,
+        draw_colormap = False,
+        colormap_column_indx = 1,
+        colormap_vmin = None,
+        colormap_vmax = None,
+        vmin_color = 'blue',
+        vmax_color = 'red',
+        colorbar_alignment = 'vertical'
         )
+
+##########################
+# write_poscar_with_force
+##########################
+if run_write_poscar_with_force == True:
+    # write_poscar_with_force
+    vasp_write.write_poscar_with_force(
+        outcar_dir = './tests/vasp/OUTCAR',
+        ionic_step = 'last',
+        output_poscar_file_name = None
+        )
+    vasp_plot.plot_poscar(
+        poscar_dir = './outputs/POSCAR_with_force_step_1',
+        euler_angle_type = 'zyz',
+        phi = -3,
+        theta = 5,
+        psi = 0,
+        elmt_color = {'Ni':'red','Re':'blue'},
+        draw_mirror_atom = True,
+        box_on = True,
+        axis_indicator =True,
+        plot_cell_basis_vector_label = True,
+        plot_atom_label = True,
+        fig_format = 'png',
+        fig_dpi = 100,
+        draw_colormap = True,
+        colormap_column_indx = 1,
+        colormap_vmin = None,
+        colormap_vmax = None,
+        vmin_color = 'blue',
+        vmax_color = 'red',
+        colorbar_alignment = 'vertical'
+        )
+    vasp_plot.plot_poscar(
+        poscar_dir = './outputs/POSCAR_with_force_step_1_absforce',
+        euler_angle_type = 'zyz',
+        phi = -3,
+        theta = 5,
+        psi = 0,
+        elmt_color = {'Ni':'red','Re':'blue'},
+        draw_mirror_atom = True,
+        box_on = True,
+        axis_indicator =True,
+        plot_cell_basis_vector_label = True,
+        plot_atom_label = True,
+        fig_format = 'png',
+        fig_dpi = 100,
+        draw_colormap = True,
+        colormap_column_indx = 1,
+        colormap_vmin = None,
+        colormap_vmax = None,
+        vmin_color = 'blue',
+        vmax_color = 'red',
+        colorbar_alignment = 'vertical'
+        )
+
 ################################################
 #run_plot_poscar for the POSCARs in a directory
 ################################################
 if run_plot_poscar_for_workdir == True:    
     vasp_plot.plot_poscar_for_workdir(
-        workdir = './example/',
+        workdir = './outputs/example/',
         euler_angle_type = 'zyx',
         phi = -3,
-        theta = 4,
+        theta = 5,
         psi = 0,
         elmt_color = None,
         draw_mirror_atom = True,
@@ -266,6 +386,13 @@ if run_plot_poscar_for_workdir == True:
         poscar_or_contcar = 'POSCAR',
         fig_format = 'png',
         fig_dpi = 100,
+        draw_colormap = False,
+        colormap_column_indx = 1,
+        colormap_vmin = None,
+        colormap_vmax = None,
+        vmin_color = 'blue',
+        vmax_color = 'red',
+        colorbar_alignment = 'vertical'
         )
 ##############
 # run_estruct
@@ -274,6 +401,51 @@ if run_estruct == True:
     vasp_analyze.estruct(
         doscar_dir = './tests/vasp/DOSCAR',
         sysname = 'DOS1',
+        )
+    vasp_plot.plot_poscar(
+        poscar_dir = './outputs/POSCAR_estruct_DOS1_Ef-7.0888',
+        euler_angle_type = 'zyz',
+        phi = -3,
+        theta = 5,
+        psi = 0,
+        elmt_color = {'Ni':'red','Re':'blue'},
+        draw_mirror_atom = True,
+        box_on = True,
+        axis_indicator =True,
+        plot_cell_basis_vector_label = True,
+        plot_atom_label = True,
+        fig_format = 'png',
+        fig_dpi = 100,
+        draw_colormap = True,
+        colormap_column_indx = 1,
+        colormap_vmin = None,
+        colormap_vmax = None,
+        vmin_color = 'blue',
+        vmax_color = 'red',
+        colorbar_alignment = 'vertical'
+        )
+
+    vasp_plot.plot_poscar(
+        poscar_dir = './outputs/POSCAR_estruct_DOS1_Ef-7.0888',
+        euler_angle_type = 'zyz',
+        phi = -3,
+        theta = 5,
+        psi = 0,
+        elmt_color = {'Ni':'red','Re':'blue'},
+        draw_mirror_atom = True,
+        box_on = True,
+        axis_indicator =True,
+        plot_cell_basis_vector_label = True,
+        plot_atom_label = True,
+        fig_format = 'png',
+        fig_dpi = 100,
+        draw_colormap = True,
+        colormap_column_indx = 1,
+        colormap_vmin = -80,
+        colormap_vmax = -40,
+        vmin_color = 'blue',
+        vmax_color = 'red',
+        colorbar_alignment = 'vertical'
         )
 
 #################################
@@ -290,4 +462,3 @@ if run_plot_concentration_profile == True:
         fig_dpi = 600,
         fig_format = 'png',
         )
-

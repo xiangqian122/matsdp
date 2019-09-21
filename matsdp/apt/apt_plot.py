@@ -10,6 +10,12 @@ def plot_proxigram_csv(proxigram_csv_dir, sysname, visible_elmt_list, interplati
     import numpy as np
     from .. import funcs
     from . import apt_read
+    from .. import default_params
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
+    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    funcs.mkdir(output_dir)
     
     font_size = 15
     label_size = 15
@@ -75,10 +81,20 @@ def plot_proxigram_csv(proxigram_csv_dir, sysname, visible_elmt_list, interplati
     plt.xlabel('distance from the interface ($nm$)', size = label_size, labelpad=font_size*1.4)
     plt.ylabel('concentration ($at.\%$)', size = label_size, labelpad=font_size*2.3)
 
-    fig_dir = os.getcwd() + './outputs'
-    funcs.mkdir(fig_dir)
-    fig_file = fig_dir + '/' + 'apt_concentration_profile_' + str(sysname) + '.' + fig_format
+    fig_file = output_dir + '/' + 'apt_concentration_profile_' + str(sysname) + '.' + fig_format
     plt.savefig(fig_file, dpi = fig_dpi)
     plt.close()
+    funcs.write_log(
+        logfile,
+        'apt_plot.plot_proxigram_csv(' + '\n' +
+        '    proxigram_csv_dir=' + 'r\'' + str(proxigram_csv_dir) + '\'' + ',\n' +
+        '    sysname=' + '\'' + str(sysname) + '\'' + ',\n' +
+        '    visible_elmt_list=' + str(visible_elmt_list) + ',\n' +
+        '    interplation_on=' + str(interplation_on) + ',\n' +
+        '    fig_width=' + str(fig_width) + ',\n' +
+        '    fig_height=' + str(fig_height) + ',\n' +
+        '    fig_dpi=' + str(fig_dpi) + ',\n' +            
+        '    fig_format=' + '\'' + str(fig_format) + '\'' + ')\n' +
+        '###############################\n')
     return 0
 

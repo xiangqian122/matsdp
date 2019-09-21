@@ -46,6 +46,8 @@ def substitution(substitution_list_file, poscar_dir):
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
+    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    funcs.mkdir(output_dir)
 
     poscar_dir = os.path.abspath(poscar_dir)
     substitution_list_file_abs_path = os.path.abspath(substitution_list_file)
@@ -56,10 +58,8 @@ def substitution(substitution_list_file, poscar_dir):
         subst_file_name, subst_file_extension = os.path.splitext(substitution_list_file)
         if subst_file_extension != '.subst':
             funcs.write_log(logfile,substitution_list_file + " detected. But the file extension should be .subst ")
-    funcs.write_log(logfile,"substitution_list_file =" + substitution_list_file)
     if os.path.isfile(poscar_dir) == False:
         funcs.write_log(logfile,poscar_dir + " doesn't exist, please check current folder")
-    funcs.write_log(logfile,"poscar_dir = " + poscar_dir)
     
     # Extract information from the input POSCAR file
     poscar_dict = vasp_read.read_poscar(poscar_dir)
@@ -84,13 +84,13 @@ def substitution(substitution_list_file, poscar_dir):
         subst_elmt = np.array([],dtype=np.str)
         for i in range(i_line,i_line+n_subst):
             #Correspond the atom index with the line number
-            indx = np.argwhere(poscar_dict['ElmtSpeciesArr']==funcs.split_line(s_line[i])[0])
-            atom_indx = poscar_dict['ElmtStartindxArr'][indx] + int(funcs.split_line(s_line[i])[1]) - 1
+            indx = np.argwhere(poscar_dict['elmt_species_arr']==funcs.split_line(s_line[i])[0])
+            atom_indx = poscar_dict['elmt_start_indx_arr'][indx] + int(funcs.split_line(s_line[i])[1]) - 1
             atom_species_name_subst_arr[atom_indx - 1] = funcs.split_line(s_line[i])[2]
             #Find unique substitution element species
             subst_elmt = np.append(subst_elmt,funcs.split_line(s_line[i])[2])
         unique_subst_elmt = np.unique(subst_elmt)
-        elmt_species_mod = np.unique(np.append(poscar_dict['ElmtSpeciesArr'], unique_subst_elmt))
+        elmt_species_mod = np.unique(np.append(poscar_dict['elmt_species_arr'], unique_subst_elmt))
         n_elmt_mod = np.array([0]*len(elmt_species_mod),dtype = np.int)
         for i in range(0,len(elmt_species_mod)):
             n_elmt_mod[i] = sum(atom_species_name_subst_arr==elmt_species_mod[i])
@@ -109,7 +109,6 @@ def substitution(substitution_list_file, poscar_dir):
         int_length = 7
         int_format_str = '{:0' + str(int_length) + 'd}' 
         sysname = 'L' + str(int_format_str.format(i_line)) + '_' + composition + "_D" + str(composition_arr_count[np.argwhere(composition_arr == composition)]).strip('[[').strip(']]')
-        funcs.write_log(logfile,str(sysname))
         atom_species_name_sort_arr = [None] * len(atom_species_name_subst_arr)
         #Rearrange the Atoms according to AtomSpeciesName
         temp1 = 0
@@ -132,7 +131,7 @@ def substitution(substitution_list_file, poscar_dir):
         elmt_species_mod_remove_va = np.delete(elmt_species_mod, val_indx)
         n_elmt_mod_RemoveVa = np.delete(n_elmt_mod, val_indx)
         #Export POSCAR file for each system
-        models_path = os.getcwd() + '/' + subst_file_name + '/' + sysname
+        models_path = output_dir + '/' + subst_file_name + '/' + sysname
         funcs.mkdir(models_path)
         isExists = os.path.exists(models_path)
         if not isExists:
@@ -147,13 +146,13 @@ def substitution(substitution_list_file, poscar_dir):
                              pline[4] +
                              str(" ".join(elmt_species_mod_remove_va)) + '\n' +
                              str(n_elmt_mod_RemoveVa).strip('[').strip(']') + '\n')
-            if poscar_dict['SletDynOn'] == True:
+            if poscar_dict['slet_dyn_on'] == True:
                 fileobject.write(pline[7] +
                                  pline[8])
             else:
                 fileobject.write(pline[7])
         with open(poscar_out,'a') as fileobject:
-            if poscar_dict['SletDynOn'] == True:
+            if poscar_dict['slet_dyn_on'] == True:
                 for i in range(0,n_atoms):
                     if atom_species_name_sort_arr[i] == 'Va':
                         continue
@@ -169,17 +168,22 @@ def substitution(substitution_list_file, poscar_dir):
         i_line = i_line + n_subst + 2
         model_number += 1
     
-    funcs.write_log(logfile,'################################')
+    funcs.write_log(
+        logfile,
+        'vasp_build.substitution(' + '\n' +
+        '    substitution_list_file=' + 'r\'' + str(substitution_list_file_abs_path) + '\'' + ',\n' +
+        '    poscar_dir='  + 'r\'' +str(poscar_dir) + '\'' + ')\n' +
+        '###############################\n')
     return 0
 
-def rep_elmt(substitution_list_file, poscar_dir, old_elmtt, elmt_group):
+def rep_elmt(substitution_list_file, poscar_dir, old_elmt, elmt_group):
     '''
     - Descriptions
      * replace element in the .subst file by specific elements and generate corresponding models
     - Args
      * substitution_list_file: String format. It specifies the directory of the *.subst file (substitution list file).
      * poscar_dir: String format. The directory of the POSCAR file. It can either be full path or relative path
-     * old_elmtt: String format. It specifies the element in the *.subst which you want to substute with.
+     * old_elmt: String format. It specifies the element in the *.subst which you want to substute with.
      * elmt_group: list format. It specifies the elements which you want to subsitute for.
     '''
     import os
@@ -193,14 +197,15 @@ def rep_elmt(substitution_list_file, poscar_dir, old_elmtt, elmt_group):
     logfile = defaults_dict['logfile']
     time_start=time.time()
     poscar_dir = os.path.abspath(poscar_dir)
+    substitution_list_file_abs_path = os.path.abspath(substitution_list_file)
     subst_file_name, subst_file_extension = os.path.splitext(substitution_list_file)
     sysname_file =subst_file_name + '.sysname'
-    Str1 = old_elmtt
+    str1 = old_elmt
     if os.path.isfile('Tempsysname.dat'):
         os.remove('Tempsysname.dat')
     for i_elmt in elmt_group:
-        funcs.replace_file_content(substitution_list_file,Str1,i_elmt)
-        Str1 = i_elmt
+        funcs.replace_file_content(substitution_list_file,str1,i_elmt)
+        str1 = i_elmt
         substitution(substitution_list_file, poscar_dir)
         funcs.merge_files('Tempsysname.dat',sysname_file)
     if os.path.isfile(sysname_file):
@@ -208,8 +213,15 @@ def rep_elmt(substitution_list_file, poscar_dir, old_elmtt, elmt_group):
     os.rename('Tempsysname.dat',sysname_file)
 
     #restore the original SubstList.in
-    funcs.replace_file_content(substitution_list_file,Str1,old_elmtt)
-
+    funcs.replace_file_content(substitution_list_file,str1,old_elmt)
     time_end=time.time()
-    funcs.write_log(logfile,'time(rep_elmt) ' + str(time_end-time_start) + 's' + '\n' + '#################################')
+    funcs.write_log(logfile,'time=' + str(time_end-time_start) + '# unit in second \n')
+    funcs.write_log(
+        logfile,
+        'vasp_build.rep_elmt(' + '\n' +
+        '    substitution_list_file='  + 'r\'' + str(substitution_list_file) + '\'' + ',\n' +
+        '    poscar_dir='  + 'r\'' + str(poscar_dir) + '\'' + ',\n' +
+        '    old_elmt=' + '\'' + str(old_elmt) + '\'' + ',\n' +
+        '    elmt_group=' + str(elmt_group) + ')\n' +
+        '###############################\n')
     return 0

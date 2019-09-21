@@ -8,14 +8,14 @@ def read_poscar(poscar_dir):
     Return:
         poscar_dict
         l_arr: Numpy float array(np.float). Dimension is 3*3
-        elmtindxArr': Numpy integer array(np.int). Element index. Start from 0
+        elmtindx_arr': Numpy integer array(np.int). Element index. Start from 0
         elmt_num_arr': Numpy integer array(np.int). Number of atoms for each element species
-        ElmtSpeciesArr': Numpy string array. element name in the periodic for each element species
-        ElmtStartindxArr': Numpy integer array(np.int). staring index for each element species in the atom_indxArr
-        CoordSystem': String type. String value of either 'Direct' or 'Cartesian'
-        UniScaleFac': Float type. Universal scale factor(latice constant)
-        SletDynOn': Logic type. Selective dynamics on or off? True or False
-        N_Header': Number of header lines. i.e. the number of lines before atomic positions
+        elmt_species_arr': Numpy string array. element name in the periodic for each element species
+        elmt_start_indx_arr': Numpy integer array(np.int). staring index for each element species in the atom_indxArr
+        coord_system': String type. String value of either 'Direct' or 'Cartesian'
+        uni_scale_fac': Float type. Universal scale factor(latice constant)
+        slet_dyn_on': Logic type. Selective dynamics on or off? True or False
+        num_header': Number of header lines. i.e. the number of lines before atomic positions
     '''
     import os
     import numpy as np
@@ -27,7 +27,7 @@ def read_poscar(poscar_dir):
     poscar_dict = {}
     with open(poscar_dir) as f:
         lines = f.readlines()
-        poscar_dict['UniScaleFac'] = float(funcs.split_line(lines[1])[0])
+        poscar_dict['uni_scale_fac'] = float(funcs.split_line(lines[1])[0])
         box_len_arr = np.array([0.0]*3*3,dtype = np.float)
         box_len_arr.shape = 3,3
         l_arr = np.array([0.0]*3*3,dtype = np.float)
@@ -35,42 +35,44 @@ def read_poscar(poscar_dir):
         box_len_arr[0,0] = float(funcs.split_line(lines[2])[0]);box_len_arr[0,1] = float(funcs.split_line(lines[2])[1]);box_len_arr[0,2] = float(funcs.split_line(lines[2])[2])
         box_len_arr[1,0] = float(funcs.split_line(lines[3])[0]);box_len_arr[1,1] = float(funcs.split_line(lines[3])[1]);box_len_arr[1,2] = float(funcs.split_line(lines[3])[2])
         box_len_arr[2,0] = float(funcs.split_line(lines[4])[0]);box_len_arr[2,1] = float(funcs.split_line(lines[4])[1]);box_len_arr[2,2] = float(funcs.split_line(lines[4])[2])
-        l_arr = box_len_arr * poscar_dict['UniScaleFac']
-        #-First POS_ParamsDic['N_Header']  lines are header of the POSCAR file
+        l_arr = box_len_arr * poscar_dict['uni_scale_fac']
+        #-First POS_ParamsDic['num_header']  lines are header of the POSCAR file
         first_char = lines[7][0:1]
         if first_char == "S" or first_char == "s":
-            poscar_dict['SletDynOn'] = True 
-            poscar_dict['N_Header']  = 9  #This is the real Header line number in the POSCAR, which means that the header has POS_ParamsDic['N_Header']  lines.
-            first_char = lines[poscar_dict['N_Header'] -1][0:1]
+            poscar_dict['slet_dyn_on'] = True 
+            poscar_dict['num_header']  = 9  #This is the real Header line number in the POSCAR, which means that the header has POS_ParamsDic['num_header']  lines.
+            first_char = lines[poscar_dict['num_header'] -1][0:1]
             if first_char == "D" or first_char == "d":
-                poscar_dict['CoordSystem'] = "Direct"
+                poscar_dict['coord_system'] = "Direct"
             elif first_char == "C" or first_char == "c":
-                poscar_dict['CoordSystem'] = "Cartesian"
+                poscar_dict['coord_system'] = "Cartesian"
         elif first_char == "D" or first_char == "d" or first_char == "C" or first_char == "c":
-            poscar_dict['SletDynOn'] = False
-            poscar_dict['N_Header'] =8
+            poscar_dict['slet_dyn_on'] = False
+            poscar_dict['num_header'] =8
             if first_char == "D" or first_char == "d":
-                poscar_dict['CoordSystem'] = "Direct"
+                poscar_dict['coord_system'] = "Direct"
             elif first_char == "C" or first_char == "c":
-                poscar_dict['CoordSystem'] = "Cartesian"
+                poscar_dict['coord_system'] = "Cartesian"
+        #-save the header of the POSCAR
+        poscar_dict['header'] = lines[0:poscar_dict['num_header']]
         #-Get number of element species
         n_species = len(funcs.split_line(lines[5]))
         #-Number of atoms in the system
-        poscar_dict['elmtindxArr'] = np.array([0]*n_species,dtype = np.int)
-        poscar_dict['ElmtSpeciesArr'] = np.array(['--']*n_species,dtype = np.str)
+        poscar_dict['elmtindx_arr'] = np.array([0]*n_species,dtype = np.int)
+        poscar_dict['elmt_species_arr'] = np.array(['--']*n_species,dtype = np.str)
         poscar_dict['elmt_num_arr'] = np.array([0]*n_species,dtype = np.int)
         for i in range(0,n_species):
-            poscar_dict['elmtindxArr'][i] = i
-            poscar_dict['ElmtSpeciesArr'][i] = funcs.split_line(lines[5])[i]
+            poscar_dict['elmtindx_arr'][i] = i
+            poscar_dict['elmt_species_arr'][i] = funcs.split_line(lines[5])[i]
             poscar_dict['elmt_num_arr'][i] = funcs.split_line(lines[6])[i]
         n_atoms = sum(poscar_dict['elmt_num_arr'][:])
         #Element start index
-        poscar_dict['ElmtStartindxArr'] = np.array([0]*n_species,dtype=np.int)
+        poscar_dict['elmt_start_indx_arr'] = np.array([0]*n_species,dtype=np.int)
         for i in range(0,n_species):
             if i == 0:
-                poscar_dict['ElmtStartindxArr'][i] = 1
+                poscar_dict['elmt_start_indx_arr'][i] = 1
             else:
-                poscar_dict['ElmtStartindxArr'][i] = sum(poscar_dict['elmt_num_arr'][range(0,i)])+1
+                poscar_dict['elmt_start_indx_arr'][i] = sum(poscar_dict['elmt_num_arr'][range(0,i)])+1
 
         #-Array atom_species_arr and atom coordinates
         atom_species_arr = np.array(['--']*n_atoms,dtype=np.str)
@@ -78,13 +80,21 @@ def read_poscar(poscar_dir):
         atomname_list = ['']*n_atoms
         indx = 0;
         for i in range(0,n_species):
-            atom_species_arr[range(indx,indx+poscar_dict['elmt_num_arr'][i])] = [poscar_dict['ElmtSpeciesArr'][i]]*poscar_dict['elmt_num_arr'][i]
+            atom_species_arr[range(indx,indx+poscar_dict['elmt_num_arr'][i])] = [poscar_dict['elmt_species_arr'][i]]*poscar_dict['elmt_num_arr'][i]
             for j in range(0,poscar_dict['elmt_num_arr'][i]):
-                i_atom = poscar_dict['ElmtStartindxArr'][i] + j
+                i_atom = poscar_dict['elmt_start_indx_arr'][i] + j
                 atom_subindx_arr[i_atom-1] = j + 1
-                atomname_list[i_atom-1] = str(poscar_dict['ElmtSpeciesArr'][i]) + str(atom_subindx_arr[i_atom-1])
+                atomname_list[i_atom-1] = str(poscar_dict['elmt_species_arr'][i]) + str(atom_subindx_arr[i_atom-1])
             indx += poscar_dict['elmt_num_arr'][i]
         
+        # user added atom data in the POSCAR file
+        num_atom_data_column = len(funcs.split_line(lines[poscar_dict['num_header']]))
+        if poscar_dict['slet_dyn_on'] == True:
+            num_added_atom_data_column = num_atom_data_column - 6
+        elif poscar_dict['slet_dyn_on'] == False:
+            num_added_atom_data_column = num_atom_data_column - 3
+        added_atom_data_arr = np.array([None]*n_atoms*num_added_atom_data_column,dtype = np.float)
+        added_atom_data_arr.shape = n_atoms,num_added_atom_data_column        
         #Atom coordinates
         #pos_arr is the coordinates of all the atoms, first three columns are in Direct coordinate, last columns are in Cartesian coordinate
         #coord_arr is the x, y, z coordinate in POSCAR, without the influence of lattice vector or scale factor
@@ -96,28 +106,31 @@ def read_poscar(poscar_dir):
         pos_arr.shape = n_atoms,6
         L_Inv_Arr = np.linalg.inv(l_arr)
         for i in range(0,n_atoms):
-            temp = funcs.split_line(lines[poscar_dict['N_Header'] +i])
+            temp = funcs.split_line(lines[poscar_dict['num_header'] +i])
             coord_arr[i,0] = float(temp[0])
             coord_arr[i,1] = float(temp[1])
             coord_arr[i,2] = float(temp[2])
-            if first_char == "S" or first_char == "s":
+            if poscar_dict['slet_dyn_on'] == True:
                 fix_arr[i,0] = temp[3]
                 fix_arr[i,1] = temp[4]
                 fix_arr[i,2] = temp[5]
-            if  poscar_dict['CoordSystem'] == "Direct":
+                added_atom_data_arr[i,0:num_added_atom_data_column] = temp[6:(6+num_added_atom_data_column)]
+            elif poscar_dict['slet_dyn_on'] == False:
+                added_atom_data_arr[i,0:num_added_atom_data_column] = temp[3:(3+num_added_atom_data_column)]
+            if poscar_dict['coord_system'] == "Direct":
                 pos_arr[i,0] = coord_arr[i,0]
                 pos_arr[i,1] = coord_arr[i,1]
                 pos_arr[i,2] = coord_arr[i,2]
                 pos_arr[i,3] = np.dot(coord_arr[i,:], l_arr[:,[0]])
                 pos_arr[i,4] = np.dot(coord_arr[i,:], l_arr[:,[1]])
                 pos_arr[i,5] = np.dot(coord_arr[i,:], l_arr[:,[2]])
-            elif poscar_dict['CoordSystem'] == "Cartesian":
+            elif poscar_dict['coord_system'] == "Cartesian":
                 pos_arr[i,0] = np.dot(L_Inv_Arr[0,:], coord_arr[i,:])
                 pos_arr[i,1] = np.dot(L_Inv_Arr[1,:], coord_arr[i,:])
                 pos_arr[i,2] = np.dot(L_Inv_Arr[2,:], coord_arr[i,:])
-                pos_arr[i,3] = coord_arr[i,0] * poscar_dict['UniScaleFac']
-                pos_arr[i,4] = coord_arr[i,1] * poscar_dict['UniScaleFac']
-                pos_arr[i,5] = coord_arr[i,2] * poscar_dict['UniScaleFac']
+                pos_arr[i,3] = coord_arr[i,0] * poscar_dict['uni_scale_fac']
+                pos_arr[i,4] = coord_arr[i,1] * poscar_dict['uni_scale_fac']
+                pos_arr[i,5] = coord_arr[i,2] * poscar_dict['uni_scale_fac']
         poscar_dict['atom_species_arr'] = atom_species_arr
         poscar_dict['atom_subindx_arr'] = atom_subindx_arr
         poscar_dict['atomname_list'] = atomname_list
@@ -125,6 +138,12 @@ def read_poscar(poscar_dir):
         poscar_dict['coord_arr'] = coord_arr
         poscar_dict['fix_arr'] = fix_arr
         poscar_dict['l_arr'] = l_arr
+        poscar_dict['added_atom_data'] = added_atom_data_arr
+        poscar_dict['added_atom_property'] = None
+        poscar_dict['added_atom_property_columns'] = None
+        if 'added_atom_property=' in poscar_dict['header'][0]:
+            poscar_dict['added_atom_property'] = funcs.split_line(line = (funcs.split_line(line = poscar_dict['header'][0], separator = '=')[-1]), separator = ':')[0]
+            poscar_dict['added_atom_property_columns'] = funcs.split_line(line = poscar_dict['header'][0], separator = ':')[-1]
     return poscar_dict
 
 def read_outcar(outcar_dir):
@@ -144,36 +163,30 @@ def read_outcar(outcar_dir):
     outcar_dir = os.path.abspath(outcar_dir)
     incar_params_dict = {}
     outcar_params_dict = {}
-    incar_params_dict['LORBIT'] = int(funcs.split_line(funcs.grep('LORBIT',outcar_dir))[2])
+    incar_params_dict['LORBIT'] = int(funcs.split_line(line=funcs.split_line(line=funcs.grep('LORBIT',outcar_dir),separator='=')[-1],separator = ' ')[0])
+    outcar_params_dict['e_fermi'] = float(funcs.split_line(line=funcs.split_line(line=funcs.grep('E-fermi',outcar_dir),separator=':')[1],separator = ' ')[0])
+    outcar_params_dict['XC(G=0)'] = float(funcs.split_line(line=funcs.split_line(line=funcs.grep('E-fermi',outcar_dir),separator=':')[2],separator = ' ')[0])
+    incar_params_dict['ISPIN'] = int(funcs.split_line(line=funcs.split_line(line=funcs.grep('ISPIN',outcar_dir),separator='=')[-1],separator = ' ')[0])
+    outcar_params_dict['alpha+bet'] = float(funcs.split_line(line = funcs.grep('E-fermi',outcar_dir), separator = ':')[-1].strip())
 
-    outcar_params_dict['e_fermi'] = float(funcs.split_line(funcs.grep('E-fermi',outcar_dir))[2])
-    outcar_params_dict['XC(G=0)'] = float(funcs.split_line(funcs.grep('E-fermi',outcar_dir))[4])
-    outcar_params_dict['LORBIT'] = float(funcs.split_line(funcs.grep('LORBIT',outcar_dir))[2])
-    outcar_params_dict['ISPIN'] = int(funcs.split_line(funcs.grep('ISPIN',outcar_dir))[2])
-    if outcar_params_dict['ISPIN'] == 1:
-        outcar_params_dict['alpha+bet'] = float(funcs.split_line(funcs.grep('E-fermi',outcar_dir))[-1].strip(':'))
-    else:
-        outcar_params_dict['alpha+bet'] = float(funcs.split_line(funcs.grep('E-fermi',outcar_dir))[6].split(':')[-1])
-
-
-    num_elmt_type = len(funcs.split_line(funcs.grep('ions per type',outcar_dir))) - 4
-    num_elmt_type_list = funcs.split_line(funcs.grep('ions per type',outcar_dir))[4:]
+    num_elmt_type = len(funcs.split_line(line=funcs.split_line(line=funcs.grep('ions per type',outcar_dir),separator='=')[-1],separator=' '))
+    num_elmt_type_list = funcs.split_line(line=funcs.split_line(line=funcs.grep('ions per type',outcar_dir),separator='=')[-1],separator=' ')[:]
     n_atoms = np.sum([int(item) for item in num_elmt_type_list])
-    num_ionic_step = funcs.grep('TOTaxis_indic_ref_length-FORCE',outcar_dir).count('TOTaxis_indic_ref_length-FORCE')
+    num_ionic_step = funcs.grep('TOTAL-FORCE',outcar_dir).count('TOTAL-FORCE')
     force_arr = np.array([None] * num_ionic_step * n_atoms * 6)
     force_arr.shape = num_ionic_step , n_atoms , 6
     outcar_params_dict['num_ionic_step'] = num_ionic_step
 
     with open(outcar_dir,'r') as f:
         line = f.readlines()
-        iionic_step = 0
+        i_ionic_step = 0
         for i in range(len(line)):
-            if 'TOTaxis_indic_ref_length-FORCE' in line[i]:
+            if 'TOTAL-FORCE' in line[i]:
                 for i_atom in range(0,n_atoms):
                     i_atomLine = i + i_atom + 2
-                    force_arr[iionic_step,i_atom,:] = [float(item) for item in funcs.split_line(line[i_atomLine])]
-                iionic_step += 1
-    outcar_params_dict['force_arr'] = force_arr
+                    force_arr[i_ionic_step,i_atom,:] = [float(item) for item in funcs.split_line(line[i_atomLine])]
+                i_ionic_step += 1
+    outcar_params_dict['force'] = force_arr
     return incar_params_dict, outcar_params_dict
 
 def read_doscar(doscar_dir, atom_indx, save_dos_arr = False):
@@ -212,7 +225,7 @@ def read_doscar(doscar_dir, atom_indx, save_dos_arr = False):
         n_atoms = int(funcs.split_line(lines[0])[0])
         NEDOS = int(funcs.split_line(lines[5])[2])
         e_fermi = float(funcs.split_line(lines[5])[3])
-        funcs.write_log(logfile, 'n_atoms = ' + str(n_atoms) + ' NEDOS = ' + str(NEDOS) + ' e_fermi(Unmodified) = ' + str(e_fermi))
+##        funcs.write_log(logfile, 'n_atoms = ' + str(n_atoms) + ' NEDOS = ' + str(NEDOS) + ' e_fermi(Unmodified) = ' + str(e_fermi))
         #TDOS
         if atom_indx == 0:
             StartLine = 6
@@ -343,12 +356,12 @@ def read_doscar(doscar_dir, atom_indx, save_dos_arr = False):
             doscar_dict['LDOS_dw'] = doscar_dict['s_dw'] + doscar_dict['p_dw'] + doscar_dict['d_dw'] + doscar_dict['f_dw']
     return doscar_dict
 
-def read_oszicar(OSZICAR_Dir):
+def read_oszicar(oszicar_dir, dpi = 100):
     '''Read OSZICAR'''
     import numpy as np
     import matplotlib.pyplot as plt
     from .. import funcs
-    with open(OSZICAR_Dir,'r') as f:
+    with open(oszicar_dir,'r') as f:
         line = f.readlines()
 
     ionic_step_num = 0
@@ -361,13 +374,13 @@ def read_oszicar(OSZICAR_Dir):
         if split_line(line[i_line])[1] == 'F=':
             etot_arr[ionic_step] = float(funcs.split_line(line[i_line])[2])
             ionic_step += 1
-    fig = plt.figure('NEtot')
+    fig = plt.figure('n_etot')
     ax = fig.add_subplot(111)
     plt.plot(range(len(etot_arr)), etot_arr, marker = '.')
     ax.set(xlabel = 'Ionic steps')
     ax.set(ylabel = '$E_{tot}(eV)$')
-    etot_oszicar_figfile = 'EtotOSZICAR.pdf'
-    plt.savefig(etot_oszicar_figfile,dpi = 100)
+    etot_oszicar_figfile = 'etot_OSZICAR.pdf'
+    plt.savefig(etot_oszicar_figfile,dpi = dpi)
     plt.close
     return etot_arr
 

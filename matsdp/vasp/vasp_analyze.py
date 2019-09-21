@@ -18,6 +18,9 @@ def nn_map(poscar_dir, a0, n_shell = 1):
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
+    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    funcs.mkdir(output_dir)
+
     poscar_dir = os.path.abspath(poscar_dir)
     n_neighbor = 100  #number of nearest neighbors in kNNList
     tol = 0.1 * a0  #tol is the maximum allowed deviation of atom posotions from perfect lattice site.
@@ -43,13 +46,14 @@ def nn_map(poscar_dir, a0, n_shell = 1):
     atomname_extend_list_no_extend_atomname = poscar_dict['atomname_list'].copy()
     car_extend_arr = np.array([0.0]*n_atoms*pow(2*n_extend+1,3)*3,dtype = np.float)
     car_extend_arr.shape = n_atoms*pow(2*n_extend+1,3),3
-    formatted_atomname_len = 5 #For example len('Ni324') = 5
-    formatted_len = 12 #For example len('Ni324_-1-1-1')=12
+    formatted_atomname_len = 6 #For example len('Ni324') = 5, len('Ni1324') = 6
+    formatted_len = 13 #For example len('Ni324_-1-1-1')=12, len('Ni1324_-1-1-1')=13
     for i_atom in range(n_atoms):
         car_extend_arr[i_atom,0] = poscar_dict['pos_arr'][i_atom,3]
         car_extend_arr[i_atom,1] = poscar_dict['pos_arr'][i_atom,4]
         car_extend_arr[i_atom,2] = poscar_dict['pos_arr'][i_atom,5]
         atomname_extend_list[i_atom] = atomname_extend_list[i_atom] + ' '*(formatted_len - len(atomname_extend_list[i_atom]))    #This is for the purpose of formatted
+        atomname_extend_list_no_extend_atomname[i_atom] = atomname_extend_list_no_extend_atomname[i_atom] + ' '*(formatted_len - len(atomname_extend_list_no_extend_atomname[i_atom]))    #This is for the purpose of formatted
     i_atom_extend = i_atom
     unit_vec = np.array([[1, 0, 0],[0, 1, 0],[0, 0, 1]])
     for i in range(-n_extend, n_extend+1):
@@ -64,18 +68,16 @@ def nn_map(poscar_dir, a0, n_shell = 1):
                     car_extend_arr[i_atom_extend,2] = poscar_dict['pos_arr'][i_atom,5] + np.dot(poscar_dict['l_arr'][:,2], unit_vec[2,:]) * k
                     extend_atomname = poscar_dict['atomname_list'][i_atom] + '_' + str(i) + str(j) + str(k)
                     atomname_extend_list.append(extend_atomname + ' '*(formatted_len - len(extend_atomname)))
-                    atomname_extend_list_no_extend_atomname.append(poscar_dict['atomname_list'][i_atom])
+                    atomname_extend_list_no_extend_atomname.append(poscar_dict['atomname_list'][i_atom] + ' '*(formatted_len - len(poscar_dict['atomname_list'][i_atom])))
     #Calculate nearest neighbor inofrmation
     tree = KDTree(car_extend_arr)
-    output_dir = os.getcwd() + '/outputs'
-    funcs.mkdir(output_dir)    
-    nn_atomname_list_file = output_dir + '/nn_atomname_list.dat'
-    nn_atomname_list_file_without_mirror_label = output_dir + '/nn_atomname_list.dat'
-    nn_dist_file = output_dir + '/nn_dist.dat'
-    nn_map_temp_file = output_dir + '/nn_map_temp.dat'
-    nn_map_temp_file_without_mirror_label = output_dir + '/nn_map_temp_without_mirror_label.dat'
-    nn_map_file = output_dir + '/nn_map.dat'
-    nn_map_file_without_mirror_label = output_dir + '/nn_map_without_mirror_label.dat'
+    nn_atomname_list_file = output_dir + '/nn_atomname_list.txt'
+    nn_atomname_list_file_without_mirror_label = output_dir + '/nn_atomname_list.txt'
+    nn_dist_file = output_dir + '/nn_dist.txt'
+    nn_map_temp_file = output_dir + '/nn_map_temp.txt'
+    nn_map_temp_file_without_mirror_label = output_dir + '/nn_map_temp_without_mirror_label.txt'
+    nn_map_file = output_dir + '/nn_map.txt'
+    nn_map_file_without_mirror_label = output_dir + '/nn_map_without_mirror_label.txt'
     with open(nn_atomname_list_file,'w') as f1, open(nn_dist_file,'w') as f2:
         pass
     with open(nn_atomname_list_file_without_mirror_label,'w') as f11:
@@ -84,17 +86,17 @@ def nn_map(poscar_dir, a0, n_shell = 1):
     nn_atomname_list_i_shell_file_without_mirror_label = []
     nn_dist_list_ishell_file = []
     max_neighbor_num = 50
-    #nn_atomname_ishell_arr constains the atoms names with mirror atom label
-    #nn_atomname_ishell_arr_no_extend_atomname constains the atoms names without mirror atom label    
+    #nn_atomname_ishell_arr constains the atom names with mirror atom label
+    #nn_atomname_ishell_arr_no_extend_atomname constains the atom names without mirror atom label    
     nn_atomname_ishell_arr = np.array([None]*n_atoms*n_shell*max_neighbor_num)
     nn_atomname_ishell_arr.shape = n_atoms,n_shell,max_neighbor_num
     nn_atomname_ishell_arr_no_extend_atomname = np.array([None]*n_atoms*n_shell*max_neighbor_num)
     nn_atomname_ishell_arr_no_extend_atomname.shape = n_atoms,n_shell,max_neighbor_num
     for i_shell in range(n_shell):
         shell_indx = i_shell +1
-        nn_atomname_list_i_shell_file.append(output_dir + '/nn_atomname_list_' + str(shell_indx) + 'NN.dat')
-        nn_atomname_list_i_shell_file_without_mirror_label.append(output_dir + '/nn_atomname_list_without_mirror_label_' + str(shell_indx) + 'NN.dat')
-        nn_dist_list_ishell_file.append(output_dir + '/nn_dist_list_' + str(shell_indx) + 'NN.dat')
+        nn_atomname_list_i_shell_file.append(output_dir + '/nn_atomname_list_' + str(shell_indx) + 'NN.txt')
+        nn_atomname_list_i_shell_file_without_mirror_label.append(output_dir + '/nn_atomname_list_without_mirror_label_' + str(shell_indx) + 'NN.txt')
+        nn_dist_list_ishell_file.append(output_dir + '/nn_dist_list_' + str(shell_indx) + 'NN.txt')
         with open(nn_atomname_list_i_shell_file[i_shell],'w') as f3, open(nn_dist_list_ishell_file[i_shell],'w') as f4:
             pass
         with open(nn_atomname_list_i_shell_file_without_mirror_label[i_shell],'w') as f13:
@@ -115,7 +117,7 @@ def nn_map(poscar_dir, a0, n_shell = 1):
                 nn_dist_list.append(str(dists[0,i_neighbor]))
             f1.write(str(', '.join(nn_atomname_list))+'\n')
             f11.write(str(', '.join(nn_atomname_list))+'\n')
-            f2.write(str(atomname_extend_list[i_atom]) + ', ' + str(", ".join(nn_dist_list))+'\n')
+            f2.write(str(atomname_extend_list[i_atom]) + ', ' + str(", ".join(['{:.4f}'.format(float(item)) for item in nn_dist_list]))+'\n')
             for i_shell in range(n_shell):
                 nn_atomname_ishell_list = []
                 nn_atomname_ishell_list_no_extend_atomname = []
@@ -124,7 +126,7 @@ def nn_map(poscar_dir, a0, n_shell = 1):
                     if abs(dists[0,i_neighbor]-r[i_shell]) < tol:
                         nn_atomname_ishell_list.append(atomname_extend_list[indices[0,i_neighbor]])
                         nn_atomname_ishell_list_no_extend_atomname.append(atomname_extend_list_no_extend_atomname[indices[0,i_neighbor]])
-                        nn_dist_ishell_list.append(str(dists[0,i_neighbor]))
+                        nn_dist_ishell_list.append(str('{:.4f}'.format(dists[0,i_neighbor])))
                 nn_atomname_ishell_arr[i_atom,i_shell,0:len(nn_atomname_ishell_list)] =  nn_atomname_ishell_list
                 nn_atomname_ishell_arr_no_extend_atomname[i_atom,i_shell,0:len(nn_atomname_ishell_list)] =  nn_atomname_ishell_list_no_extend_atomname
                 with open(nn_atomname_list_i_shell_file[i_shell],'a') as f3, open(nn_dist_list_ishell_file[i_shell],'a') as f4, open(nn_atomname_list_i_shell_file_without_mirror_label[i_shell],'a') as f13:
@@ -139,9 +141,9 @@ def nn_map(poscar_dir, a0, n_shell = 1):
                 if nn_atomname_ishell_arr_no_extend_atomname[i_atom,i_shell,i_neighbor] == None:
                     nn_atomname_ishell_arr_no_extend_atomname[i_atom,i_shell,i_neighbor] = ' '*formatted_len                  
     with open(nn_map_temp_file,'w') as f5:
-        f5.write('atom  ' + ' '.join([str(i+1) + 'NN         ' for i in range(n_shell)]) + '\n')
+        f5.write('atom   ' + '  '.join([str(i+1) + 'NN         ' for i in range(n_shell)]) + '\n')
     with open(nn_map_temp_file_without_mirror_label,'w') as f15:
-        f15.write('atom  ' + ' '.join([str(i+1) + 'NN         ' for i in range(n_shell)]) + '\n')
+        f15.write('atom   ' + '  '.join([str(i+1) + 'NN         ' for i in range(n_shell)]) + '\n')
     with open(nn_map_temp_file,'a') as f5, open(nn_map_temp_file_without_mirror_label,'a') as f15:
         for i_atom in range(n_atoms):
             split_text = ' '*formatted_atomname_len + ' '
@@ -169,11 +171,155 @@ def nn_map(poscar_dir, a0, n_shell = 1):
                 if nn_atomname_ishell_arr[i_atom,i_shell,i_neighbor] == ' '*formatted_len:
                     nn_atomname_ishell_arr[i_atom,i_shell,i_neighbor] = None              
                 if nn_atomname_ishell_arr_no_extend_atomname[i_atom,i_shell,i_neighbor] == ' '*formatted_len:
-                    nn_atomname_ishell_arr_no_extend_atomname[i_atom,i_shell,i_neighbor] = None               
+                    nn_atomname_ishell_arr_no_extend_atomname[i_atom,i_shell,i_neighbor] = None
+    os.remove(nn_map_temp_file)
+    os.remove(nn_map_temp_file_without_mirror_label)
 
-    funcs.write_log(logfile, 'nn_map:' + '\n' + 'n_shell=' + str(n_shell) + '\n' + 'a0=' + str(a0) + '\n' + 'POSCARDir=' + poscar_dir + '\n' + '#############################################')
+    funcs.write_log(
+        logfile,
+        'vasp_analyze.nn_map(' + '\n' +
+        '    poscar_dir=' + 'r\'' + str(poscar_dir) + '\'' + ',\n' +
+        '    a0=' + str(a0) + ',\n' +
+        '    n_shell=' + str(n_shell) + ')\n' +
+        '###############################\n')
     return nn_atomname_ishell_arr, nn_atomname_ishell_arr_no_extend_atomname
 
+def simple_cna(poscar_dir, a0, common_neighbor_elmt_list = []):
+    '''
+    simple common neighbor analysis (CNA)
+    '''
+    import os
+    import re
+    import itertools
+    import numpy as np
+    from .. import funcs
+    from .. import default_params
+    from . import vasp_read
+    from . import vasp_write
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
+    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    funcs.mkdir(output_dir)
+
+    ##For test purpose, the next two lines are commented.
+    ##common_neighbor_elmt_list = ['Re','W','Ta','Ru']
+    ##first_nn_list = ['Ni1', 'Ni1', 'Ni2', 'Ni38', 'Re1', 'Re1', 'Re5', 'W2', 'W4', 'Ta5',None,None]
+    poscar_dir = os.path.abspath(poscar_dir)
+    nn_atomname_ishell_arr, nn_atomname_ishell_arr_no_extend_atomname = nn_map(poscar_dir, a0, n_shell = 1)
+
+    poscar_dict = vasp_read.read_poscar(poscar_dir)
+    n_atoms = np.sum(poscar_dict['elmt_num_arr'])
+    # define the element pairs which need to be anlyzed
+    elmt_pair_list = [item for item in common_neighbor_elmt_list if item in poscar_dict['elmt_species_arr']]
+    num_first_nn_comb = len(list(itertools.combinations([0]*12, 2)))
+    num_elmt_comb = len(list(itertools.combinations_with_replacement(elmt_pair_list, 2)))
+    common_neighbor_pair_list = [None]*num_elmt_comb
+    common_neighbor_pair_count_arr = np.array([None]*n_atoms*num_elmt_comb)
+    common_neighbor_pair_count_arr.shape = n_atoms,num_elmt_comb
+    common_neighbor_pair_content_arr = np.array([None]*n_atoms*num_elmt_comb*num_first_nn_comb)
+    common_neighbor_pair_content_arr.shape = n_atoms,num_elmt_comb,num_first_nn_comb
+
+    indx = 0
+    for i_pair in itertools.combinations_with_replacement(elmt_pair_list, 2):
+        common_neighbor_pair_list[indx] = i_pair[0] + '-' + i_pair[1]
+        common_neighbor_pair_count_arr[:, indx] = 0
+        indx += 1
+
+    formatted_atomname_len = 6 #For example len('Ni324') = 5, len('Ni1324') = 6
+    formatted_len1 = 5 #For example len('Ni-Re')=5
+    formatted_len2 = 13 #For example len('Ni329-Re123')=11, len('Ni1329-Re1123')=13
+    formatted_len3 = 12 #For example len('-54.0812')=8, len('-54.08128345')=12    
+
+    for i_atom in range(0,n_atoms):
+        i_atom_name = poscar_dict['atomname_list'][i_atom]
+
+        first_nn_list = nn_atomname_ishell_arr_no_extend_atomname[i_atom,0,:]
+            
+        first_nn_list = list(filter(None, first_nn_list)) 
+        first_nn_list_unique = list(set(first_nn_list))
+        num_first_nn = len(first_nn_list)
+        ##print(first_nn_list)
+
+        # element type list
+        first_nn_elmt_list = []
+        for i in range(0,len(first_nn_list)):
+            first_nn_elmt_list.append(''.join(re.findall(r'[A-Za-z]', first_nn_list[i])))
+        # unique element type list
+        first_nn_elmt_list_unique = list(set(first_nn_elmt_list))
+
+        if len(list(set(first_nn_elmt_list_unique).intersection(set(elmt_pair_list)))) == 0:
+            continue
+        first_nn_list_temp = first_nn_list.copy()
+        for i in range(0,len(first_nn_list_temp)):
+            if ''.join(re.findall(r'[A-Za-z]', first_nn_list_temp[i])) not in elmt_pair_list:
+                first_nn_list.remove(first_nn_list_temp[i])
+
+        for i_pair in itertools.combinations(first_nn_list, 2):
+            pair_str1 = ''.join(re.findall(r'[A-Za-z]', i_pair[0])) + '-' + ''.join(re.findall(r'[A-Za-z]', i_pair[1]))
+            pair_str2 = ''.join(re.findall(r'[A-Za-z]', i_pair[1])) + '-' + ''.join(re.findall(r'[A-Za-z]', i_pair[0]))  
+            if pair_str1 in common_neighbor_pair_list:
+                indx = common_neighbor_pair_list.index(pair_str1)
+                pair_str = i_pair[0].strip() + '-' + i_pair[1].strip()
+                pair_full_str = pair_str + (' '*(formatted_len2-len(pair_str)))
+            elif pair_str2 in common_neighbor_pair_list:
+                indx = common_neighbor_pair_list.index(pair_str2)
+                pair_str = i_pair[1].strip() + '-' + i_pair[0].strip()
+                pair_full_str = pair_str + (' '*(formatted_len2-len(pair_str)))
+            common_neighbor_pair_content_arr[i_atom, indx, common_neighbor_pair_count_arr[i_atom, indx]] =  pair_full_str
+            common_neighbor_pair_count_arr[i_atom, indx] += 1
+
+        common_neighbor_dict={}
+        common_neighbor_dict['pair_name'] = common_neighbor_pair_list
+        common_neighbor_dict['pair_count'] = common_neighbor_pair_count_arr
+        common_neighbor_dict['pair_content'] = common_neighbor_pair_content_arr
+
+    elmt_pair_list_str = ''.join(elmt_pair_list)
+    simple_common_neighbor_pair_count_file = output_dir + '/simple_common_neighbor_pair_count_' + elmt_pair_list_str + '.txt'
+    simple_common_neighbor_file = output_dir + '/simple_common_neighbor_' + elmt_pair_list_str + '.txt'
+
+    for i_atom in range(n_atoms):
+        for i_elmt_comb in range(num_elmt_comb):
+            for i_pair_indx in range(num_first_nn_comb):
+                if common_neighbor_dict['pair_content'][i_atom, i_elmt_comb, i_pair_indx] == None:
+                    common_neighbor_dict['pair_content'][i_atom, i_elmt_comb, i_pair_indx] = ' '*formatted_len2
+    
+    with open(simple_common_neighbor_pair_count_file,'w') as f1, open(simple_common_neighbor_file,'w') as f2:
+        f1.write('atom   ' + str(' '.join(common_neighbor_dict['pair_name']))+'\n')
+        f2.write('atom   ' + str(' '.join([item + (' '*(formatted_len2 - len(str(item)))) for item in common_neighbor_dict['pair_name']]))+'\n')
+    with open(simple_common_neighbor_pair_count_file,'a') as f1, open(simple_common_neighbor_file,'a') as f2:
+        for i_atom in range(n_atoms):
+            if len(list(set(first_nn_elmt_list_unique).intersection(set(elmt_pair_list)))) == 0:
+                continue
+            i_atom_name = poscar_dict['atomname_list'][i_atom]
+            f1.write(i_atom_name + ' '*(formatted_atomname_len - len(i_atom_name)) + ' ' +
+                     ' '.join([str(item) + (' '*(formatted_len1 - len(str(item)))) for item in common_neighbor_dict['pair_count'][i_atom,:]])+'\n')
+            f2.write(i_atom_name + ' '*(formatted_atomname_len - len(i_atom_name)) + ' ' +
+                     ' '.join([str(item) + (' '*(formatted_len2 - len(str(item)))) for item in common_neighbor_dict['pair_count'][i_atom,:]])+'\n')
+            split_text = ' '*formatted_atomname_len + ' '
+            nn_text = split_text.join([' '.join(i) + '\n' for i in [common_neighbor_dict['pair_content'][i_atom, 0:num_elmt_comb, i_pair_indx].tolist() for i_pair_indx in range(num_first_nn_comb)]])
+            f2.write((' '*formatted_atomname_len) + ' ' + nn_text + '\n')    
+
+    # write the POSCAR file with atom property data
+    simple_cna_pair_count_poscar_file_name = 'POSCAR_simple_common_neighbor_pair_count_' + elmt_pair_list_str
+    added_atom_property_str = 'simple_cna'
+    added_atom_property_columns_str = str(' '.join([item for item in common_neighbor_dict['pair_name']]))
+    vasp_write.write_poscar_with_atom_property(output_poscar_file_name = simple_cna_pair_count_poscar_file_name,
+                                               poscar_dict = poscar_dict,
+                                               added_atom_data = common_neighbor_dict['pair_count'],
+                                               added_atom_property_str = added_atom_property_str,
+                                               added_atom_property_columns_str = added_atom_property_columns_str)
+    
+    # delete empty lines of the file
+    funcs.rm_empty_lines_in_file(simple_common_neighbor_file)
+    funcs.write_log(
+        logfile,
+        'vasp_analyze.simple_cna(' + '\n' +
+        '    poscar_dir=' + 'r\'' + str(poscar_dir) + '\'' + ',\n' +
+        '    a0=' + str(a0) + ',\n' +
+        '    common_neighbor_elmt_list=' + str(common_neighbor_elmt_list) + ')\n' +
+        '###############################\n')
+    return common_neighbor_dict
 
 def estruct(doscar_dir, sysname = ''):
     '''
@@ -189,11 +335,15 @@ def estruct(doscar_dir, sysname = ''):
     import numpy as np
     from .. import funcs
     from .. import convert
-    from . import vasp_read
     from .. import default_params
+    from . import vasp_read
+    from . import vasp_write
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
+    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    funcs.mkdir(output_dir)
+
     valence_electron_num_dict = {'Al':3,
                              'Ti':4,'V':5,'Cr':6,'Mn':7,'Fe':8,'Co':9,'Ni':10,'Cu':11,'Zn':12,
                              'Zr':4,'Nb':5,'Mo':6,'Tc':7,'Ru':8,'Rh':9,'Pd':10,'Ag':11,'Cd':12,
@@ -222,70 +372,80 @@ def estruct(doscar_dir, sysname = ''):
 
     atom_num = len(poscar_dict['atom_species_arr'])
 
-    estru = np.array([0.00000000] * atom_num)
+    estrut_arr = np.array([0.00000000] * atom_num)
     n1 = np.array([0.00000000] * atom_num)
     n2 = np.array([0.00000000] * atom_num)
     ne1 = 0
     ne2 = 0
     valence_electron_num_sum = 0
     eband = 0
-
-    output_dir = os.getcwd() + '/outputs'
-    funcs.mkdir(output_dir)
     
     estruct_file = output_dir + '/estruct_' + str(sysname) + '_Ef' + str('{:.4f}'.format(e_fermi_mod)) + '.txt'
     estruct_with_pos_file = output_dir + '/estruct_with_position_' + str(sysname) + '_Ef' + str('{:.4f}'.format(e_fermi_mod)) + '.txt'
 
+    formatted_atomname_len = 6 #For example len('Ni324') = 5, len('Ni1324') = 6
+    formatted_len1 = 12 #For example len('-54.0812')=8, len('-54.08128345')=12    
+
     with open(estruct_file,'w') as f, open(estruct_with_pos_file,'w') as f1:
-        f.write('atom_name estruct\n')
-        f1.write('x y z atom_name estruct\n')
+        f.write('atom' + ' ' + (' '*(formatted_atomname_len-len('atom'))) +
+                'estruct\n')
+        f1.write('x' + ' ' + (' '*(formatted_len1-len('x'))) +
+                 'y' + ' ' + (' '*(formatted_len1-len('y'))) +
+                 'z' + ' ' + (' '*(formatted_len1-len('z'))) +
+                 'atom' + ' ' + (' '*(formatted_atomname_len-len('atom'))) +
+                 'estruct\n')
+
     with open(estruct_file,'a') as f, open(estruct_with_pos_file,'a') as f1:
         doscar_dict = vasp_read.read_doscar(doscar_dir, 1, False)
         NEDOS = len(doscar_dict['energy'])
         energy = doscar_dict['energy'] + outcar_params_dict['alpha+bet']
         e_grid = (np.max(energy)-np.min(energy)) / (NEDOS - 1)
-        funcs.write_log(logfile, '#################################################\n' + 'estruct\n' + '#################################################\n')
-        funcs.write_log(logfile, 'Modified Ef=' + str(e_fermi_mod) + ' eV' + '\n')
-        funcs.write_log(logfile, 'NEDOS=' + str(NEDOS) + '\n')
-        funcs.write_log(logfile, 'Emin=' + '{:.2f}'.format(np.min(energy)) + ' eV' +' Emax=' + '{:.2f}'.format(np.max(energy)) + ' eV' + '\n')
-        funcs.write_log(logfile, 'dE=' + '{:.4f}'.format(e_grid) + ' eV' + '\n')
+        funcs.write_log(logfile, '## Modified Ef=' + str(e_fermi_mod) + ' eV' + '\n')
+        funcs.write_log(logfile, '## NEDOS=' + str(NEDOS) + '\n')
+        funcs.write_log(logfile, '## Emin=' + '{:.2f}'.format(np.min(energy)) + ' eV' +' Emax=' + '{:.2f}'.format(np.max(energy)) + ' eV' + '\n')
+        funcs.write_log(logfile, '## dE=' + '{:.4f}'.format(e_grid) + ' eV' + '\n')
         dos_sum = np.array([0.0000000000]*NEDOS*atom_num)
         dos_sum.shape = NEDOS, atom_num
 
-        for i in range(0, atom_num):
-            doscar_dict = vasp_read.read_doscar(doscar_dir, i + 1, False)
-            ValenceElectronNum = valence_electron_num_dict[poscar_dict['atom_species_arr'][i]]
+        for i_atom in range(0, atom_num):
+            doscar_dict = vasp_read.read_doscar(doscar_dir, i_atom + 1, False)
+            ValenceElectronNum = valence_electron_num_dict[poscar_dict['atom_species_arr'][i_atom]]
             valence_electron_num_sum += ValenceElectronNum
             if doscar_dict['num_col'] == 10:
                 #For transition elements:
-                if poscar_dict['atom_species_arr'][i] in d_s_valence_elmtname:
-                    dos_sum[:,i] += np.abs(doscar_dict['dos_arr'][:,1])
+                if poscar_dict['atom_species_arr'][i_atom] in d_s_valence_elmtname:
+                    dos_sum[:,i_atom] += np.abs(doscar_dict['dos_arr'][:,1])
                     for i_col in range(5,10):
-                        dos_sum[:,i] += np.abs(doscar_dict['dos_arr'][:,i_col])
-                elif poscar_dict['atom_species_arr'][i] in s_p_valence_elmtname:
-                    dos_sum[:,i] += np.abs(doscar_dict['dos_arr'][:,1])
+                        dos_sum[:,i_atom] += np.abs(doscar_dict['dos_arr'][:,i_col])
+                elif poscar_dict['atom_species_arr'][i_atom] in s_p_valence_elmtname:
+                    dos_sum[:,i_atom] += np.abs(doscar_dict['dos_arr'][:,1])
                     for i_col in range(2,5):
-                        dos_sum[:,i] += np.abs(doscar_dict['dos_arr'][:,i_col])
+                        dos_sum[:,i_atom] += np.abs(doscar_dict['dos_arr'][:,i_col])
             if doscar_dict['num_col'] == 19:
                 #For transition elements:
-                if poscar_dict['atom_species_arr'][i] in d_s_valence_elmtname:
-                    dos_sum[:,i] += np.abs(doscar_dict['dos_arr'][:,1])
+                if poscar_dict['atom_species_arr'][i_atom] in d_s_valence_elmtname:
+                    dos_sum[:,i_atom] += np.abs(doscar_dict['dos_arr'][:,1])
                     for i_col in range(9,19):
-                        dos_sum[:,i] += np.abs(doscar_dict['dos_arr'][:,i_col])
-                elif poscar_dict['atom_species_arr'][i] in s_p_valence_elmtname:
-                    dos_sum[:,i] += np.abs(doscar_dict['dos_arr'][:,1])
+                        dos_sum[:,i_atom] += np.abs(doscar_dict['dos_arr'][:,i_col])
+                elif poscar_dict['atom_species_arr'][i_atom] in s_p_valence_elmtname:
+                    dos_sum[:,i_atom] += np.abs(doscar_dict['dos_arr'][:,1])
                     for i_col in range(3,9):
-                        dos_sum[:,i] += np.abs(doscar_dict['dos_arr'][:,i_col])
+                        dos_sum[:,i_atom] += np.abs(doscar_dict['dos_arr'][:,i_col])
             #Integrate over energy spectrum
             for j in range(0,NEDOS):
                 if energy[j] < e_fermi_mod:
-                    estru[i] += dos_sum[j,i] * energy[j] * e_grid
-                    n1[i] += dos_sum[j,i] * e_grid
-            ne1 += n1[i] * 2
-            eband += estru[i]
-            f.write(poscar_dict['atomname_list'][i] + ' ' + '{:.4f}'.format(estru[i]) + '\n')
-            f1.write('{:.4f}'.format(poscar_dict['pos_arr'][i,3]) + ' ' + '{:.4f}'.format(poscar_dict['pos_arr'][i,4]) + ' ' + '{:.4f}'.format(poscar_dict['pos_arr'][i,5]) + ' ' + poscar_dict['atomname_list'][i] + ' ' + '{:.4f}'.format(estru[i]) + '\n')
-##            f.write(poscar_dict['atomname_list'][i] + ' ' + '{:.4f}'.format(estru[i]) + ' ' + '{:.4f}'.format(2*n1[i]) + '\n')
+                    estrut_arr[i_atom] += dos_sum[j,i_atom] * energy[j] * e_grid
+                    n1[i_atom] += dos_sum[j,i_atom] * e_grid
+            ne1 += n1[i_atom] * 2
+            eband += estrut_arr[i_atom]
+            f.write(poscar_dict['atomname_list'][i_atom] + (' '*(formatted_atomname_len-len(poscar_dict['atomname_list'][i_atom]))) +
+                    ' ' + '{:.4f}'.format(estrut_arr[i_atom]) + '\n')
+            f1.write('{:.4f}'.format(poscar_dict['pos_arr'][i_atom,3]) + ' ' + (' '*(formatted_len1-len('{:.4f}'.format(poscar_dict['pos_arr'][i_atom,3])))) +
+                     '{:.4f}'.format(poscar_dict['pos_arr'][i_atom,4]) + ' ' + (' '*(formatted_len1-len('{:.4f}'.format(poscar_dict['pos_arr'][i_atom,4])))) +
+                     '{:.4f}'.format(poscar_dict['pos_arr'][i_atom,5]) + ' ' + (' '*(formatted_len1-len('{:.4f}'.format(poscar_dict['pos_arr'][i_atom,5])))) +
+                     poscar_dict['atomname_list'][i_atom] + ' ' + (' '*(formatted_atomname_len-len(poscar_dict['atomname_list'][i_atom]))) +
+                     '{:.4f}'.format(estrut_arr[i_atom]) + '\n')
+##            f.write(poscar_dict['atomname_list'][i_atom] + ' ' + '{:.4f}'.format(estrut_arr[i_atom]) + ' ' + '{:.4f}'.format(2*n1[i_atom]) + '\n')
 
 ##            #Integrate over energy spectrum: trapezoidal integration
 ##            NEDOS_BelowFermi = 0
@@ -299,10 +459,25 @@ def estruct(doscar_dir, sysname = ''):
 ##            n2[i] = np.trapz(n_Mult_E, dx = e_grid)
 ##            ne2 += n2[i] * 2
 
-        funcs.write_log(logfile, 'Calculated number of valence electrons=' + '{:.2f}'.format(ne1) + '\n')
-        funcs.write_log(logfile, 'Actual number of valence electrons=' + str(valence_electron_num_sum) + '\n')
-        funcs.write_log(logfile, 'eband=' + '{:.2f}'.format(eband) + ' eV' + '\n')
+    # write the POSCAR file with atom property data
+    estruct_poscar_file_name = 'POSCAR_estruct_' + str(sysname) + '_Ef' + str('{:.4f}'.format(e_fermi_mod))
+    added_atom_property_str = 'estruct'
+    added_atom_property_columns_str = 'estruct'
+    vasp_write.write_poscar_with_atom_property(output_poscar_file_name = estruct_poscar_file_name,
+                                               poscar_dict = poscar_dict,
+                                               added_atom_data = estrut_arr,
+                                               added_atom_property_str = added_atom_property_str,
+                                               added_atom_property_columns_str = added_atom_property_columns_str)
 
+    funcs.write_log(logfile, '## Calculated number of valence electrons=' + '{:.2f}'.format(ne1) + '\n')
+    funcs.write_log(logfile, '## Actual number of valence electrons=' + str(valence_electron_num_sum) + '\n')
+    funcs.write_log(logfile, '## eband=' + '{:.2f}'.format(eband) + ' eV' + '\n')
+    funcs.write_log(
+        logfile,
+        'vasp_analyze.estruct(' + '\n' +
+        '    doscar_dir=' + 'r\'' + str(doscar_dir) + '\'' + ',\n' +
+        '    sysname=' + '\'' + str(sysname) + '\'' + ')\n' +
+        '###############################\n')
 ##        NonZeroEiFound = False
 ##        for j in range(0,NEDOS):
 ##            for i in range(0, atom_num):
@@ -685,6 +860,8 @@ def overlap_peak_analyzer(doscar_dir, sysname, atom_indx_list,n_shell,a0, dos_mo
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
+    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    funcs.mkdir(output_dir)
 
     #Default values
     if dos_mode == None:
@@ -709,11 +886,8 @@ def overlap_peak_analyzer(doscar_dir, sysname, atom_indx_list,n_shell,a0, dos_mo
     e_fermi = outcar_params_dict['e_fermi']
     e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
 
-    output_dir = os.getcwd() + '/outputs'
-    funcs.mkdir(output_dir)
-
-    overlap_peak_file = output_dir + '/overlap_paek_' + str(sysname) + '.dat'
-    eff_overlap_energy_file = output_dir + '/EffectiveOverlapEnergy_' + str(sysname) + '.dat'
+    overlap_peak_file = output_dir + '/overlap_peak_' + str(sysname) + '.txt'
+    eff_overlap_energy_file = output_dir + '/effective_overlap_energy_' + str(sysname) + '.txt'
     with open(overlap_peak_file,'w') as f, open(eff_overlap_energy_file,'w') as f1:
         if fermi_shift_zero == True:
             f.write('e_fermi = 0\n')
@@ -793,6 +967,18 @@ def overlap_peak_analyzer(doscar_dir, sysname, atom_indx_list,n_shell,a0, dos_mo
                 f1.write(str(orbitname_list[i_orbit]) + ' = ')
                 f1.write(str(eff_overlap_energy[i_orbit]) + '\n')
             f1.write('sum = ' + str(np.sum(eff_overlap_energy)) + '\n')
+    funcs.write_log(
+        logfile,
+        'dos_mode=' + str(dos_mode) + '\n' +
+        'vasp_analyze.overlap_peak_analyzer(' + '\n' +
+        '    doscar_dir=' + 'r\'' + str(doscar_dir) + '\'' + ',\n' +
+        '    sysname=' + '\'' + str(sysname) + '\'' + ',\n' +
+        '    atom_indx_list=' + str(atom_indx_list) + ',\n' +
+        '    n_shell=' + str(n_shell) + ',\n' +
+        '    a0=' + str(a0) + ',\n' +
+        '    dos_mode=dos_mode' + ',\n' +
+        '    fermi_shift_zero=' + str(fermi_shift_zero) + ')\n' +
+        '###############################\n')
     return 0
 
 
