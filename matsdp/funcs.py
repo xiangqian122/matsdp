@@ -86,12 +86,36 @@ def write_log(logfile,output_str):
        If the log file doesn't exist, then create it and write output to log file.
        Note that output_str must be string format'''
     import os
-    if os.path.isfile(logfile) == False:
+    import time
+    current_time = time.time()
+    formatted_time = time.strftime('## time: %Y%m%d %H:%M:%S',time.localtime(current_time))
+    if os.path.exists(logfile) == False or (os.path.exists(logfile) and os.path.getsize(logfile) == 0):
+        # write header to the log file
         with open(logfile,'w') as logfile_object:
-            logfile_object.write(output_str +  '\n')
+            logfile_object.write(
+                '################log file###############\n' +
+                '# -*- coding: utf-8 -*-' + '\n' +
+                '##possible imports:' + '\n' +
+                'import matsdp' + '\n' +
+                'from matsdp import vasp' + '\n' +
+                'from matsdp import apt' + '\n' +
+                'from matsdp.vasp import vasp_read' + '\n' +
+                'from matsdp.vasp import vasp_plot' + '\n' +
+                'from matsdp.vasp import vasp_analyze' + '\n' +
+                'from matsdp.vasp import vasp_build' + '\n' +
+                'from matsdp.vasp import vasp_write' + '\n' +
+                'from matsdp.apt import apt_read' + '\n' +
+                'from matsdp.apt import apt_plot' + '\n' +
+                '######################################\n')
+        with open(logfile,'a') as logfile_object:
+            logfile_object.write(
+                formatted_time + '\n' +
+                output_str +  '\n')
     else:
         with open(logfile,'a') as logfile_object:
-            logfile_object.write(output_str + '\n')
+            logfile_object.write(
+                formatted_time + '\n' +
+                output_str + '\n')
 
 def rm_empty_lines_in_file(in_file):
     '''

@@ -84,11 +84,13 @@ def substitution(substitution_list_file, poscar_dir):
         subst_elmt = np.array([],dtype=np.str)
         for i in range(i_line,i_line+n_subst):
             #Correspond the atom index with the line number
-            indx = np.argwhere(poscar_dict['elmt_species_arr']==funcs.split_line(s_line[i])[0])
-            atom_indx = poscar_dict['elmt_start_indx_arr'][indx] + int(funcs.split_line(s_line[i])[1]) - 1
-            atom_species_name_subst_arr[atom_indx - 1] = funcs.split_line(s_line[i])[2]
+            substituted_elmt_species = ''.join(filter(str.isalpha, funcs.split_line(s_line[i])[0]))  
+            substituted_atom_subindx = int(''.join(filter(str.isdigit, funcs.split_line(s_line[i])[0])))
+            indx = np.argwhere(poscar_dict['elmt_species_arr']==substituted_elmt_species)
+            atom_indx = poscar_dict['elmt_start_indx_arr'][indx] + substituted_atom_subindx - 1
+            atom_species_name_subst_arr[atom_indx - 1] = funcs.split_line(s_line[i])[1]
             #Find unique substitution element species
-            subst_elmt = np.append(subst_elmt,funcs.split_line(s_line[i])[2])
+            subst_elmt = np.append(subst_elmt,funcs.split_line(s_line[i])[1])
         unique_subst_elmt = np.unique(subst_elmt)
         elmt_species_mod = np.unique(np.append(poscar_dict['elmt_species_arr'], unique_subst_elmt))
         n_elmt_mod = np.array([0]*len(elmt_species_mod),dtype = np.int)
