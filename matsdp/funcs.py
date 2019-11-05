@@ -106,6 +106,7 @@ def write_log(logfile,output_str):
                 'from matsdp.vasp import vasp_write' + '\n' +
                 'from matsdp.apt import apt_read' + '\n' +
                 'from matsdp.apt import apt_plot' + '\n' +
+                'from matsdp.dvm import dvm_build' + '\n' +
                 '######################################\n')
         with open(logfile,'a') as logfile_object:
             logfile_object.write(

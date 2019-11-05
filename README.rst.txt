@@ -41,9 +41,9 @@ pip install matsdp
 Release note
 ------------
 
-- version 0.1.3
+- version 0.1.4
 
- * Date: 20191031
+ * Date: 20191106
 
 ======
 Usage

@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(name =  'matsdp',
-      version = '0.1.3',
+      version = '0.1.4',
       description = 'The materials simulation and data processing toolkit',
       long_description = open('README.rst.txt').read(),
       author = 'Dianwu Wang',
@@ -13,11 +13,13 @@ setup(name =  'matsdp',
       url = 'https://github.com/dianwdw/matsdp',
       packages = ['matsdp',
                   'matsdp.vasp',
-                  'matsdp.apt'
+                  'matsdp.apt',
+                  'matsdp.dvm'
                   ],
       package_dir = {'matsdp': './matsdp',
                      'matsdp.vasp' : './matsdp/vasp',
-                     'matsdp.apt' : './matsdp/apt'
+                     'matsdp.apt' : './matsdp/apt',
+                     'matsdp.dvm' : './matsdp/dvm'
                      },
       platforms = ['all'],
       install_requires=[

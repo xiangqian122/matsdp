@@ -76,11 +76,13 @@ def read_poscar(poscar_dir):
 
         #-Array atom_species_arr and atom coordinates
         atom_species_arr = np.array(['--']*n_atoms,dtype=np.str)
+        atom_elmtindx_arr = np.array([None]*n_atoms)
         atom_subindx_arr = np.array([0]*n_atoms,dtype=np.int)
         atomname_list = ['']*n_atoms
         indx = 0;
         for i in range(0,n_species):
             atom_species_arr[range(indx,indx+poscar_dict['elmt_num_arr'][i])] = [poscar_dict['elmt_species_arr'][i]]*poscar_dict['elmt_num_arr'][i]
+            atom_elmtindx_arr[range(indx,indx+poscar_dict['elmt_num_arr'][i])] = [poscar_dict['elmtindx_arr'][i]]*poscar_dict['elmt_num_arr'][i]
             for j in range(0,poscar_dict['elmt_num_arr'][i]):
                 i_atom = poscar_dict['elmt_start_indx_arr'][i] + j
                 atom_subindx_arr[i_atom-1] = j + 1
@@ -131,13 +133,21 @@ def read_poscar(poscar_dir):
                 pos_arr[i,3] = coord_arr[i,0] * poscar_dict['uni_scale_fac']
                 pos_arr[i,4] = coord_arr[i,1] * poscar_dict['uni_scale_fac']
                 pos_arr[i,5] = coord_arr[i,2] * poscar_dict['uni_scale_fac']
+        poscar_dict['n_atoms'] = int(np.sum(poscar_dict['elmt_num_arr']))
         poscar_dict['atom_species_arr'] = atom_species_arr
+        poscar_dict['atom_elmtindx_arr'] = atom_elmtindx_arr
         poscar_dict['atom_subindx_arr'] = atom_subindx_arr
         poscar_dict['atomname_list'] = atomname_list
         poscar_dict['pos_arr'] = pos_arr
         poscar_dict['coord_arr'] = coord_arr
         poscar_dict['fix_arr'] = fix_arr
         poscar_dict['l_arr'] = l_arr
+        poscar_dict['xlo'] = np.min([poscar_dict['l_arr'][0,0], poscar_dict['l_arr'][1,0], poscar_dict['l_arr'][2,0], 0])
+        poscar_dict['xhi'] = np.max([poscar_dict['l_arr'][0,0], poscar_dict['l_arr'][1,0], poscar_dict['l_arr'][2,0], 0])
+        poscar_dict['ylo'] = np.min([poscar_dict['l_arr'][0,1], poscar_dict['l_arr'][1,1], poscar_dict['l_arr'][2,1], 0])
+        poscar_dict['yhi'] = np.max([poscar_dict['l_arr'][0,1], poscar_dict['l_arr'][1,1], poscar_dict['l_arr'][2,1], 0])
+        poscar_dict['zlo'] = np.min([poscar_dict['l_arr'][0,2], poscar_dict['l_arr'][1,2], poscar_dict['l_arr'][2,2], 0])
+        poscar_dict['zhi'] = np.max([poscar_dict['l_arr'][0,2], poscar_dict['l_arr'][1,2], poscar_dict['l_arr'][2,2], 0])       
         poscar_dict['added_atom_data'] = added_atom_data_arr
         poscar_dict['added_atom_property'] = None
         poscar_dict['added_atom_property_columns'] = None

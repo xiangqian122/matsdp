@@ -11,6 +11,7 @@ from matsdp.vasp import vasp_build
 from matsdp.vasp import vasp_write
 from matsdp.apt import apt_read
 from matsdp.apt import apt_plot
+from matsdp.dvm import dvm_build
 
 run_nn_map = True
 run_simple_cna = True
@@ -24,6 +25,7 @@ run_overlap_peak_analyzer = True
 run_estruct = True
 run_write_poscar_with_force = True
 run_plot_concentration_profile = True
+run_dvm_build = True
 
 ###############
 # nn_map_Calc
@@ -461,4 +463,16 @@ if run_plot_concentration_profile == True:
         fig_height = 5,
         fig_dpi = 600,
         fig_format = 'png',
+        )
+
+#################################
+# dvm build
+#################################
+if run_dvm_build == True:
+    dvm_build.sphere_poscar(
+        poscar_dir = './tests/vasp/CONTCAR',
+        origin_atom_name = 'Re1',
+        radius = 7,
+        include_mirror_atoms = True,
+        dvm_incar_file_name = 'dvm_example'
         )
