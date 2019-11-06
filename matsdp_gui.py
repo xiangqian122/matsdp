@@ -36,7 +36,7 @@ formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time_start))
 funcs.write_log(logfile,'## Job started at ' + formatted_time)
 
 program_name = 'matsdp'
-version = '0.1.4'
+version = '0.1.5'
 authors = 'dianwuwang@163.com'
 
 root = tk.Tk()
@@ -83,6 +83,20 @@ def on_run_subst_button_clicked(event):
     child_toplevel.geometry('1020x130+20+25')
     
     subst_subtoolkit(child_toplevel)
+    return 'break'
+
+def on_run_vasp_selection_sphere_button_clicked(event):
+    '''
+    Description:
+        selection_sphere()
+    '''
+    import tkinter as tk
+    funcs.write_log(logfile,'## selection_sphere GUI\n')
+    child_toplevel = tk.Toplevel(root)
+    tk.Label(child_toplevel, text='selection_sphere')
+    child_toplevel.geometry('1020x130+20+25')
+    
+    vasp_selection_sphere_subtoolkit(child_toplevel)
     return 'break'
 
 def on_run_plot_dos_button_clicked(event):
@@ -175,7 +189,7 @@ def on_run_read_py_script_button_clicked(event):
 ##############################
 class read_py_script_subtoolkit:
     def __init__(self, root):
-        self.subtoolkitname = 'read .py script'
+        self.subtoolkitname = 'read .py or *.log file'
         self.max_num_of_files = 1
         
         self.root = root
@@ -259,14 +273,14 @@ class read_py_script_subtoolkit:
         left_frame.grid(row = 10, column = 0, columnspan = 6, sticky = tk.W + tk.E + tk.N + tk.S)
         for i in range(0, self.max_num_of_files):
             if i == 0:
-                tk.Label(left_frame, text = '*.py file:').grid(row = i, column = 0, padx =2, pady = 4)
+                tk.Label(left_frame, text = '*.py or *.log file:').grid(row = i, column = 0, padx =2, pady = 4)
             open_file_button = tk.Button(left_frame, text = 'Find', command = self.on_open_file_button_clicked(i))
             open_file_button.grid(row = i, column = 1, padx = 5, pady =4)
             filename_str = tk.StringVar()
             self.load_file_entry_widget[i] = tk.Entry(left_frame, width = 120, textvariable= filename_str)
             self.load_file_entry_widget[i].grid(row = i, column =4, padx = 6, pady =4)
             if i == 0:
-                filename_str.set('Enter or choose the *.py file (the *.py file needs to be in the same directory as the current executable).')
+                filename_str.set('Enter or choose the *.py or *.log file (the file needs to be in the same directory as the current executable).')
 
     def create_top_menu(self):
         self.menu_bar = tk.Menu(self.root)
@@ -532,7 +546,7 @@ class simple_cna_subtoolkit:
         self.create_run_bar()
 
 ###############################
-#vasp_build
+#vasp_build -- substitution
 ###############################
 class subst_subtoolkit:
     def __init__(self, root):
@@ -631,7 +645,148 @@ class subst_subtoolkit:
         self.create_top_menu()
         self.create_run_bar()
 
+##########################
+# vasp_selection_sphere
+##########################
+class vasp_selection_sphere_subtoolkit:
+    def __init__(self, root):
+        self.subtoolkitname = 'vasp_selection_sphere'
+        self.max_num_of_files = 1
+        self.initial_origin_atom_name = 'Ni1'
+        self.initial_radius = 7.0
+        self.initial_output_file_name = 'example'
 
+        self.include_mirror_atoms = False
+        
+        self.root = root
+        self.root.title(self.subtoolkitname)
+        self.all_input_params = [None] * self.max_num_of_files
+        self.current_file_indx = 0
+        self.load_file_entry_widget = [None] * self.max_num_of_files
+        self.init_all_input_params()
+        self.init_gui()
+
+
+    def get_input_dict(self):
+        return self.all_input_params[self.current_file_indx]
+    def get_list_of_file_paths(self):
+        return self.get_input_dict()['list_of_file_paths']
+    def set_file_path(self, file_indx, file_path):
+        self.get_list_of_file_paths()[file_indx] = file_path
+    def init_all_input_params(self):
+        self.all_input_params = [{'list_of_file_paths': [None] * self.max_num_of_files,
+                                'origin_atom_name' : self.initial_origin_atom_name,
+                                'radius' : self.initial_radius,
+                                'output_file_name' : self.initial_output_file_name
+                                }
+                               for k in range(self.max_num_of_files)]
+    def on_open_file_button_clicked(self, file_indx):  
+        def event_handler():
+            file_path = tkinter.filedialog.askopenfilename()
+            if not file_path:
+                return
+            self.set_file_path(file_indx, file_path)
+            self.display_all_file_paths()
+        return event_handler
+    def display_all_file_paths(self):
+        '''
+        Description:
+            display the file path in each entry box
+        '''            
+        for indx, file_path in enumerate(self.get_list_of_file_paths()):
+            self.display_file_path(indx, file_path)            
+    def display_file_path(self, text_widget_indx, file_path):
+        '''
+        Description:
+            display the file path in the TextWidgetNum-th entry box
+        '''
+        if file_path is None:
+            return
+        self.load_file_entry_widget[text_widget_indx].delete(0, tk.END)
+        self.load_file_entry_widget[text_widget_indx].insert(0, file_path)
+
+    def on_include_mirror_atoms_changed(self,value):
+        self.include_mirror_atoms = value
+
+    def on_run_button_clicked(self):
+        for i in range(0, self.max_num_of_files):
+            self.get_input_dict()['list_of_file_paths'][i] = self.load_file_entry_widget[i].get()
+        self.get_input_dict()['origin_atom_name'] = self.origin_atom_name_value_widget.get()
+        self.get_input_dict()['radius'] = self.radius_value_widget.get()
+        self.get_input_dict()['output_file_name'] = self.output_file_name_value_widget.get()
+        
+        poscar_dir = self.get_input_dict()['list_of_file_paths'][0]
+        origin_atom_name = str(self.get_input_dict()['origin_atom_name'])
+        radius = float(self.get_input_dict()['radius'])
+        self.include_mirror_atoms = funcs.convert_bool(self.include_mirror_atoms_str.get())
+        include_mirror_atoms = self.include_mirror_atoms
+        output_file_name = str(self.get_input_dict()['output_file_name'])
+        
+        vasp_build.selection_sphere(poscar_dir, origin_atom_name, radius, include_mirror_atoms, output_file_name)
+        return 'break'
+    
+    def create_run_bar(self):
+        run_bar_frame = tk.Frame(self.root, height = 15)
+        start_row = self.max_num_of_files + 10
+        run_bar_frame.grid(row = start_row, columnspan = 13, sticky = tk.W + tk.E, padx = 15, pady = 10)
+        self.run_button = tk.Button(run_bar_frame, text = 'Run', compound = 'left', command = self.on_run_button_clicked)
+        self.run_button.grid(row = start_row, column = 1, padx = 2)
+        self.run_button.configure(background='lightgreen')
+    def create_left_file_loader(self):
+        left_frame = tk.Frame(self.root)
+        left_frame.grid(row = 10, column = 0, columnspan = 6, sticky = tk.W + tk.E + tk.N + tk.S)
+        for i in range(0, self.max_num_of_files):
+            tk.Label(left_frame, text = 'POSCAR:').grid(row = i, column = 0, padx =2, pady = 4)
+            open_file_button = tk.Button(left_frame, text='Find',command = self.on_open_file_button_clicked(i))
+            open_file_button.grid(row = i, column = 1, padx = 5, pady =4)
+            filename_str = tk.StringVar()
+            self.load_file_entry_widget[i] = tk.Entry(left_frame, width = 120, textvariable= filename_str)
+            self.load_file_entry_widget[i].grid(row = i, column =4, padx = 6, pady =4)
+            filename_str.set('Enter or choose POSCAR path here')
+    def create_top_bar(self):
+        top_bar_frame = tk.Frame(self.root, height = 25)
+        top_bar_frame.grid(row = 0, columnspan = 12, rowspan = 10, padx = 5, pady = 5)
+
+        tk.Label(top_bar_frame, text = 'origin_atom_name=').grid(row = 0, column =0)
+        origin_atom_name_str = tk.StringVar()
+        self.origin_atom_name_value_widget = tk.Entry(top_bar_frame, width = 7, textvariable = origin_atom_name_str)
+        self.origin_atom_name_value_widget.grid(row = 0, column = 1, padx = 3, pady = 2)
+        origin_atom_name_str.set(self.get_input_dict()['origin_atom_name'])
+
+        tk.Label(top_bar_frame, text = 'radius=').grid(row = 0, column =2)
+        radius_str = tk.StringVar()
+        self.radius_value_widget = tk.Entry(top_bar_frame, width = 8, textvariable = radius_str)
+        self.radius_value_widget.grid(row = 0, column = 3, padx = 3, pady = 2)
+        radius_str.set(self.get_input_dict()['radius'])
+
+        tk.Label(top_bar_frame,text = 'include_mirror_atoms:').grid(row = 0, column = 4, padx =2 , pady = 4)
+        self.include_mirror_atoms_str = tk.StringVar()
+        options = ['True','False']
+        self.include_mirror_atoms_option_menu_widget = tk.OptionMenu(top_bar_frame,self.include_mirror_atoms_str,*options, command = self.on_include_mirror_atoms_changed)
+        self.include_mirror_atoms_option_menu_widget.grid(row = 0, column =5, padx = 6, pady =4, sticky = tk.W + tk.E)
+        self.include_mirror_atoms_str.set(str(self.include_mirror_atoms))
+
+        tk.Label(top_bar_frame, text = 'output_file_name=').grid(row = 0, column =6)
+        output_file_name_str = tk.StringVar()
+        self.output_file_name_value_widget = tk.Entry(top_bar_frame, width = 45, textvariable = output_file_name_str)
+        self.output_file_name_value_widget.grid(row = 0, column = 7, padx = 3, pady = 2)
+        output_file_name_str.set(self.get_input_dict()['output_file_name'])
+
+    def create_top_menu(self):
+        self.menu_bar = tk.Menu(self.root)
+        self.file_menu = tk.Menu(self.menu_bar, tearoff = 0)
+        self.file_menu.add_command(label = 'Exit', accelerator='Alt+F4', command=exit_editor)
+        self.menu_bar.add_cascade(label = 'File', menu = self.file_menu)
+        self.about_menu = tk.Menu(self.menu_bar, tearoff = 0)
+        self.about_menu.add_command(label = 'About', command=display_about_messagebox)
+        self.about_menu.add_command(label = 'Help', command=display_help_messagebox)
+        self.menu_bar.add_cascade(label = 'About', menu = self.about_menu)
+        self.root.config(menu = self.menu_bar)
+    def init_gui(self):
+        self.create_left_file_loader()
+        self.create_top_menu()
+        self.create_top_bar()
+        self.create_run_bar()
 
 ###################
 #plot_dos
@@ -2164,10 +2319,17 @@ root.config(menu=menu_bar)
 root.protocol('WM_DELETE_WINDOW', exit_editor)
 
 #####################
-#Substitution button
+#substitution button
 #####################
 subst_button = tk.Button(root, text='VASP: Build model by substitution', anchor = tk.W, compound = 'left', width=37)
 subst_button.bind('<Button-1>', on_run_subst_button_clicked)
+subst_button.pack()
+
+#########################
+#selection_sphere button
+#########################
+subst_button = tk.Button(root, text='VASP: Build model by selection (sphere)', anchor = tk.W, compound = 'left', width=37)
+subst_button.bind('<Button-1>', on_run_vasp_selection_sphere_button_clicked)
 subst_button.pack()
 
 #####################
@@ -2222,7 +2384,7 @@ plot_proxigram_csv_button.pack()
 #####################
 #read_py_script button
 #####################
-read_py_script_button = tk.Button(root, text='Read *.py script', anchor = tk.W, compound = 'left', width=37)
+read_py_script_button = tk.Button(root, text='Read *.py or *.log file', anchor = tk.W, compound = 'left', width=37)
 read_py_script_button.bind('<Button-1>', on_run_read_py_script_button_clicked)
 read_py_script_button.pack()
 
