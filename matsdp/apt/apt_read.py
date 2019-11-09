@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-def read_proxigram_csv(proxigram_csv_dir):
+def read_proxigram_csv(proxigram_csv_file_path):
     '''
     read the proxigram csv file.
     '''
     import numpy as np
     from .. import funcs
-    with open(proxigram_csv_dir,'r') as f:
+    with open(proxigram_csv_file_path,'r') as f:
         line = f.readlines()
         line_num = len(line)
         row_num = len(funcs.split_line(line = line[0], separator = ','))

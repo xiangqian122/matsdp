@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-def read_poscar(poscar_dir):
+def read_poscar(poscar_file_path):
     '''
     Description:
         Read information from POSCAR file
     Args:
-        @.poscar_dir: String format. The directory of the POSCAR file. It can either be full path or relative path
+        @.poscar_file_path: String format. The directory of the POSCAR file. It can either be full path or relative path
     Return:
         poscar_dict
         l_arr: Numpy float array(np.float). Dimension is 3*3
@@ -23,9 +23,9 @@ def read_poscar(poscar_dir):
     import time
     from .. import funcs
 
-    poscar_dir = os.path.abspath(poscar_dir)
+    poscar_file_path = os.path.abspath(poscar_file_path)
     poscar_dict = {}
-    with open(poscar_dir) as f:
+    with open(poscar_file_path) as f:
         lines = f.readlines()
         poscar_dict['uni_scale_fac'] = float(funcs.split_line(lines[1])[0])
         box_len_arr = np.array([0.0]*3*3,dtype = np.float)
@@ -95,7 +95,7 @@ def read_poscar(poscar_dir):
             num_added_atom_data_column = num_atom_data_column - 6
         elif poscar_dict['slet_dyn_on'] == False:
             num_added_atom_data_column = num_atom_data_column - 3
-        added_atom_data_arr = np.array([None]*n_atoms*num_added_atom_data_column,dtype = np.float)
+        added_atom_data_arr = np.array([None]*n_atoms*num_added_atom_data_column)
         added_atom_data_arr.shape = n_atoms,num_added_atom_data_column        
         #Atom coordinates
         #pos_arr is the coordinates of all the atoms, first three columns are in Direct coordinate, last columns are in Cartesian coordinate
@@ -134,10 +134,12 @@ def read_poscar(poscar_dir):
                 pos_arr[i,4] = coord_arr[i,1] * poscar_dict['uni_scale_fac']
                 pos_arr[i,5] = coord_arr[i,2] * poscar_dict['uni_scale_fac']
         poscar_dict['n_atoms'] = int(np.sum(poscar_dict['elmt_num_arr']))
+        poscar_dict['num_elmts'] = len(atom_species_arr)
         poscar_dict['atom_species_arr'] = atom_species_arr
         poscar_dict['atom_elmtindx_arr'] = atom_elmtindx_arr
         poscar_dict['atom_subindx_arr'] = atom_subindx_arr
         poscar_dict['atomname_list'] = atomname_list
+        poscar_dict['atom_indx_arr'] = np.array([ x + 1 for x in range(0, poscar_dict['n_atoms'])])  # atom index start from 1
         poscar_dict['pos_arr'] = pos_arr
         poscar_dict['coord_arr'] = coord_arr
         poscar_dict['fix_arr'] = fix_arr
@@ -156,12 +158,12 @@ def read_poscar(poscar_dir):
             poscar_dict['added_atom_property_columns'] = funcs.split_line(line = poscar_dict['header'][0], separator = ':')[-1]
     return poscar_dict
 
-def read_outcar(outcar_dir):
+def read_outcar(outcar_file_path):
     '''
     Description:
         Read information from OUTCAR file
     Args:
-        outcar_dir: String format. The directory of the OUTCAR file. It can either be full path or relative path
+        outcar_file_path: String format. The directory of the OUTCAR file. It can either be full path or relative path
     Return:
         @.incar_params_dict
         @.outcar_params_dict
@@ -170,24 +172,24 @@ def read_outcar(outcar_dir):
     import numpy as np
     from .. import funcs
 
-    outcar_dir = os.path.abspath(outcar_dir)
+    outcar_file_path = os.path.abspath(outcar_file_path)
     incar_params_dict = {}
     outcar_params_dict = {}
-    incar_params_dict['LORBIT'] = int(funcs.split_line(line=funcs.split_line(line=funcs.grep('LORBIT',outcar_dir),separator='=')[-1],separator = ' ')[0])
-    outcar_params_dict['e_fermi'] = float(funcs.split_line(line=funcs.split_line(line=funcs.grep('E-fermi',outcar_dir),separator=':')[1],separator = ' ')[0])
-    outcar_params_dict['XC(G=0)'] = float(funcs.split_line(line=funcs.split_line(line=funcs.grep('E-fermi',outcar_dir),separator=':')[2],separator = ' ')[0])
-    incar_params_dict['ISPIN'] = int(funcs.split_line(line=funcs.split_line(line=funcs.grep('ISPIN',outcar_dir),separator='=')[-1],separator = ' ')[0])
-    outcar_params_dict['alpha+bet'] = float(funcs.split_line(line = funcs.grep('E-fermi',outcar_dir), separator = ':')[-1].strip())
+    incar_params_dict['LORBIT'] = int(funcs.split_line(line=funcs.split_line(line=funcs.grep('LORBIT',outcar_file_path),separator='=')[-1],separator = ' ')[0])
+    outcar_params_dict['e_fermi'] = float(funcs.split_line(line=funcs.split_line(line=funcs.grep('E-fermi',outcar_file_path),separator=':')[1],separator = ' ')[0])
+    outcar_params_dict['XC(G=0)'] = float(funcs.split_line(line=funcs.split_line(line=funcs.grep('E-fermi',outcar_file_path),separator=':')[2],separator = ' ')[0])
+    incar_params_dict['ISPIN'] = int(funcs.split_line(line=funcs.split_line(line=funcs.grep('ISPIN',outcar_file_path),separator='=')[-1],separator = ' ')[0])
+    outcar_params_dict['alpha+bet'] = float(funcs.split_line(line = funcs.grep('E-fermi',outcar_file_path), separator = ':')[-1].strip())
 
-    num_elmt_type = len(funcs.split_line(line=funcs.split_line(line=funcs.grep('ions per type',outcar_dir),separator='=')[-1],separator=' '))
-    num_elmt_type_list = funcs.split_line(line=funcs.split_line(line=funcs.grep('ions per type',outcar_dir),separator='=')[-1],separator=' ')[:]
+    num_elmt_type = len(funcs.split_line(line=funcs.split_line(line=funcs.grep('ions per type',outcar_file_path),separator='=')[-1],separator=' '))
+    num_elmt_type_list = funcs.split_line(line=funcs.split_line(line=funcs.grep('ions per type',outcar_file_path),separator='=')[-1],separator=' ')[:]
     n_atoms = np.sum([int(item) for item in num_elmt_type_list])
-    num_ionic_step = funcs.grep('TOTAL-FORCE',outcar_dir).count('TOTAL-FORCE')
+    num_ionic_step = funcs.grep('TOTAL-FORCE',outcar_file_path).count('TOTAL-FORCE')
     force_arr = np.array([None] * num_ionic_step * n_atoms * 6)
     force_arr.shape = num_ionic_step , n_atoms , 6
     outcar_params_dict['num_ionic_step'] = num_ionic_step
 
-    with open(outcar_dir,'r') as f:
+    with open(outcar_file_path,'r') as f:
         line = f.readlines()
         i_ionic_step = 0
         for i in range(len(line)):
@@ -199,7 +201,7 @@ def read_outcar(outcar_dir):
     outcar_params_dict['force'] = force_arr
     return incar_params_dict, outcar_params_dict
 
-def read_doscar(doscar_dir, atom_indx, save_dos_arr = False):
+def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
     '''
     Description:
         Read information from DOSCAR file.
@@ -213,7 +215,7 @@ def read_doscar(doscar_dir, atom_indx, save_dos_arr = False):
             num_col = 17. energy, s, py, pz, px, dxy, dyz, dz2, dxz, dx2, f-3, f-2, f-1, f0, f1, f2, f3 
             num_col = 33. energy, s(up), s(dw), py(up), py(dw), pz(up), pz(dw), px(up), px(dw), dxy(up), dxy(dw), dyz(up), dyz(dw), dz2(up), dz2(dw), dxz(up), dxz(dw), dx2(up), dx2(dw) , f-3(up) , f-3(dw), f-2(up), f-2(dw), f-1(up), f-1(dw), f0(up), f0(dw), f1(up), f1(dw), f2(up), f2(dw), f3(up), f3(dw) 
     Args:
-        @.poscar_dir: String format. The directory of the DOSCAR file. It can either be full path or relative path
+        @.doscar_file_path: String format. The directory of the DOSCAR file. It can either be full path or relative path
         @.atom_indx: Integer format. The real atom index in the POSCAR. If there are N atoms then the atom indices are frim 1 to N. Note that atom_indx = 0 means to extract TDOS inoformation
         @save_dos_arr: logical value. Determine whether to save the dos_arr to a file or not.
     Return:
@@ -227,10 +229,10 @@ def read_doscar(doscar_dir, atom_indx, save_dos_arr = False):
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
 
-    doscar_dir = os.path.abspath(doscar_dir)
-    workdir, dos_file = funcs.file_path_name(doscar_dir)
+    doscar_file_path = os.path.abspath(doscar_file_path)
+    workdir, dos_file = funcs.file_path_name(doscar_file_path)
     #Also Required files are OUTCAR and POSCAR
-    with open(doscar_dir,'r') as f:
+    with open(doscar_file_path,'r') as f:
         lines = f.readlines()
         n_atoms = int(funcs.split_line(lines[0])[0])
         NEDOS = int(funcs.split_line(lines[5])[2])
@@ -366,12 +368,12 @@ def read_doscar(doscar_dir, atom_indx, save_dos_arr = False):
             doscar_dict['LDOS_dw'] = doscar_dict['s_dw'] + doscar_dict['p_dw'] + doscar_dict['d_dw'] + doscar_dict['f_dw']
     return doscar_dict
 
-def read_oszicar(oszicar_dir, dpi = 100):
+def read_oszicar(oszicar_file_path, dpi = 100):
     '''Read OSZICAR'''
     import numpy as np
     import matplotlib.pyplot as plt
     from .. import funcs
-    with open(oszicar_dir,'r') as f:
+    with open(oszicar_file_path,'r') as f:
         line = f.readlines()
 
     ionic_step_num = 0

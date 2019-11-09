@@ -4,13 +4,23 @@ import sys
 package_path = './'
 sys.path.insert(0, os.path.abspath(package_path))
 
+from matsdp import funcs
+from matsdp import convert
 from matsdp.vasp import vasp_read
 from matsdp.vasp import vasp_plot
 from matsdp.vasp import vasp_analyze
 from matsdp.vasp import vasp_build
 from matsdp.vasp import vasp_write
+from matsdp.vasp import vasp_default
+from matsdp.vasp import vasp_help
 from matsdp.apt import apt_read
 from matsdp.apt import apt_plot
+from matsdp.dvm import dvm_read
+from matsdp.dvm import dvm_build
+from matsdp.dvm import dvm_analyze
+from matsdp.dvm import dvm_write
+from matsdp.dvm import dvm_default
+from matsdp.dvm import dvm_help
 
 run_nn_map = True
 run_simple_cna = True
@@ -25,13 +35,15 @@ run_overlap_peak_analyzer = True
 run_estruct = True
 run_write_poscar_with_force = True
 run_plot_concentration_profile = True
+run_create_multiple_dvm_jobs = True
+run_poscar2dvmincar = True
 
 ###############
 # nn_map_Calc
 ###############
 if run_nn_map == True:
     vasp_analyze.nn_map(
-        poscar_dir = './tests/vasp/POSCAR',
+        poscar_file_path = './tests/vasp/POSCAR',
         a0 = 3.545,
         n_shell = 2,
         )
@@ -40,12 +52,12 @@ if run_nn_map == True:
 ########################
 if run_simple_cna == True:
     vasp_analyze.simple_cna(
-        poscar_dir = './tests/vasp/POSCAR',
+        poscar_file_path = './tests/vasp/POSCAR',
         a0 = 3.545,
         common_neighbor_elmt_list = ['Re', 'W', 'Ta','Ni']
         )
     vasp_plot.plot_poscar(
-        poscar_dir = './outputs/POSCAR_simple_common_neighbor_pair_count_ReNi',
+        poscar_file_path = './outputs/POSCAR_simple_common_neighbor_pair_count_ReNi.vasp',
         euler_angle_type = 'zyz',
         phi = -3,
         theta = 5,
@@ -67,7 +79,7 @@ if run_simple_cna == True:
         colorbar_alignment = 'vertical'
         )
     vasp_plot.plot_poscar(
-        poscar_dir = './outputs/POSCAR_simple_common_neighbor_pair_count_ReNi',
+        poscar_file_path = './outputs/POSCAR_simple_common_neighbor_pair_count_ReNi.vasp',
         euler_angle_type = 'zyz',
         phi = -3,
         theta = 5,
@@ -95,7 +107,7 @@ if run_simple_cna == True:
 if run_substitute == True:
     vasp_build.substitution(
         substitution_list_file = './tests/vasp/example.subst',
-        poscar_dir = './tests/vasp/POSCAR_NoDope',
+        poscar_file_path = './tests/vasp/POSCAR_NoDope',
         )
 ###################
 # run_replace_elmt
@@ -103,7 +115,7 @@ if run_substitute == True:
 if run_replace_elmt == True:
     vasp_build.rep_elmt(
         substitution_list_file = './tests/vasp/example.subst',
-        poscar_dir = './tests/vasp/POSCAR_NoDope',
+        poscar_file_path = './tests/vasp/POSCAR_NoDope',
         old_elmt= 'Re',
         elmt_group = ['W','Cr'],
         )
@@ -112,7 +124,7 @@ if run_replace_elmt == True:
 #################################
 if run_selection_sphere == True:
     vasp_build.selection_sphere(
-        poscar_dir = './tests/vasp/CONTCAR',
+        poscar_file_path = './tests/vasp/CONTCAR',
         origin_atom_name = 'Re1',
         radius = 7,
         include_mirror_atoms = False,
@@ -122,9 +134,9 @@ if run_selection_sphere == True:
 #plot_dos
 ###########
 if run_plot_dos == True:
-    DOS1_Dir = './tests/vasp/DOSCAR'
+    dos1_file_path = './tests/vasp/DOSCAR'
     vasp_plot.plot_dos(
-        atom_doscar_dir_list = [DOS1_Dir],
+        atom_doscar_file_path_list = [dos1_file_path],
         atom_sysname_list = ['C5'],
         atom_indx_list = ['Ni1'],
         atom_palette_list = ['black'],
@@ -148,7 +160,7 @@ if run_plot_dos == True:
         fig_dpi = 600,
         )
     vasp_plot.plot_dos(
-        atom_doscar_dir_list = [DOS1_Dir, DOS1_Dir],
+        atom_doscar_file_path_list = [dos1_file_path, dos1_file_path],
         atom_sysname_list = ['C1', 'C1'],
         atom_indx_list = ['Ni1', 'Re1'],
         atom_palette_list = ['black', 'red'],
@@ -173,7 +185,7 @@ if run_plot_dos == True:
         )
 
     vasp_plot.plot_dos(
-        atom_doscar_dir_list = [DOS1_Dir, DOS1_Dir],
+        atom_doscar_file_path_list = [dos1_file_path, dos1_file_path],
         atom_sysname_list = ['C1', 'C1'],
         atom_indx_list = ['Ni2', 'Re1'],
         atom_palette_list = ['black', 'red'],
@@ -198,7 +210,7 @@ if run_plot_dos == True:
         )
 
     vasp_plot.plot_dos(
-        atom_doscar_dir_list = [DOS1_Dir, DOS1_Dir],
+        atom_doscar_file_path_list = [dos1_file_path, dos1_file_path],
         atom_sysname_list = ['C1', 'C1'],
         atom_indx_list = ['Ni2', 'Re1'],
         atom_palette_list = ['black', 'red'],
@@ -224,7 +236,7 @@ if run_plot_dos == True:
 
 
     vasp_plot.plot_dos(
-        atom_doscar_dir_list = [DOS1_Dir, DOS1_Dir, DOS1_Dir, DOS1_Dir],
+        atom_doscar_file_path_list = [dos1_file_path, dos1_file_path, dos1_file_path, dos1_file_path],
         atom_sysname_list = ['C1', 'C1', 'C1', 'C1'],
         atom_indx_list = ['Ni2', 'Re1', 'Ni1', 'Ni5'],
         atom_palette_list = ['black', 'red', 'blue', 'green'],
@@ -248,7 +260,7 @@ if run_plot_dos == True:
         fig_dpi = 600,
         )
     vasp_plot.plot_dos(
-        atom_doscar_dir_list = [DOS1_Dir, DOS1_Dir, DOS1_Dir, DOS1_Dir],
+        atom_doscar_file_path_list = [dos1_file_path, dos1_file_path, dos1_file_path, dos1_file_path],
         atom_sysname_list = ['C1', 'C1', 'C1', 'C1'],
         atom_indx_list = ['Ni2', 'Re1', 'Ni1', 'Ni5'],
         atom_palette_list = ['black', 'red', 'blue', 'green'],
@@ -276,7 +288,7 @@ if run_plot_dos == True:
 #########################
 if run_overlap_peak_analyzer == True:
     vasp_analyze.overlap_peak_analyzer(
-        doscar_dir = './tests/vasp/DOSCAR',
+        doscar_file_path = './tests/vasp/DOSCAR',
         sysname = 'DOS1',
         atom_indx_list = ['Ni1','Re1'],
         n_shell = 2,
@@ -288,11 +300,11 @@ if run_overlap_peak_analyzer == True:
 #Get DOS files with DOS info
 #############################
 if run_get_doscar == True:
-    poscar_dir = './tests/vasp/POSCAR'
-    poscar_dict = vasp_read.read_poscar(poscar_dir)  
+    poscar_file_path = './tests/vasp/POSCAR'
+    poscar_dict = vasp_read.read_poscar(poscar_file_path)  
     for atom_indx in range(0, len(poscar_dict['atom_species_arr']) + 1):
         vasp_read.read_doscar(
-            doscar_dir = './tests/vasp/DOSCAR',
+            doscar_file_path = './tests/vasp/DOSCAR',
             atom_indx = atom_indx,
             save_dos_arr = True,
             )
@@ -302,7 +314,7 @@ if run_get_doscar == True:
 #########################
 if run_plot_poscar == True:
     vasp_plot.plot_poscar(
-        poscar_dir = './tests/vasp/POSCAR',
+        poscar_file_path = './tests/vasp/POSCAR',
         euler_angle_type = 'zyz',
         phi = -3,
         theta = 5,
@@ -330,12 +342,12 @@ if run_plot_poscar == True:
 if run_write_poscar_with_force == True:
     # write_poscar_with_force
     vasp_write.write_poscar_with_force(
-        outcar_dir = './tests/vasp/OUTCAR',
+        outcar_file_path = './tests/vasp/OUTCAR',
         ionic_step = 'last',
         output_poscar_file_name = None
         )
     vasp_plot.plot_poscar(
-        poscar_dir = './outputs/POSCAR_with_force_step_1',
+        poscar_file_path = './tests/vasp/POSCAR_with_force_step_1.vasp',
         euler_angle_type = 'zyz',
         phi = -3,
         theta = 5,
@@ -357,7 +369,7 @@ if run_write_poscar_with_force == True:
         colorbar_alignment = 'vertical'
         )
     vasp_plot.plot_poscar(
-        poscar_dir = './outputs/POSCAR_with_force_step_1_absforce',
+        poscar_file_path = './tests/vasp/POSCAR_with_force_step_1_absforce.vasp',
         euler_angle_type = 'zyz',
         phi = -3,
         theta = 5,
@@ -411,11 +423,11 @@ if run_plot_poscar_for_workdir == True:
 ##############
 if run_estruct == True:
     vasp_analyze.estruct(
-        doscar_dir = './tests/vasp/DOSCAR',
+        doscar_file_path = './tests/vasp/DOSCAR',
         sysname = 'DOS1',
         )
     vasp_plot.plot_poscar(
-        poscar_dir = './outputs/POSCAR_estruct_DOS1_Ef-7.0888',
+        poscar_file_path = './outputs/POSCAR_estruct_DOS1_Ef-7.0888.vasp',
         euler_angle_type = 'zyz',
         phi = -3,
         theta = 5,
@@ -438,7 +450,7 @@ if run_estruct == True:
         )
 
     vasp_plot.plot_poscar(
-        poscar_dir = './outputs/POSCAR_estruct_DOS1_Ef-7.0888',
+        poscar_file_path = './outputs/POSCAR_estruct_DOS1_Ef-7.0888.vasp',
         euler_angle_type = 'zyz',
         phi = -3,
         theta = 5,
@@ -465,7 +477,7 @@ if run_estruct == True:
 #################################
 if run_plot_concentration_profile == True:    
     apt_plot.plot_proxigram_csv(
-        proxigram_csv_dir = './tests/apt/profile-interface0.csv',
+        proxigram_csv_file_path = './tests/apt/profile-interface0.csv',
         sysname = 'M2',
         visible_elmt_list = ['Ni','Al'],
         interplation_on = False,
@@ -473,4 +485,25 @@ if run_plot_concentration_profile == True:
         fig_height = 5,
         fig_dpi = 600,
         fig_format = 'png',
+        )
+
+#################################
+# create multiple dvm jobs
+#################################
+if run_create_multiple_dvm_jobs == True:
+    poscar_file_path_dict = {}
+    poscar_file_path_dict['dvm_example'] = './tests/vasp/CONTCAR'
+    dvm_build.create_multiple_dvm_jobs(
+        poscar_file_path_dict = poscar_file_path_dict,
+        origin_atom_name_list = ['Re1', 'Ni5'],
+        radius = 8,
+        elmt_ind_file_dir = './tests/dvm/'
+        )
+
+#################################
+# poscar2dvmincar
+#################################
+if run_poscar2dvmincar == True:
+    convert.poscar2dvmincar(
+        poscar_path = './tests/vasp/CONTCAR'
         )

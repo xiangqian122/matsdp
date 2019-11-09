@@ -19,20 +19,31 @@ Functions
 
 - Vienna ab-initio simulation package (VASP) analyzing and postprocessing tools 
 
- * vasp_build: Build model by atom substitution or atom selection based on a POSCAR file.
- * vasp_read: Read DOSCAR, OUTCAR, POSCAR, and OSZICAR
- * vasp_plot.plot_poscar: Plot POSCAR/CONTCAR model (also support color mapping of atom properties), Required files: POSCAR/CONTCAR or POSCAR with data of atom properties
- * vasp_plot.plot_dos: Plot DOS (PDOS, LDOS, TDOS) information. Required files: DOSCAR, OUTCAR, POSCAR
- * vasp_analyze.nn_map: Calculate the nearest neighbor information. Required file: POSCAR
- * vasp_analyze.simple_cna: Perform simple common neighbor analysis
- * vasp_analyze.estruct: Calculate structural energy (E_struct). Required files: CONTCAR, OUTCAR, POSCAR
- * vasp_write.write_poscar_with_force: Write atom force information into the POSCAR
+ * Build model by atom substitution or atom selection based on a POSCAR file
+ * Read information DOSCAR, OUTCAR, POSCAR, and OSZICAR
+ * Plot Plot model in the POSCAR/CONTCAR (also support color mapping of atom properties), Required files: POSCAR/CONTCAR or POSCAR with data of atom properties
+ * Plot DOS (PDOS, LDOS, TDOS) information. Required files: DOSCAR, OUTCAR, POSCAR
+ * Calculate the nearest neighbor information. Required file: POSCAR
+ * Perform simple common neighbor analysis
+ * Calculate structural energy (E_struct). Required files: CONTCAR, OUTCAR, POSCAR
+ * Write atom force information into the POSCAR
 
 - Three-dimensional atom probe tomography (APT) postprocessing tools
 
- * apt_read.read_proxigram_csv: Read the concentration profile .csv file
- * apt_plot.plot_proxigram_csv: Plot the concentration profile
+ * Read the concentration profile .csv file
+ * Plot the concentration profile
+ 
+- DVM tools
 
+ * Read the .input, .incar, .otput files
+ * Write the .input, .incar, IND.DAT files
+ * Write the interatomic energy (IE) files (including the IEs of the first nearest neighbor atoms)
+ * The .incar file can also be prepared by atom selection from the vasp_build function in the vasp module 
+
+- Others tools
+
+ * file format conversion
+ 
 Installation
 ------------
 
@@ -41,9 +52,9 @@ pip install matsdp
 Release note
 ------------
 
-- version 0.1.5
+- version 0.1.6
 
- * Date: 20191106
+ * Date: 20191109
 
 ======
 Usage
@@ -56,7 +67,7 @@ Graphical User Interface (GUI)
 Running with Python environment
 -------------------------------
 
-- modules to import before using the vasp package
+- modules that may be imported before using the vasp package
 
  * from matsdp.vasp import vasp_read
  * from matsdp.vasp import vasp_build
@@ -64,10 +75,19 @@ Running with Python environment
  * from matsdp.vasp import vasp_analyze
  * from matsdp.vasp import vasp_write
 
-- modules to import before using the apt package
+- modules that may be imported before using the apt package
 
  * from matsdp.apt import apt_read
  * from matsdp.apt import apt_plot
+ 
+- modules that may be imported before using the dvm package
+
+ * from matsdp.dvm import dvm_read
+ * from matsdp.dvm import dvm_build
+ * from matsdp.dvm import dvm_analyze
+ * from matsdp.dvm import dvm_write
+ * from matsdp.dvm import dvm_default
+ * from matsdp.dvm import dvm_help
 
 ======
 Tests

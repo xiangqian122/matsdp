@@ -2,7 +2,7 @@
 import matplotlib
 matplotlib.use("Agg")
 
-def plot_proxigram_csv(proxigram_csv_dir, sysname, visible_elmt_list, interplation_on = False, fig_width=6, fig_height=5, fig_dpi = 600, fig_format = 'png'):
+def plot_proxigram_csv(proxigram_csv_file_path, sysname, visible_elmt_list, interplation_on = False, fig_width=6, fig_height=5, fig_dpi = 600, fig_format = 'png'):
     import os
     import numpy as np
     import matplotlib.pyplot as plt
@@ -22,7 +22,7 @@ def plot_proxigram_csv(proxigram_csv_dir, sysname, visible_elmt_list, interplati
     line_width = 0.5
     fig_size = (fig_width,fig_height)
 
-    data_set, elmtname_list = apt_read.read_proxigram_csv(os.path.abspath(proxigram_csv_dir))
+    data_set, elmtname_list = apt_read.read_proxigram_csv(os.path.abspath(proxigram_csv_file_path))
     plt.rcParams['figure.figsize'] = fig_size
     distance = np.array(data_set[:,0], dtype = np.float32)
     fig = plt.figure('concentration' + str(sysname))
@@ -87,7 +87,7 @@ def plot_proxigram_csv(proxigram_csv_dir, sysname, visible_elmt_list, interplati
     funcs.write_log(
         logfile,
         'apt_plot.plot_proxigram_csv(' + '\n' +
-        '    proxigram_csv_dir=' + 'r\'' + str(proxigram_csv_dir) + '\'' + ',\n' +
+        '    proxigram_csv_file_path=' + 'r\'' + str(proxigram_csv_file_path) + '\'' + ',\n' +
         '    sysname=' + '\'' + str(sysname) + '\'' + ',\n' +
         '    visible_elmt_list=' + str(visible_elmt_list) + ',\n' +
         '    interplation_on=' + str(interplation_on) + ',\n' +

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-def nn_map(poscar_dir, a0, n_shell = 1):
+def nn_map(poscar_file_path, a0, n_shell = 1):
     '''
     Description:
         Nearest neighbor map. Now only availavle for face-centered based structures
     - Args
-     * poscar_dir: String format. It specifies the directory of the POSCAR file
+     * poscar_file_path: String format. It specifies the directory of the POSCAR file
      * a0: Float format. The lattice constant of the model. Unit in Angstrom
      * n_shell: Integer format. It determines up to which crystallographic shell the nearest neighbour map calculates
     '''
@@ -21,7 +21,7 @@ def nn_map(poscar_dir, a0, n_shell = 1):
     output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
     funcs.mkdir(output_dir)
 
-    poscar_dir = os.path.abspath(poscar_dir)
+    poscar_file_path = os.path.abspath(poscar_file_path)
     n_neighbor = 100  #number of nearest neighbors in kNNList
     tol = 0.1 * a0  #tol is the maximum allowed deviation of atom posotions from perfect lattice site.
 
@@ -33,8 +33,8 @@ def nn_map(poscar_dir, a0, n_shell = 1):
         for i_shell in range(0,n_shell):
             r[i_shell] = first_nn * math.sqrt(i_shell + 1.0);
             
-    workdir, poscar_file = funcs.file_path_name(poscar_dir)
-    poscar_dict = vasp_read.read_poscar(poscar_dir)
+    workdir, poscar_file = funcs.file_path_name(poscar_file_path)
+    poscar_dict = vasp_read.read_poscar(poscar_file_path)
     n_atoms = np.sum(poscar_dict['elmt_num_arr'])  
     '''Find atom neighbors over periodic boundaries:
     Eextend/duplicate the cell in three dimensions, Create duplicates in three dimensions.
@@ -178,13 +178,13 @@ def nn_map(poscar_dir, a0, n_shell = 1):
     funcs.write_log(
         logfile,
         'vasp_analyze.nn_map(' + '\n' +
-        '    poscar_dir=' + 'r\'' + str(poscar_dir) + '\'' + ',\n' +
+        '    poscar_file_path=' + 'r\'' + str(poscar_file_path) + '\'' + ',\n' +
         '    a0=' + str(a0) + ',\n' +
         '    n_shell=' + str(n_shell) + ')\n' +
         '###############################\n')
     return nn_atomname_ishell_arr, nn_atomname_ishell_arr_no_extend_atomname
 
-def simple_cna(poscar_dir, a0, common_neighbor_elmt_list = []):
+def simple_cna(poscar_file_path, a0, common_neighbor_elmt_list = []):
     '''
     simple common neighbor analysis (CNA)
     '''
@@ -205,10 +205,10 @@ def simple_cna(poscar_dir, a0, common_neighbor_elmt_list = []):
     ##For test purpose, the next two lines are commented.
     ##common_neighbor_elmt_list = ['Re','W','Ta','Ru']
     ##first_nn_list = ['Ni1', 'Ni1', 'Ni2', 'Ni38', 'Re1', 'Re1', 'Re5', 'W2', 'W4', 'Ta5',None,None]
-    poscar_dir = os.path.abspath(poscar_dir)
-    nn_atomname_ishell_arr, nn_atomname_ishell_arr_no_extend_atomname = nn_map(poscar_dir, a0, n_shell = 1)
+    poscar_file_path = os.path.abspath(poscar_file_path)
+    nn_atomname_ishell_arr, nn_atomname_ishell_arr_no_extend_atomname = nn_map(poscar_file_path, a0, n_shell = 1)
 
-    poscar_dict = vasp_read.read_poscar(poscar_dir)
+    poscar_dict = vasp_read.read_poscar(poscar_file_path)
     n_atoms = np.sum(poscar_dict['elmt_num_arr'])
     # define the element pairs which need to be anlyzed
     elmt_pair_list = [item for item in common_neighbor_elmt_list if item in poscar_dict['elmt_species_arr']]
@@ -301,10 +301,10 @@ def simple_cna(poscar_dir, a0, common_neighbor_elmt_list = []):
             f2.write((' '*formatted_atomname_len) + ' ' + nn_text + '\n')    
 
     # write the POSCAR file with atom property data
-    simple_cna_pair_count_poscar_file_name = 'POSCAR_simple_common_neighbor_pair_count_' + elmt_pair_list_str
+    simple_cna_pair_count_poscar_file_path = output_dir + '/POSCAR_simple_common_neighbor_pair_count_' + elmt_pair_list_str + '.vasp'
     added_atom_property_str = 'simple_cna'
     added_atom_property_columns_str = str(' '.join([item for item in common_neighbor_dict['pair_name']]))
-    vasp_write.write_poscar_with_atom_property(output_poscar_file_name = simple_cna_pair_count_poscar_file_name,
+    vasp_write.write_poscar_with_atom_property(output_poscar_file_path = simple_cna_pair_count_poscar_file_path,
                                                poscar_dict = poscar_dict,
                                                added_atom_data = common_neighbor_dict['pair_count'],
                                                added_atom_property_str = added_atom_property_str,
@@ -315,20 +315,20 @@ def simple_cna(poscar_dir, a0, common_neighbor_elmt_list = []):
     funcs.write_log(
         logfile,
         'vasp_analyze.simple_cna(' + '\n' +
-        '    poscar_dir=' + 'r\'' + str(poscar_dir) + '\'' + ',\n' +
+        '    poscar_file_path=' + 'r\'' + str(poscar_file_path) + '\'' + ',\n' +
         '    a0=' + str(a0) + ',\n' +
         '    common_neighbor_elmt_list=' + str(common_neighbor_elmt_list) + ')\n' +
         '###############################\n')
     return common_neighbor_dict
 
-def estruct(doscar_dir, sysname = ''):
+def estruct(doscar_file_path, sysname = ''):
     '''
     - Descriptions
      * Calculates the structural energies at each atomic site
      * Reference: Chongyu Wang, Feng An, Gubing Lin, Fusui Liu, Ying Chen, Physical Review B, 1988
 
     - Args
-     * doscar_dir: String format. It specifies the directory of the DOSCAR
+     * doscar_file_path: String format. It specifies the directory of the DOSCAR
      * sysname: String format. User defined system name
     '''
     import os
@@ -359,13 +359,13 @@ def estruct(doscar_dir, sysname = ''):
                            ]
     s_valence_elmtname = ['H','Li','Be','Na','Mg','K','Ca','Rb','Sr','Cs','Ba']
 
-    workdir, dos_file = funcs.file_path_name(doscar_dir)
-    outcar_dir = workdir + '/OUTCAR'
-    doscar_dir = workdir + '/DOSCAR'
-    incar_dir = workdir + '/INCAR'
-    poscar_dir = workdir + '/POSCAR'
-    poscar_dict = vasp_read.read_poscar(poscar_dir)
-    incar_params_dict, outcar_params_dict = vasp_read.read_outcar(outcar_dir)
+    workdir, dos_file = funcs.file_path_name(doscar_file_path)
+    outcar_file_path = workdir + '/OUTCAR'
+    doscar_file_path = workdir + '/DOSCAR'
+    incar_file_path = workdir + '/INCAR'
+    poscar_file_path = workdir + '/POSCAR'
+    poscar_dict = vasp_read.read_poscar(poscar_file_path)
+    incar_params_dict, outcar_params_dict = vasp_read.read_outcar(outcar_file_path)
     LORBIT = incar_params_dict['LORBIT']
     e_fermi = outcar_params_dict['e_fermi']
     e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
@@ -396,7 +396,7 @@ def estruct(doscar_dir, sysname = ''):
                  'estruct\n')
 
     with open(estruct_file,'a') as f, open(estruct_with_pos_file,'a') as f1:
-        doscar_dict = vasp_read.read_doscar(doscar_dir, 1, False)
+        doscar_dict = vasp_read.read_doscar(doscar_file_path, 1, False)
         NEDOS = len(doscar_dict['energy'])
         energy = doscar_dict['energy'] + outcar_params_dict['alpha+bet']
         e_grid = (np.max(energy)-np.min(energy)) / (NEDOS - 1)
@@ -408,7 +408,7 @@ def estruct(doscar_dir, sysname = ''):
         dos_sum.shape = NEDOS, atom_num
 
         for i_atom in range(0, atom_num):
-            doscar_dict = vasp_read.read_doscar(doscar_dir, i_atom + 1, False)
+            doscar_dict = vasp_read.read_doscar(doscar_file_path, i_atom + 1, False)
             ValenceElectronNum = valence_electron_num_dict[poscar_dict['atom_species_arr'][i_atom]]
             valence_electron_num_sum += ValenceElectronNum
             if doscar_dict['num_col'] == 10:
@@ -460,10 +460,10 @@ def estruct(doscar_dir, sysname = ''):
 ##            ne2 += n2[i] * 2
 
     # write the POSCAR file with atom property data
-    estruct_poscar_file_name = 'POSCAR_estruct_' + str(sysname) + '_Ef' + str('{:.4f}'.format(e_fermi_mod))
+    estruct_poscar_file_path = output_dir + '/POSCAR_estruct_' + str(sysname) + '_Ef' + str('{:.4f}'.format(e_fermi_mod)) + '.vasp'
     added_atom_property_str = 'estruct'
     added_atom_property_columns_str = 'estruct'
-    vasp_write.write_poscar_with_atom_property(output_poscar_file_name = estruct_poscar_file_name,
+    vasp_write.write_poscar_with_atom_property(output_poscar_file_path = estruct_poscar_file_path,
                                                poscar_dict = poscar_dict,
                                                added_atom_data = estrut_arr,
                                                added_atom_property_str = added_atom_property_str,
@@ -475,7 +475,7 @@ def estruct(doscar_dir, sysname = ''):
     funcs.write_log(
         logfile,
         'vasp_analyze.estruct(' + '\n' +
-        '    doscar_dir=' + 'r\'' + str(doscar_dir) + '\'' + ',\n' +
+        '    doscar_file_path=' + 'r\'' + str(doscar_file_path) + '\'' + ',\n' +
         '    sysname=' + '\'' + str(sysname) + '\'' + ')\n' +
         '###############################\n')
 ##        NonZeroEiFound = False
@@ -828,7 +828,7 @@ def get_orbit_dos_peak_list(dos_arr, orbits, energy):
             orbitname_list.append('s_dw')
     return energy_peak_list, peak_val_list, orbitname_list
 
-def overlap_peak_analyzer(doscar_dir, sysname, atom_indx_list,n_shell,a0, dos_mode = None, fermi_shift_zero = True):
+def overlap_peak_analyzer(doscar_file_path, sysname, atom_indx_list,n_shell,a0, dos_mode = None, fermi_shift_zero = True):
     '''
     procedure:
     Specify the atoms to be checked through
@@ -843,7 +843,7 @@ def overlap_peak_analyzer(doscar_dir, sysname, atom_indx_list,n_shell,a0, dos_mo
      * Find the overlapped orbitals and their corresponding energy levels.	
      
     - Args
-     * doscar_dir: String format. The directory which contains the DOSCAR file, abstract path can be accepted
+     * doscar_file_path: String format. The directory which contains the DOSCAR file, abstract path can be accepted
      * sysname: String format. A string character which specifies the name of the system, this string will be used as part of the output file name
      * atom_indx_list: List of strings. Specifies the list of selected atoms.
      * n_shell: float format. Up to which crystallographic shell(up to which nearest neighbor) of the selected atom will be considered
@@ -871,17 +871,17 @@ def overlap_peak_analyzer(doscar_dir, sysname, atom_indx_list,n_shell,a0, dos_mo
     max_neighbor_num = 50   #Maximum number of neighbors, please do not modify this variable unless you know what you are doing
     formatted_len = 12 #For example len('Ni324_-1-1-1')=12
     
-    doscar_dir = os.path.abspath(doscar_dir)
+    doscar_file_path = os.path.abspath(doscar_file_path)
     if sysname == None:
         sysname = ''
 
-    workdir, dos_file = funcs.file_path_name(doscar_dir)
-    outcar_dir = workdir + '/OUTCAR'
-    doscar_dir = workdir + '/DOSCAR'
-    incar_dir = workdir + '/INCAR'
-    poscar_dir = workdir + '/POSCAR'
-    poscar_dict = vasp_read.read_poscar(poscar_dir)
-    incar_params_dict, outcar_params_dict = vasp_read.read_outcar(outcar_dir)
+    workdir, dos_file = funcs.file_path_name(doscar_file_path)
+    outcar_file_path = workdir + '/OUTCAR'
+    doscar_file_path = workdir + '/DOSCAR'
+    incar_file_path = workdir + '/INCAR'
+    poscar_file_path = workdir + '/POSCAR'
+    poscar_dict = vasp_read.read_poscar(poscar_file_path)
+    incar_params_dict, outcar_params_dict = vasp_read.read_outcar(outcar_file_path)
     LORBIT = incar_params_dict['LORBIT']
     e_fermi = outcar_params_dict['e_fermi']
     e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
@@ -908,7 +908,7 @@ def overlap_peak_analyzer(doscar_dir, sysname, atom_indx_list,n_shell,a0, dos_mo
             f1.write('################################\n')
             f1.write(atomname_temp + '\n')            
             orbits = dos_mode[str(poscar_dict['atom_species_arr'][atom_indx - 1])]
-            doscar_dict = vasp_read.read_doscar(doscar_dir, atom_indx, False)
+            doscar_dict = vasp_read.read_doscar(doscar_file_path, atom_indx, False)
             energy = doscar_dict['energy'] + outcar_params_dict['alpha+bet'] - e_fermi_mod*funcs.logic_retn_val(fermi_shift_zero,1,0)
 
             energy_peak_list, peak_val_list, orbitname_list = get_orbit_dos_peak_list(doscar_dict['dos_arr'], orbits, energy)
@@ -916,7 +916,7 @@ def overlap_peak_analyzer(doscar_dir, sysname, atom_indx_list,n_shell,a0, dos_mo
             #######################################
             # For the neighbors of the selected atom
             #######################################
-            nn_atomname_ishell_arr, nn_atomname_ishell_arr_no_extend_atomname = nn_map(poscar_dir, a0, n_shell)
+            nn_atomname_ishell_arr, nn_atomname_ishell_arr_no_extend_atomname = nn_map(poscar_file_path, a0, n_shell)
             for i_shell in range(n_shell):
                 f.write('\n' + str(i_shell+1) + 'NN Orbit(' + atomname_temp + ') Orbit(X) OverlappedPeaks...' + '\n')
                 f1.write('\n' + str(i_shell+1) + 'NN Orbit(' + atomname_temp + ')' + '\n')
@@ -935,7 +935,7 @@ def overlap_peak_analyzer(doscar_dir, sysname, atom_indx_list,n_shell,a0, dos_mo
 
                     iNN_orbits = dos_mode[str(poscar_dict['atom_species_arr'][i_nn_atom_indx - 1])]
                     
-                    i_nn_doscar_dict = vasp_read.read_doscar(doscar_dir, i_nn_atom_indx, False)
+                    i_nn_doscar_dict = vasp_read.read_doscar(doscar_file_path, i_nn_atom_indx, False)
                     i_nn_dos_arr = i_nn_doscar_dict['dos_arr']
         
                     i_nn_energy_peak_list, i_nn_peak_val_list, iNN_orbitname_list = get_orbit_dos_peak_list(i_nn_dos_arr, iNN_orbits, energy)
@@ -971,7 +971,7 @@ def overlap_peak_analyzer(doscar_dir, sysname, atom_indx_list,n_shell,a0, dos_mo
         logfile,
         'dos_mode=' + str(dos_mode) + '\n' +
         'vasp_analyze.overlap_peak_analyzer(' + '\n' +
-        '    doscar_dir=' + 'r\'' + str(doscar_dir) + '\'' + ',\n' +
+        '    doscar_file_path=' + 'r\'' + str(doscar_file_path) + '\'' + ',\n' +
         '    sysname=' + '\'' + str(sysname) + '\'' + ',\n' +
         '    atom_indx_list=' + str(atom_indx_list) + ',\n' +
         '    n_shell=' + str(n_shell) + ',\n' +

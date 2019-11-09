@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 def atomname2indx(poscar_dir,atom_name):
     '''Convert atom name to atom index according to POSCAR file of vasp'''
-    from .vasp import vasp_read as RFV
-    poscar_dict = RFV.read_poscar(poscar_dir)
+    from .vasp import vasp_read
+    poscar_dict = vasp_read.read_poscar(poscar_dir)
     atom_indx = poscar_dict['atomname_list'].index(atom_name) + 1
     return atom_indx
 
-def POSCAR2lmp_datafile(poscar_dir):
+def poscar2lmp_datafile(poscar_dir):
     '''
     Description:
         Convert POSCAR file to LAMMPS data file
     '''
     import os
     import numpy as np
-    from .vasp import vasp_read as RFV
+    from .vasp import vasp_read
     
     poscar_dir = os.path.abspath(poscar_dir)
     poscar_path = os.path.dirname(poscar_dir)
@@ -21,7 +21,7 @@ def POSCAR2lmp_datafile(poscar_dir):
     lmp_datafile = poscar_path + '/' + poscar_filename + '.lmpdata'
     
     # Extract information from the input POSCAR file
-    poscar_dict = RFV.read_poscar(poscar_dir)
+    poscar_dict = vasp_read.read_poscar(poscar_dir)
     n_atoms = np.sum(poscar_dict['elmt_num_arr'])
 
     #Generate element name index\
@@ -51,3 +51,100 @@ def unitconvert(A,B):
     if A == 'a.u.' and B == 'eV':
         result = 27.211396 
     return result
+
+def poscar2dvmincar(poscar_path):
+    '''convert the POSCAR file of the VASP program into the *.incar file of the DVM program'''
+    import os
+    from . import funcs
+    from .vasp import vasp_read
+    poscar_path = os.path.abspath(poscar_path)
+    workdir, poscar_file = funcs.file_path_name(poscar_path)
+    poscar_dict = vasp_read.read_poscar(poscar_path)
+
+    pos_arr = poscar_dict['pos_arr']
+    n_atoms = poscar_dict['n_atoms']
+    dvm_atom_elmtindx_arr = poscar_dict['atom_elmtindx_arr'].copy()
+    for i_atom in range(0, n_atoms):
+        dvm_atom_elmtindx_arr[i_atom] = poscar_dict['atom_elmtindx_arr'][i_atom] + 1
+
+    # the *.incar file which contains the selected atoms
+    dvm_incar_path = workdir + '/' + poscar_file + '_poscar2dvmincar.incar'
+    with open(dvm_incar_path, 'w') as f_dvm_incar:
+        temp_str = ''
+        for i_atom_indx in range(1, n_atoms + 1):
+            temp_str = temp_str + str(i_atom_indx) + ' '
+            if i_atom_indx % 10 == 0:
+                temp_str = temp_str + '\n'
+        formatted_dvm_header = temp_str
+        f_dvm_incar.write(
+            str(n_atoms) + ' 3.0\n' + formatted_dvm_header + '\n\n'
+            )
+    with open(dvm_incar_path, 'a') as f_dvm_incar:
+        for i_atom in range(0, n_atoms):
+            f_dvm_incar.write(
+                str('{:.6f}'.format(pos_arr[i_atom, 3])) + ' ' +
+                str('{:.6f}'.format(pos_arr[i_atom, 4])) + ' ' +
+                str('{:.6f}'.format(pos_arr[i_atom, 5])) + ' ' +
+                str(dvm_atom_elmtindx_arr[i_atom]) + '\n'
+                )
+    return 0
+
+def dvmincar2poscar(dvm_incar_file_path):
+    '''convert the *.incar file of the DVM program to the POSCAR file of the VASP program'''
+    import os
+    import numpy as np
+    from . import funcs
+    from .dvm import dvm_read
+    from .vasp import vasp_write
+
+    dvm_incar_file_path = os.path.abspath(dvm_incar_file_path)
+    # designate the working directory
+    workdir, dvm_incar_file = funcs.file_path_name(dvm_incar_file_path)
+
+    dvm_incar_dict = dvm_read.read_incar(dvm_incar_file_path)
+    n_atoms = int(dvm_incar_dict['n_atoms'])
+    coord_arr = np.array([None] * n_atoms * 3)
+    coord_arr.shape = n_atoms, 3
+    added_atom_property_str = 'dvmincar2poscar'
+    added_atom_property_columns_str = 'dvm_elmt_indx elmt_species atomname dvm_atom_indx'
+    added_atom_data = np.array([None] * n_atoms * 4)
+    added_atom_data.shape = n_atoms , 4 
+    atom_temp_indx = 0
+    small_shift = 0.1
+    for elmt_indx in range(1, dvm_incar_dict['num_elmts'] + 1):
+        elmt_temp_subindx = 0
+        for atom_indx in range(0, n_atoms):
+            if dvm_incar_dict['dvm_atom_elmt_indx_arr'][atom_indx] == elmt_indx:
+                elmt_temp_subindx += 1
+                coord_arr[atom_temp_indx,0] = dvm_incar_dict['pos_arr'][atom_indx,0] - dvm_incar_dict['xmin'] + small_shift 
+                coord_arr[atom_temp_indx,1] = dvm_incar_dict['pos_arr'][atom_indx,1] - dvm_incar_dict['ymin'] + small_shift 
+                coord_arr[atom_temp_indx,2] = dvm_incar_dict['pos_arr'][atom_indx,2] - dvm_incar_dict['zmin'] + small_shift 
+                added_atom_data[atom_temp_indx, 0] = elmt_indx
+                added_atom_data[atom_temp_indx, 1] = dvm_incar_dict['elmt_species_arr'][elmt_indx-1]
+                added_atom_data[atom_temp_indx, 2] = dvm_incar_dict['elmt_species_arr'][elmt_indx-1] + str(elmt_temp_subindx)
+                added_atom_data[atom_temp_indx, 3] = dvm_incar_dict['atom_indx_arr'][atom_indx]
+                atom_temp_indx += 1
+    poscar_dict = {}
+    poscar_dict['elmt_num_arr'] = dvm_incar_dict['elmt_num_arr']
+    poscar_dict['header'] = [
+        'Converted from ' + dvm_incar_file + ' by the program matsdp.\n', 
+        '1\n', 
+        str(dvm_incar_dict['xmax'] - dvm_incar_dict['xmin'] + small_shift * 2) + ' 0 0\n', 
+        '0 ' + str(dvm_incar_dict['ymax'] - dvm_incar_dict['ymin'] + small_shift * 2) + ' 0\n', 
+        '0 0 ' + str(dvm_incar_dict['zmax'] - dvm_incar_dict['zmin'] + small_shift * 2) + '\n', 
+        ' '.join([str(x) for x in dvm_incar_dict['elmt_species_arr']]) + '\n',
+        ' '.join([str(x) for x in dvm_incar_dict['elmt_num_arr']]) + '\n',
+        'Cartesian\n'
+        ]
+    
+    poscar_dict['slet_dyn_on'] = False
+    poscar_dict['coord_arr'] = coord_arr
+    vasp_poscar_file_path = workdir + '/' + dvm_incar_file[0:-6] + '_dvmincar2poscar.vasp'
+    vasp_write.write_poscar_with_atom_property(
+        output_poscar_file_path = vasp_poscar_file_path, 
+        poscar_dict = poscar_dict, 
+        added_atom_data = added_atom_data, 
+        added_atom_property_str = added_atom_property_str, 
+        added_atom_property_columns_str = added_atom_property_columns_str
+        )
+    return 0

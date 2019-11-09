@@ -12,6 +12,7 @@ def cp(src_filedir,dst_filedir):
         if not os.path.exists(fpath):
             os.makedirs(fpath)
         shutil.copyfile(src_filedir,dst_filedir)
+    return 0
         
 def file_path_name(file_dir):
     '''Get parent path and file name for the input file directory'''
@@ -55,6 +56,7 @@ def merge_files(file1,file2):
         with open(file2_dir) as file2_obj:
             file2line = file2_obj.readlines()
             file1_obj.write("".join(file2line))
+    return 0
 
 def mkdir(path):
     'create a directory'
@@ -79,6 +81,7 @@ def mv(src_filedir,dst_filedir):
         if not os.path.exists(fpath):
             os.makedirs(fpath)
         shutil.move(src_filedir,dst_filedir)
+    return 0
 
 def write_log(logfile,output_str):
     '''Write specific string into a log file,
@@ -97,15 +100,26 @@ def write_log(logfile,output_str):
                 '# -*- coding: utf-8 -*-' + '\n' +
                 '##possible imports:' + '\n' +
                 'import matsdp' + '\n' +
+                'from matsdp import convert' + '\n' +
+                'from matsdp import funcs' + '\n' +
                 'from matsdp import vasp' + '\n' +
                 'from matsdp import apt' + '\n' +
+                'from matsdp import dvm' + '\n' +
                 'from matsdp.vasp import vasp_read' + '\n' +
                 'from matsdp.vasp import vasp_plot' + '\n' +
                 'from matsdp.vasp import vasp_analyze' + '\n' +
                 'from matsdp.vasp import vasp_build' + '\n' +
                 'from matsdp.vasp import vasp_write' + '\n' +
+                'from matsdp.vasp import vasp_default' + '\n' +
+                'from matsdp.vasp import vasp_help' + '\n' +
                 'from matsdp.apt import apt_read' + '\n' +
                 'from matsdp.apt import apt_plot' + '\n' +
+                'from matsdp.dvm import dvm_read' + '\n' +
+                'from matsdp.dvm import dvm_analyze' + '\n' +
+                'from matsdp.dvm import dvm_build' + '\n' +
+                'from matsdp.dvm import dvm_write' + '\n' +
+                'from matsdp.dvm import dvm_default' + '\n' +
+                'from matsdp.dvm import dvm_help' + '\n' +
                 '######################################\n')
         with open(logfile,'a') as logfile_object:
             logfile_object.write(
@@ -116,6 +130,7 @@ def write_log(logfile,output_str):
             logfile_object.write(
                 formatted_time + '\n' +
                 output_str + '\n')
+    return 0
 
 def rm_empty_lines_in_file(in_file):
     '''
@@ -132,7 +147,33 @@ def rm_empty_lines_in_file(in_file):
                 continue
             f2.write(line)
     mv(ftemp,in_file)
+    return 0
 
+def write_file(input_str, dest_file_path):
+    '''
+    write sepcified string to a desiginated file
+    input_str: the string which is to be included in the destination file
+    dest_file_path: destination file path, the specific string will be written to the destination file
+    if the destination file exists, then it will be created.
+    '''    
+    import os
+    input_str = str(input_str)
+    dest_file_path = os.path.abspath(dest_file_path)
+    workdir, dest_file = file_path_name(dest_file_path)
+    mkdir(workdir)
+    with open(dest_file_path, 'w') as f:
+        f.write(input_str)
+    return 0
+
+def touch(file_path):
+    '''create file'''
+    import os
+    file_path = os.path.abspath(file_path)
+    workdir, file = file_path_name(file_path)
+    mkdir(workdir)
+    with open(file_path, 'w') as f:
+        pass
+    return 0
 ##########################################
 #String manipulation
 ##########################################
@@ -149,6 +190,26 @@ def insert_str(old_str,indx,inserted_str):
     new_str = old_str[:indx] + inserted_str + old_str[indx:]
     return new_str
 
+def replace(file_path, pattern, subst):
+    '''
+    Search and replace a string in a line of a file
+    https://stackoverflow.com/questions/39086/search-and-replace-a-line-in-a-file-in-python
+    '''
+    from tempfile import mkstemp
+    from shutil import move
+    from os import fdopen, remove
+    #Create temp file
+    fh, abs_path = mkstemp()
+    with fdopen(fh,'w') as new_file:
+        with open(file_path) as old_file:
+            for line in old_file:
+                new_file.write(line.replace(pattern, subst))
+    #Remove original file
+    remove(file_path)
+    #Move new file
+    move(abs_path, file_path)
+    return 0
+
 def replace_file_content(filename,oldStr,newStr):
     'Replace string in file'
     import os
@@ -161,6 +222,7 @@ def replace_file_content(filename,oldStr,newStr):
     for line in all_the_lines:
         f.write(line.replace(oldStr,newStr))
     f.close()
+    return 0
   
 def split_line(line, separator = ' '):
     '''split the line using white space 
@@ -170,6 +232,18 @@ def split_line(line, separator = ' '):
         temp_list.remove('')
     return temp_list
 
+def find_kwd_line_indx(kwd, file_path):
+    '''
+    find the keyword line index in the file (the line index starts from 0)
+    the list which contains the line indices will be returned
+    '''
+    import os
+    file_path = os.path.abspath(file_path)
+    kwd = str(kwd)
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+        indx = [x for x in range(len(lines)) if kwd in lines[x]]
+    return indx
 ##########################################
 #Other functions
 ##########################################
@@ -227,6 +301,7 @@ def data_normalize(input_data_value, data_list, colormap_vmin = None, colormap_v
             colormap_vmin = min(data_list)
             colormap_vmax = max(data_list)        
         elif colormap_vmin != None and colormap_vmax != None and colormap_vmin < colormap_vmax:
+            ##print(type(colormap_vmin), type(min(data_list)))
             if (colormap_vmin <= min(data_list)) and (colormap_vmax >= max(data_list)):
                 pass
             elif (colormap_vmin > min(data_list)) and (colormap_vmax >= max(data_list)):
@@ -268,8 +343,8 @@ def userdefined_colormap(data_list , colormap_vmin = None, colormap_vmax = None,
 
     color_marker_num = 100
     # get colormap_vmin and colormap_vmax
-    colormap_normalized_data, colormap_vmin, colormap_vmax = data_normalize(input_data_value = data_list[0],
-                                                                            data_list = data_list,
+    colormap_normalized_data, colormap_vmin, colormap_vmax = data_normalize(input_data_value = float(data_list[0]),
+                                                                            data_list = data_list.astype(float),
                                                                             colormap_vmin = colormap_vmin,
                                                                             colormap_vmax = colormap_vmax)
 

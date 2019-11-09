@@ -2,7 +2,7 @@
 import matplotlib
 matplotlib.use("Agg")
 
-def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palette_list, atom_subplot_arg_list,
+def plot_dos(atom_doscar_file_path_list, atom_sysname_list, atom_indx_list, atom_palette_list, atom_subplot_arg_list,
              subplot_arg_list, subplot_xlo_list, subplot_xhi_list, subplot_ylo_list, subplot_yhi_list,
              subplot_xtick_list, subplot_ytick_list, subplot_xlabel_list, subplot_ylabel_list, subplot_share_xy_list = [False, False] , mainplot_axis_label_list = [False, False],
              dos_mode = None, fermi_shift_zero = True, peak_analyzer = False, fig_format = 'png', fig_size = [15,10], fig_dpi = 600):
@@ -12,11 +12,11 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
      * There are three types of input arguments: atom related input arguments, subplot related input arguments, and others
 
     - Atom related Args
-     * atom_doscar_dir_list: list format. Conatains DOSCAR files for each atom. The directory of DOSCAR files can either be full path or relative path
-     * atom_sysname_list: system name for each atom, it corresponds to the atoms in the atom_doscar_dir_list. This is for the purpose of labeling the DOS curves in the legend.
+     * atom_doscar_file_path_list: list format. Conatains DOSCAR files for each atom. The directory of DOSCAR files can either be full path or relative path
+     * atom_sysname_list: system name for each atom, it corresponds to the atoms in the atom_doscar_file_path_list. This is for the purpose of labeling the DOS curves in the legend.
                If sysnameList = None, then the label of system name will not shown in the legend
                For example, sysnameList = ['System1','System1','System2']
-     * atom_indx_list: list format. Atom index list, it corresponding to the atoms in  atom_doscar_dir_list. If it is integer type then it denotes the atom index, if it is string type then it denotes the atom name
+     * atom_indx_list: list format. Atom index list, it corresponding to the atoms in  atom_doscar_file_path_list. If it is integer type then it denotes the atom index, if it is string type then it denotes the atom name
                atom_indx_list = [1,2,45] denotes the 1st, 2nd, and the 45th atoms in the POSCAR
                atom_indx_list = ['Ni1','Al3','Re3'] denotes Ni1, Al3, and Re3 in the POSCAR
                atom_indx_list = ['TDOS'] and atom_indx_list = [0] donotes the total dos
@@ -56,7 +56,7 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
     if dos_mode == None:
         dos_mode = periodic_table_dict['dos_mode']
 
-    #Possible further modifications: check the consistency of lengths of lists: atom_doscar_dir_list and atom_indx_list; subplot_arg_list and SubplotXYLabelLogicList
+    #Possible further modifications: check the consistency of lengths of lists: atom_doscar_file_path_list and atom_indx_list; subplot_arg_list and SubplotXYLabelLogicList
     ###############################################################################################################
     #User defined region, change the params when necessary. Usually we don't change these parameters unless needed.
     ###############################################################################################################
@@ -143,10 +143,10 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
                 plt.text(energy[peaks][ipeak], sample_dos_arr_1d[peaks][ipeak], str(energy[peaks][ipeak]),color='red',size=3)
         plt.plot(energy[peaks], sample_dos_arr_1d[peaks], "x",color='red')
         return energy[peaks]
-    for i in range(0,len(atom_doscar_dir_list)):
-        atom_doscar_dir_list[i] = os.path.abspath(atom_doscar_dir_list[i])
+    for i in range(0,len(atom_doscar_file_path_list)):
+        atom_doscar_file_path_list[i] = os.path.abspath(atom_doscar_file_path_list[i])
     if atom_sysname_list == None:
-        atom_sysname_list = [''] * len(atom_doscar_dir_list)
+        atom_sysname_list = [''] * len(atom_doscar_file_path_list)
     else:
         for i in range(0,len(atom_sysname_list)):
             if atom_sysname_list[i] == None or atom_sysname_list[i] == 'None' or atom_sysname_list[i] == 'none' or atom_sysname_list[i] == '':
@@ -185,27 +185,27 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
             subplot_dict['xlabel'][subplot_dict_indx] = subplot_xlabel_list[i_subplot]
             subplot_dict['ylabel'][subplot_dict_indx] = subplot_ylabel_list[i_subplot]
     subplot_arg_unique_count_list = []
-    CounterList = []
+    counter_list = []
     for i in range(len(subplot_arg_unique_list)):
         subplot_arg_unique_count_list.append(atom_subplot_arg_list.count(subplot_arg_unique_list[i]))
-        CounterList.append(0)
+        counter_list.append(0)
     sysnameList = []
     dos_atomname_list = []
     e_fermi_list = []
     plt.rcParams['figure.figsize'] = (fig_size[0],fig_size[1])
-    if len(atom_doscar_dir_list) == 1:
-        doscar_dir = atom_doscar_dir_list[0]
-        workdir, dos_file = funcs.file_path_name(doscar_dir)
+    if len(atom_doscar_file_path_list) == 1:
+        doscar_file_path = atom_doscar_file_path_list[0]
+        workdir, dos_file = funcs.file_path_name(doscar_file_path)
         if isinstance(atom_indx_list[0],str) and atom_indx_list[0] != 'TDOS':
             atom_indx = convert.atomname2indx(workdir + '/POSCAR',atom_indx_list[0])
         elif isinstance(atom_indx_list[0],str) and atom_indx_list[0] == 'TDOS':
             atom_indx = 0
         elif isinstance(atom_indx_list[0],int):
             atom_indx = atom_indx_list[0]
-        FigDOS = plt.figure('Fig'+dos_file)
+        fig_dos = plt.figure('Fig'+dos_file)
     else:
-        FigDOS = plt.figure('Fig_DOS_Cmpr')
-    ax0 = FigDOS.add_subplot(111)
+        fig_dos = plt.figure('Fig_DOS_Cmpr')
+    ax0 = fig_dos.add_subplot(111)
     #Below is the axis setting for the main figure, and the axis settings only work for main figure with multiple subplots(number of subplots >=2):
     #set interspacing between subplots
     if subplot_dict['ShareXY'][0] == True:
@@ -238,7 +238,7 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
         ax0.spines['left'].set_position(('outward',30))
         plt.xlabel(funcs.logic_retn_val(mainplot_axis_label_list[0],xlabel_str,''), fontsize = font_size)
         plt.ylabel(funcs.logic_retn_val(mainplot_axis_label_list[1],ylabel_str,''), fontsize = font_size, labelpad=font_size*1.3)
-    def plot_lines(orbits, doscar_dict, energy, atom_palette_list, dos_lty, line_width, peak_analyzer, subplot_indx, subplot_dict, atom_sysname_list, dos_file_indx, i_elmtName, orbit_scaling_dict):
+    def plot_lines(orbits, doscar_dict, energy, atom_palette_list, dos_lty, line_width, peak_analyzer, subplot_indx, subplot_dict, atom_sysname_list, dos_file_indx, i_elmt_name, orbit_scaling_dict):
         import matplotlib.pyplot as plt
         orbitname_list = ['f','d','dxy','dyz','dz2','dxz','dx2','p','py','pz','px','s','LDOS']
         orbit_label_list = ['-$f$',
@@ -255,7 +255,7 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
                 orbit_scaling_factor = orbit_scaling_dict[orbitname_list[orbitname_indx]]
                 if doscar_dict['num_col'] == 5 or doscar_dict['num_col'] == 19 or doscar_dict['num_col'] == 33:
                     plt.plot(energy,doscar_dict[orbitname_list[orbitname_indx]+'_up']*orbit_scaling_factor,color=atom_palette_list[dos_file_indx],linestyle = dos_lty[dos_lty_indx],
-                             marker='',linewidth = line_width, label=atom_sysname_list[dos_file_indx]+i_elmtName + orbit_label_list[orbitname_indx])
+                             marker='',linewidth = line_width, label=atom_sysname_list[dos_file_indx]+i_elmt_name + orbit_label_list[orbitname_indx])
                     plt.plot(energy,doscar_dict[orbitname_list[orbitname_indx]+'_dw']*orbit_scaling_factor,color=atom_palette_list[dos_file_indx],linestyle = dos_lty[dos_lty_indx],
                              marker='',linewidth = line_width)
                     dos_lty_indx += 1                
@@ -264,27 +264,27 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
                         label_peaks(energy, doscar_dict[orbitname_list[orbitname_indx]+'_dw']*orbit_scaling_factor, subplot_indx, subplot_dict['xlo'][subplot_indx], subplot_dict['xhi'][subplot_indx])
                 elif doscar_dict['num_col'] == 3 or doscar_dict['num_col'] == 10 or doscar_dict['num_col'] == 17:
                     plt.plot(energy,doscar_dict[orbitname_list[orbitname_indx]]*orbit_scaling_factor,color=atom_palette_list[dos_file_indx],linestyle = dos_lty[dos_lty_indx],
-                             marker='',linewidth = line_width, label=atom_sysname_list[dos_file_indx]+i_elmtName + orbit_label_list[orbitname_indx])
+                             marker='',linewidth = line_width, label=atom_sysname_list[dos_file_indx]+i_elmt_name + orbit_label_list[orbitname_indx])
                     dos_lty_indx += 1                
                     if peak_analyzer == True:
                         label_peaks(energy, doscar_dict[orbitname_list[orbitname_indx]]*orbit_scaling_factor, subplot_indx, subplot_dict)                        
     #Below plot DOS in each subplot
-    for dos_file_indx in range(0,len(atom_doscar_dir_list)):
-        doscar_dir = atom_doscar_dir_list[dos_file_indx]
-        workdir, dos_file = funcs.file_path_name(doscar_dir)
+    for dos_file_indx in range(0,len(atom_doscar_file_path_list)):
+        doscar_file_path = atom_doscar_file_path_list[dos_file_indx]
+        workdir, dos_file = funcs.file_path_name(doscar_file_path)
         if isinstance(atom_indx_list[dos_file_indx],str) and atom_indx_list[dos_file_indx] != 'TDOS':
             atom_indx = convert.atomname2indx(workdir + '/POSCAR',atom_indx_list[dos_file_indx])
         elif isinstance(atom_indx_list[dos_file_indx],str) and atom_indx_list[dos_file_indx] == 'TDOS':
             atom_indx = 0
         elif isinstance(atom_indx_list[dos_file_indx],int):
             atom_indx = atom_indx_list[dos_file_indx]
-        doscar_dict = vasp_read.read_doscar(doscar_dir, atom_indx, False)
-        outcar_dir = workdir + '/OUTCAR'
-        doscar_dir = workdir + '/DOSCAR'
-        incar_dir = workdir + '/INCAR'
-        poscar_dir = workdir + '/POSCAR'
-        poscar_dict = vasp_read.read_poscar(poscar_dir)
-        incar_params_dict, outcar_params_dict = vasp_read.read_outcar(outcar_dir)
+        doscar_dict = vasp_read.read_doscar(doscar_file_path, atom_indx, False)
+        outcar_file_path = workdir + '/OUTCAR'
+        doscar_file_path = workdir + '/DOSCAR'
+        incar_file_path = workdir + '/INCAR'
+        poscar_file_path = workdir + '/POSCAR'
+        poscar_dict = vasp_read.read_poscar(poscar_file_path)
+        incar_params_dict, outcar_params_dict = vasp_read.read_outcar(outcar_file_path)
         LORBIT = incar_params_dict['LORBIT']
         e_fermi = outcar_params_dict['e_fermi']
         e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
@@ -301,9 +301,9 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
             if atom_subplot_arg_list[dos_file_indx] == previous_subplot_arg:
                 pass
             else:
-                FigDOS.add_subplot(atom_subplot_arg_list[dos_file_indx])       
+                fig_dos.add_subplot(atom_subplot_arg_list[dos_file_indx])       
             
-            CounterList[subplot_indx] += 1
+            counter_list[subplot_indx] += 1
             sysnameList.append(''.join(str(poscar_dict['elmt_species_arr'][i])+str(poscar_dict['elmt_num_arr'][i]) for i in range(len(poscar_dict['elmt_species_arr'])-1,-1,-1)))
             dos_atomname_list.append('TDOS')
             e_fermi_list.append(e_fermi_mod)
@@ -335,11 +335,11 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
             if atom_subplot_arg_list[dos_file_indx] == previous_subplot_arg:
                 pass
             else:
-                FigDOS.add_subplot(atom_subplot_arg_list[dos_file_indx])     
-            CounterList[subplot_indx] += 1
-            i_elmtName = poscar_dict['atomname_list'][atom_indx - 1]
+                fig_dos.add_subplot(atom_subplot_arg_list[dos_file_indx])     
+            counter_list[subplot_indx] += 1
+            i_elmt_name = poscar_dict['atomname_list'][atom_indx - 1]
             sysnameList.append(''.join(str(poscar_dict['elmt_species_arr'][i])+str(poscar_dict['elmt_num_arr'][i]) for i in range(len(poscar_dict['elmt_species_arr'])-1,-1,-1)))
-            dos_atomname_list.append(i_elmtName)
+            dos_atomname_list.append(i_elmt_name)
             e_fermi_list.append(e_fermi_mod)
             energy = doscar_dict['energy']  + outcar_params_dict['alpha+bet'] - e_fermi_mod*funcs.logic_retn_val(fermi_shift_zero,1,0)
             orbits = dos_mode[str(poscar_dict['atom_species_arr'][atom_indx - 1])]
@@ -353,32 +353,32 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
             #Subplot y axis limit
             if doscar_dict['num_col'] == 10 or doscar_dict['num_col'] == 17:
                 #Spin unpolarized calculation
-                for Orbitindx in range(0,len(orbitname_list)):
-                    if orbitname_list[Orbitindx] in orbits:
-                        subplot_dict['ylo'][subplot_indx] = min(subplot_dict['ylo'][subplot_indx],min(doscar_dict[orbitname_list[Orbitindx]])[0])
-                        subplot_dict['yhi'][subplot_indx] = max(subplot_dict['yhi'][subplot_indx],max(doscar_dict[orbitname_list[Orbitindx]])[0])
+                for orbit_indx in range(0,len(orbitname_list)):
+                    if orbitname_list[orbit_indx] in orbits:
+                        subplot_dict['ylo'][subplot_indx] = min(subplot_dict['ylo'][subplot_indx],min(doscar_dict[orbitname_list[orbit_indx]])[0])
+                        subplot_dict['yhi'][subplot_indx] = max(subplot_dict['yhi'][subplot_indx],max(doscar_dict[orbitname_list[orbit_indx]])[0])
             elif doscar_dict['num_col'] == 19 or doscar_dict['num_col'] == 33:
                 #Spin polarized calculation
-                for Orbitindx in range(0,len(orbitname_list)):
-                    if orbitname_list[Orbitindx] in orbits:
-                        subplot_dict['ylo'][subplot_indx] = min(subplot_dict['ylo'][subplot_indx],min(doscar_dict[orbitname_list[Orbitindx]+'_up'])[0],min(doscar_dict[orbitname_list[Orbitindx]+'_dw'])[0])
-                        subplot_dict['yhi'][subplot_indx] = max(subplot_dict['yhi'][subplot_indx],max(doscar_dict[orbitname_list[Orbitindx]+'_up'])[0],max(doscar_dict[orbitname_list[Orbitindx]+'_dw'])[0])
+                for orbit_indx in range(0,len(orbitname_list)):
+                    if orbitname_list[orbit_indx] in orbits:
+                        subplot_dict['ylo'][subplot_indx] = min(subplot_dict['ylo'][subplot_indx],min(doscar_dict[orbitname_list[orbit_indx]+'_up'])[0],min(doscar_dict[orbitname_list[orbit_indx]+'_dw'])[0])
+                        subplot_dict['yhi'][subplot_indx] = max(subplot_dict['yhi'][subplot_indx],max(doscar_dict[orbitname_list[orbit_indx]+'_up'])[0],max(doscar_dict[orbitname_list[orbit_indx]+'_dw'])[0])
             if subplot_ylo_list[subplot_arg_list.index(subplot_dict['Arg'][subplot_indx])] == None or subplot_yhi_list[subplot_arg_list.index(subplot_dict['Arg'][subplot_indx])] == None:
                 subplot_dict['ylo'][subplot_indx] = subplot_dict['ylo'][subplot_indx] * lower_spine_scale
                 subplot_dict['yhi'][subplot_indx] = subplot_dict['yhi'][subplot_indx] * upper_spine_scale
-            plot_lines(orbits, doscar_dict, energy, atom_palette_list, dos_lty, line_width, peak_analyzer, subplot_indx, subplot_dict, atom_sysname_list, dos_file_indx, i_elmtName, orbit_scaling_dict)
+            plot_lines(orbits, doscar_dict, energy, atom_palette_list, dos_lty, line_width, peak_analyzer, subplot_indx, subplot_dict, atom_sysname_list, dos_file_indx, i_elmt_name, orbit_scaling_dict)
         #Plot Fermi energy indicator line:
-        if len(atom_doscar_dir_list) == 1:
+        if len(atom_doscar_file_path_list) == 1:
             #Figure only contain one subplot, single DOS is plotted or multiple DOS files are plotted onto one subplot        
             line1 = [(e_fermi_mod * funcs.logic_retn_val(fermi_shift_zero,0,1), subplot_dict['ylo'][subplot_indx]), (e_fermi_mod * funcs.logic_retn_val(fermi_shift_zero,0,1), subplot_dict['yhi'][subplot_indx])]
             (line1_xs, line1_ys) = zip(*line1)
             plt.plot(line1_xs, line1_ys, linestyle = '--',linewidth = 0.5, color = 'black')
-        elif len(atom_doscar_dir_list) != 1 and fermi_shift_zero == True and CounterList[subplot_indx] == subplot_arg_unique_count_list[subplot_indx]:
+        elif len(atom_doscar_file_path_list) != 1 and fermi_shift_zero == True and counter_list[subplot_indx] == subplot_arg_unique_count_list[subplot_indx]:
             #Figure contain multiple subplots, Fermi energy is shifted to zero. Each subplot only plot the Fermi energy level once.
             line1 = [(e_fermi_mod * funcs.logic_retn_val(fermi_shift_zero,0,1), subplot_dict['ylo'][subplot_indx]), (e_fermi_mod * funcs.logic_retn_val(fermi_shift_zero,0,1), subplot_dict['yhi'][subplot_indx])]
             (line1_xs, line1_ys) = zip(*line1)
             plt.plot(line1_xs, line1_ys, linestyle = '--',linewidth = 0.5, color = 'black')
-        elif len(atom_doscar_dir_list) != 1 and fermi_shift_zero == False:
+        elif len(atom_doscar_file_path_list) != 1 and fermi_shift_zero == False:
             #Figure contain multiple subplots, Fermi energy is not shifted to zero.
             e_fermi = e_fermi_list[dos_file_indx]
             line1 = [(e_fermi_mod * funcs.logic_retn_val(fermi_shift_zero,0,1), subplot_dict['ylo'][subplot_indx]),(e_fermi_mod * funcs.logic_retn_val(fermi_shift_zero,0,1), subplot_dict['yhi'][subplot_indx])]
@@ -429,19 +429,19 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
         ax.set_ylabel(funcs.logic_retn_val(mult_plot_logic, subplot_ylabel_on_off_str, ylabel_str),fontsize=font_size)
         ax.legend(loc='best',fontsize=font_size)
     #Export Figures
-    #sysindx_list denotes the systems as integers. Identical doscar_dir have the same integer value.
-    #As the items of atom_doscar_dir_list goes from the first one to the last one, The corresponding position of sysindx_list is assigned a unique interger value(from 1 to N).
+    #sysindx_list denotes the systems as integers. Identical doscar_file_path have the same integer value.
+    #As the items of atom_doscar_file_path_list goes from the first one to the last one, The corresponding position of sysindx_list is assigned a unique interger value(from 1 to N).
     sysindx_list = []
     Uniquesysindx_list = []
-    unique_atom_doscar_dir_list = []
+    unique_atom_doscar_file_path_list = []
     Uniquee_fermi_list = []
     sysindx = 1
-    for idoscar_dir in atom_doscar_dir_list:
-        if idoscar_dir in unique_atom_doscar_dir_list:
-            sysindx_list.append(Uniquesysindx_list[unique_atom_doscar_dir_list.index(idoscar_dir)])
+    for idoscar_file_path in atom_doscar_file_path_list:
+        if idoscar_file_path in unique_atom_doscar_file_path_list:
+            sysindx_list.append(Uniquesysindx_list[unique_atom_doscar_file_path_list.index(idoscar_file_path)])
         else:
             Uniquesysindx_list.append(sysindx)
-            unique_atom_doscar_dir_list.append(idoscar_dir)
+            unique_atom_doscar_file_path_list.append(idoscar_file_path)
             sysindx_list.append(sysindx)
             Uniquee_fermi_list.append(e_fermi_list[sysindx - 1])
             sysindx += 1
@@ -454,14 +454,14 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
     for iSys in range(0,len(atom_indx_list)):
         sys_list.append('sys' + str(sysindx_list[iSys]))
     funcs.write_log(logfile, '## The system directorie(s) are given below:')
-    for i_unique_sys in range(0,len(unique_atom_doscar_dir_list)):
+    for i_unique_sys in range(0,len(unique_atom_doscar_file_path_list)):
         funcs.write_log(logfile,
-                        'sys' + str(Uniquesysindx_list[i_unique_sys]) + ' = r\'' + str(unique_atom_doscar_dir_list[i_unique_sys]) + '\'' + '\n'
+                        'sys' + str(Uniquesysindx_list[i_unique_sys]) + ' = r\'' + str(unique_atom_doscar_file_path_list[i_unique_sys]) + '\'' + '\n'
                         'e_fermi_mod = ' + str(e_fermi_list[i_unique_sys]))
     funcs.write_log(logfile,
                     'dos_mode = ' + str(dos_mode) + '\n' +
                    'vasp_plot.plot_dos(' + '\n' +
-                   '    atom_doscar_dir_list=' + ('[' + ','.join(sys_list) + ']') + ',\n' +
+                   '    atom_doscar_file_path_list=' + ('[' + ','.join(sys_list) + ']') + ',\n' +
                    '    atom_sysname_list=' + str(atom_sysname_list) + ',\n' +
                    '    atom_indx_list=' + str(atom_indx_list) + ',\n' +
                    '    atom_palette_list=' + str(atom_palette_list) + ',\n' +
@@ -488,7 +488,7 @@ def plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palet
     return subplot_dict
 
 
-def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 5, psi = 0, elmt_color = None, draw_mirror_atom = True, box_on = True, axis_indicator = True,
+def plot_poscar(poscar_file_path, euler_angle_type = 'zyx', phi = -3, theta = 5, psi = 0, elmt_color = None, draw_mirror_atom = True, box_on = True, axis_indicator = True,
                 plot_cell_basis_vector_label = False, plot_atom_label = True, fig_format = 'png', fig_dpi = 100,
                 draw_colormap = False, colormap_column_indx = 1, colormap_vmin = None, colormap_vmax = None, vmin_color = 'blue', vmax_color = 'red', colorbar_alignment = 'vertical'):
     '''
@@ -498,7 +498,7 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 5, psi =
      * Reference for Eulerian angles: Herbert Goldstein and Charles P. Poole Jr. and John L. Safko,Classical Mechanics (3rd Edition),2001.
 
     - Args:
-     * poscar_dir: String format. Directory of the POSCAR file which you want to plot
+     * poscar_file_path: String format. Directory of the POSCAR file which you want to plot
      * euler_angle_type: string of length 3. It specify the type of rotations based on Eulerian angles. Choices are 'zyz', 'zxz', 'zyx', etc.. Usually the 'zyz' type is used.
 
                 'zyz' : proper Euler angle, y-convention. Performe consecutive rotations at axes counter-clockwisely. z-y-z rotation.
@@ -559,15 +559,15 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 5, psi =
     #Please don't modify the following codes unless you know what you are doing
     ###########################################################################
     view_axis = 'x' #view_axis: Decide viewing from which direction: 'x' or 'y' or 'z'. Default is view from x axis
-    poscar_dir = os.path.abspath(poscar_dir)
-    poscar_dict = vasp_read.read_poscar(poscar_dir)    
-    def disp_and_rotation(poscar_dir, phi, theta, psi):
+    poscar_file_path = os.path.abspath(poscar_file_path)
+    poscar_dict = vasp_read.read_poscar(poscar_file_path)    
+    def disp_and_rotation(poscar_file_path, phi, theta, psi):
         '''
         Description:
             Rotation center is at automatically set as its geometrical center.
             Displace the origin of the model to the center rot_center_arr and then rotate the model according to Eulerian angle
         Args:
-            poscar_dir: POSCAR of the model
+            poscar_file_path: POSCAR of the model
             rot_center_arr: rotation center of the model, units in Angstroms
             phi, theta, psi: Eulerian angles, units in degrees
         Return:
@@ -576,7 +576,7 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 5, psi =
         import numpy as np
         from .. import funcs
         angle_unit = 'deg' # define the unit of the Eulerian angles. 'deg' or 'rad'
-        poscar_dict = vasp_read.read_poscar(poscar_dir)
+        poscar_dict = vasp_read.read_poscar(poscar_file_path)
         # Treat each point as a vector. Think of the problem use the knowledge of vector analysis 
         origin_arr = np.array([0,0,0]) # The default origin is (0,0,0). It is a vector
         diagonal_arr = poscar_dict['l_arr'][0,:] + poscar_dict['l_arr'][1,:] + poscar_dict['l_arr'][2,:] # diagonal_arr is the furthest vertex from the origin, i.e. the diagonal relative to the origin. it is a vector    
@@ -664,8 +664,8 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 5, psi =
         if write_log_logic == True:
             funcs.write_log(
                 logfile,
-                'poscar_dir = ' + str(poscar_dir) + '\n' +
-                'plot_poscar(poscar_dir, view_axis=' + str(view_axis) + ', phi=' + str(phi) + ', theta=' + str(theta) + ', psi=' + str(psi) +
+                'poscar_file_path = ' + str(poscar_file_path) + '\n' +
+                'plot_poscar(poscar_file_path, view_axis=' + str(view_axis) + ', phi=' + str(phi) + ', theta=' + str(theta) + ', psi=' + str(psi) +
                 ', draw_mirror_atom=' + str(draw_mirror_atom) + ', box_on=' + str(box_on) + ', axis_indicator=' + str(axis_indicator) +
                 ', plot_cell_basis_vector_label=' + str(plot_cell_basis_vector_label) + ', plot_atom_label=' + str(plot_atom_label) + ', fig_format=' + str(fig_format) +
                 ', logfile=' + logfile + '\n' +
@@ -682,7 +682,7 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 5, psi =
             pass
         return pos_shift_arr, t, t_pos_shift_arr, d_pos_shift_arr, t_vertex, t_vertex_min, t_vertex_max, shifted_origin_arr, shifted_diagonal_arr, t_axis_indic_origin_shift_arr, t_indic_vec_shift_arr, axis_indic_ref_length
 
-    pos_shift_arr, t, t_pos_shift_arr, d_pos_shift_arr, t_vertex, t_vertex_min, t_vertex_max, shifted_origin_arr, shifted_diagonal_arr, t_axis_indic_origin_shift_arr, t_indic_vec_shift_arr, axis_indic_ref_length = disp_and_rotation(poscar_dir, phi, theta, psi)
+    pos_shift_arr, t, t_pos_shift_arr, d_pos_shift_arr, t_vertex, t_vertex_min, t_vertex_max, shifted_origin_arr, shifted_diagonal_arr, t_axis_indic_origin_shift_arr, t_indic_vec_shift_arr, axis_indic_ref_length = disp_and_rotation(poscar_file_path, phi, theta, psi)
     #Inverse of the transformation matrix t_inv
     #The tranformation matrix t acts on the axes, making the axes to rotate in a counter-clockwise manner. This means that atom coordinates rotate in a clockwise manner
     #The inverse of t_inv should act on coordinates of atoms and cause coordinates of atoms to rotate in a counter-clockwise manner. 
@@ -894,7 +894,7 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 5, psi =
     tikz_dir = output_dir + '/poscar_tikz_latex_files'
     funcs.mkdir(tikz_dir)
     formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time.time()))
-    system_folder = str(str(os.path.abspath(poscar_dir)).split('/')).split('\\\\')[-2]
+    system_folder = str(str(os.path.abspath(poscar_file_path)).split('/')).split('\\\\')[-2]
     tikz_texfile = tikz_dir + '/TikZ_' + str(formatted_time) + '_' + system_folder + '_' + str(euler_angle_type) + '_phi' + str(phi) + '_theta' + str(theta) + '_psi' + str(psi) + '_' + funcs.logic_retn_val(box_on,'BoxOn','BoxOff') + '_' + funcs.logic_retn_val(axis_indicator,'AxisOn','AxisOff') + '.tex' 
     
     #Define scaled element radius according to Atomic Radius. This is for the purpose of plotting. 
@@ -1024,8 +1024,8 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 5, psi =
             #Draw atoms for pyplot figure (with shiny shpere effect)
             original_ball_size = scaled_atomic_radius_for_pyplot_dict[atom_species_add_mirror_atoms_arr[i]]
             if len(poscar_dict['added_atom_data'][0,:]) != 0:
-                colormap_normalized_data, colormap_vmin, colormap_vmax = funcs.data_normalize(input_data_value = selected_added_atom_data_arr[i],
-                                                                                              data_list = selected_added_atom_data_arr,
+                colormap_normalized_data, colormap_vmin, colormap_vmax = funcs.data_normalize(input_data_value = float(selected_added_atom_data_arr[i]),
+                                                                                              data_list = selected_added_atom_data_arr.astype(float),
                                                                                               colormap_vmin = colormap_vmin,
                                                                                               colormap_vmax = colormap_vmax)
             #Real color background
@@ -1206,7 +1206,7 @@ def plot_poscar(poscar_dir, euler_angle_type = 'zyx', phi = -3, theta = 5, psi =
         logfile,
         'elmt_color = ' + str(elmt_color) + '\n' +
         'vasp_plot.plot_poscar(' + '\n' +
-        '    poscar_dir=' + 'r\'' + str(poscar_dir) + '\'' + ',\n' +
+        '    poscar_file_path=' + 'r\'' + str(poscar_file_path) + '\'' + ',\n' +
         '    euler_angle_type=' + '\'' + str(euler_angle_type) + '\'' + ',\n' +
         '    phi=' + str(phi) + ',\n' +
         '    theta=' + str(theta) + ',\n' +
@@ -1366,8 +1366,8 @@ def plot_poscar_for_sysname(sysname_file, euler_angle_type = 'zyx', phi = -3, th
         for i_line in range(0,n_lines):
             sysname = funcs.split_line(lines[i_line])[0]
             workdir = os.getcwd() + '/' + str(filename) + '/' + sysname
-            poscar_dir = workdir + '/POSCAR'
-            plot_poscar(poscar_dir, euler_angle_type, phi, theta, psi, elmt_color, draw_mirror_atom, box_on, axis_indicator,
+            poscar_file_path = workdir + '/POSCAR'
+            plot_poscar(poscar_file_path, euler_angle_type, phi, theta, psi, elmt_color, draw_mirror_atom, box_on, axis_indicator,
                         plot_cell_basis_vector_label, plot_atom_label, fig_format, fig_dpi)
     funcs.write_log(
         logfile,

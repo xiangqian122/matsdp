@@ -18,7 +18,15 @@ from matsdp.vasp import vasp_build
 from matsdp.vasp import vasp_plot
 from matsdp.vasp import vasp_analyze
 from matsdp.vasp import vasp_write
+from matsdp.vasp import vasp_default
+from matsdp.vasp import vasp_help
 from matsdp.apt import apt_plot
+from matsdp.dvm import dvm_read
+from matsdp.dvm import dvm_build
+from matsdp.dvm import dvm_analyze
+from matsdp.dvm import dvm_write
+from matsdp.dvm import dvm_default
+from matsdp.dvm import dvm_help
 
 defaults_dict = default_params.default_params()
 logfile = defaults_dict['logfile']
@@ -36,7 +44,7 @@ formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time_start))
 funcs.write_log(logfile,'## Job started at ' + formatted_time)
 
 program_name = 'matsdp'
-version = '0.1.5'
+version = '0.1.6'
 authors = 'dianwuwang@163.com'
 
 root = tk.Tk()
@@ -182,6 +190,34 @@ def on_run_read_py_script_button_clicked(event):
     child_toplevel.geometry('1020x110+20+25')
     
     read_py_script_subtoolkit(child_toplevel)
+    return 'break'
+
+def on_run_ie_nn_button_clicked(event):
+    '''
+    Description:
+        Run ie_nn()
+    '''
+    import tkinter as tk
+    funcs.write_log(logfile,'## ie_nn GUI\n')
+    child_toplevel = tk.Toplevel(root)
+    tk.Label(child_toplevel, text='ie_nn')
+    child_toplevel.geometry('1030x130+20+25')
+    
+    ie_nn_subtoolkit(child_toplevel)
+    return 'break'
+
+def on_run_write_ie_button_clicked(event):
+    '''
+    Description:
+        Run write_ie()
+    '''
+    import tkinter as tk
+    funcs.write_log(logfile,'## write_ie GUI\n')
+    child_toplevel = tk.Toplevel(root)
+    tk.Label(child_toplevel, text='write_ie')
+    child_toplevel.geometry('1030x130+20+25')
+    
+    write_ie_subtoolkit(child_toplevel)
     return 'break'
 
 ##############################
@@ -362,11 +398,11 @@ class nn_map_subtoolkit:
         self.get_input_dict()['n_shell'] = int(self.n_shell_value_widget.get())
         self.get_input_dict()['a0'] = float(self.a0_value_widget.get())
         
-        poscar_dir = self.get_input_dict()['list_of_file_paths'][0]
+        poscar_file_path = self.get_input_dict()['list_of_file_paths'][0]
         n_shell = self.get_input_dict()['n_shell']
         a0 = self.get_input_dict()['a0']
         
-        vasp_analyze.nn_map(poscar_dir, a0, n_shell)
+        vasp_analyze.nn_map(poscar_file_path, a0, n_shell)
         return 'break'
     
     def create_run_bar(self):
@@ -485,14 +521,14 @@ class simple_cna_subtoolkit:
         self.get_input_dict()['a0'] = self.a0_value_widget.get()
         self.get_input_dict()['common_neighbor_elmt_list'] = self.common_neighbor_elmt_list_value_widget.get()
         
-        poscar_dir = self.get_input_dict()['list_of_file_paths'][0]
+        poscar_file_path = self.get_input_dict()['list_of_file_paths'][0]
         a0 = float(self.get_input_dict()['a0'])
         if ',' in self.get_input_dict()['common_neighbor_elmt_list']:
             common_neighbor_elmt_list = funcs.split_line(line = self.get_input_dict()['common_neighbor_elmt_list'], separator = ',')
         else:
             common_neighbor_elmt_list = funcs.split_line(line = self.get_input_dict()['common_neighbor_elmt_list'], separator = ' ')
         
-        vasp_analyze.simple_cna(poscar_dir, a0, common_neighbor_elmt_list)
+        vasp_analyze.simple_cna(poscar_file_path, a0, common_neighbor_elmt_list)
         return 'break'
     
     def create_run_bar(self):
@@ -598,10 +634,10 @@ class subst_subtoolkit:
     def on_run_button_clicked(self):
         for i in range(0, self.max_num_of_files):
             self.get_input_dict()['list_of_file_paths'][i] = self.load_file_entry_widget[i].get()
-        poscar_dir = self.get_input_dict()['list_of_file_paths'][0]
+        poscar_file_path = self.get_input_dict()['list_of_file_paths'][0]
         substitution_list_file = self.get_input_dict()['list_of_file_paths'][1]
         
-        vasp_build.substitution(substitution_list_file, poscar_dir)
+        vasp_build.substitution(substitution_list_file, poscar_file_path)
         funcs.write_log(logfile,'## Substitution complete\n')
         return 'break'
     
@@ -715,14 +751,14 @@ class vasp_selection_sphere_subtoolkit:
         self.get_input_dict()['radius'] = self.radius_value_widget.get()
         self.get_input_dict()['output_file_name'] = self.output_file_name_value_widget.get()
         
-        poscar_dir = self.get_input_dict()['list_of_file_paths'][0]
+        poscar_file_path = self.get_input_dict()['list_of_file_paths'][0]
         origin_atom_name = str(self.get_input_dict()['origin_atom_name'])
         radius = float(self.get_input_dict()['radius'])
         self.include_mirror_atoms = funcs.convert_bool(self.include_mirror_atoms_str.get())
         include_mirror_atoms = self.include_mirror_atoms
         output_file_name = str(self.get_input_dict()['output_file_name'])
         
-        vasp_build.selection_sphere(poscar_dir, origin_atom_name, radius, include_mirror_atoms, output_file_name)
+        vasp_build.selection_sphere(poscar_file_path, origin_atom_name, radius, include_mirror_atoms, output_file_name)
         return 'break'
     
     def create_run_bar(self):
@@ -1011,7 +1047,7 @@ class plot_dos_subtoolkit:
             if self.l_dos_mode_check_button_widget[i].var.get() == True:
                 self.dos_mode[self.dos_mode_elmtname_entry_widget[i].get()].append('LDOS')  
 
-        atom_doscar_dir_list = []
+        atom_doscar_file_path_list = []
         atom_subplot_arg_list = []
         subplot_arg_list = []
         subplot_xtick_list = []
@@ -1019,7 +1055,7 @@ class plot_dos_subtoolkit:
         subplot_xlabel_list = []
         subplot_ylabel_list = []
         for i in range(0, self.num_of_atoms):
-            atom_doscar_dir_list.append(self.get_doscar_related_input_dict()['ListOfDOSCARPaths'][int(self.get_atom_related_input_dict()['ListOfAtomDOSCARindx'][i]) - 1])
+            atom_doscar_file_path_list.append(self.get_doscar_related_input_dict()['ListOfDOSCARPaths'][int(self.get_atom_related_input_dict()['ListOfAtomDOSCARindx'][i]) - 1])
             atom_subplot_arg_list.append(int(self.get_atom_related_input_dict()['ListOfAtomSubplotArg'][i]))
         for i in range(0, self.num_of_subplots):
             subplot_arg_list.append(int(self.get_subplot_related_input_dict()['ListOfSubplotArg'][i]))
@@ -1060,7 +1096,7 @@ class plot_dos_subtoolkit:
         fig_size = [float(self.fig_width), float(self.fig_height)]
         dos_mode = self.dos_mode
 
-        vasp_plot.plot_dos(atom_doscar_dir_list, atom_sysname_list, atom_indx_list, atom_palette_list, atom_subplot_arg_list,
+        vasp_plot.plot_dos(atom_doscar_file_path_list, atom_sysname_list, atom_indx_list, atom_palette_list, atom_subplot_arg_list,
                           subplot_arg_list, subplot_xlo_list, subplot_xhi_list, subplot_ylo_list, subplot_yhi_list,
                           subplot_xtick_list, subplot_ytick_list, subplot_xlabel_list, subplot_ylabel_list, subplot_share_xy_list, mainplot_axis_label_list,
                           dos_mode, fermi_shift_zero, peak_analyzer, fig_format, fig_size, fig_dpi)
@@ -1500,7 +1536,7 @@ class plot_poscar_subtoolkit:
         self.plot_poscar_mode = funcs.convert_bool(self.plot_poscar_mode_str.get())
         plot_poscar_mode = self.plot_poscar_mode
         if plot_poscar_mode == 'single':
-            poscar_dir = self.get_input_dict()['list_of_file_paths'][0]
+            poscar_file_path = self.get_input_dict()['list_of_file_paths'][0]
         elif plot_poscar_mode == 'multiple':
             workdir = self.get_dir_dict()['list_of_dir_paths'][0]
 
@@ -1560,7 +1596,7 @@ class plot_poscar_subtoolkit:
 
         if plot_poscar_mode == 'single':
             vasp_plot.plot_poscar(
-                poscar_dir, euler_angle_type, phi, theta, psi, elmt_color, draw_mirror_atom, box_on,
+                poscar_file_path, euler_angle_type, phi, theta, psi, elmt_color, draw_mirror_atom, box_on,
                 axis_indicator, plot_cell_basis_vector_label, plot_atom_label, fig_format, fig_dpi,
                 draw_colormap, colormap_column_indx, colormap_vmin, colormap_vmax, vmin_color, vmax_color, colorbar_alignment)
         elif plot_poscar_mode == 'multiple':
@@ -1880,10 +1916,10 @@ class estruct_subtoolkit:
             self.get_input_dict()['list_of_file_paths'][i] = self.load_file_entry_widget[i].get()
         self.get_input_dict()['sysname'] = self.sysname_value_widget.get()
         
-        doscar_dir = self.get_input_dict()['list_of_file_paths'][0]
+        doscar_file_path = self.get_input_dict()['list_of_file_paths'][0]
         sysname = self.get_input_dict()['sysname']
         
-        vasp_analyze.estruct(doscar_dir, sysname)
+        vasp_analyze.estruct(doscar_file_path, sysname)
         return 'break'
     
     def create_run_bar(self):
@@ -1931,14 +1967,14 @@ class estruct_subtoolkit:
         self.create_run_bar()
 
 ##########################
-# write_outcar_with_force
+# write_poscar_with_force
 ##########################
 class write_poscar_with_force_subtoolkit:
     def __init__(self, root):
         self.subtoolkitname = 'write_outcar_with_force'
         self.max_num_of_files = 1
         self.initial_ionic_step = 'last'
-        self.initial_output_poscar_file_name = 'None'
+        self.initial_output_poscar_file_path = 'None'
         
         self.root = root
         self.root.title(self.subtoolkitname)
@@ -1956,7 +1992,7 @@ class write_poscar_with_force_subtoolkit:
     def init_all_input_params(self):
         self.all_input_params = [{'list_of_file_paths': [None] * self.max_num_of_files,
                                 'ionic_step' : self.initial_ionic_step,
-                                'output_poscar_file_name' : self.initial_output_poscar_file_name
+                                'output_poscar_file_path' : self.initial_output_poscar_file_path
                                 }
                                for k in range(self.max_num_of_files)]
     def on_open_file_button_clicked(self, file_indx):  
@@ -1988,19 +2024,19 @@ class write_poscar_with_force_subtoolkit:
         for i in range(0, self.max_num_of_files):
             self.get_input_dict()['list_of_file_paths'][i] = self.load_file_entry_widget[i].get()
         self.get_input_dict()['ionic_step'] = self.ionic_step_value_widget.get()
-        self.get_input_dict()['output_poscar_file_name'] = self.output_poscar_file_name_value_widget.get()
+        self.get_input_dict()['output_poscar_file_path'] = self.output_poscar_file_path_value_widget.get()
         
-        outcar_dir = self.get_input_dict()['list_of_file_paths'][0]
+        outcar_file_path = self.get_input_dict()['list_of_file_paths'][0]
         if self.get_input_dict()['ionic_step'] == 'last' or self.get_input_dict()['ionic_step'] == 'first':
             ionic_step = self.get_input_dict()['ionic_step']
         else:
             ionic_step = int(self.get_input_dict()['ionic_step'])
-        if self.get_input_dict()['output_poscar_file_name'] == 'None':
-            output_poscar_file_name = None
+        if self.get_input_dict()['output_poscar_file_path'] == 'None':
+            output_poscar_file_path = None
         else:
             pass
         
-        vasp_write.write_poscar_with_force(outcar_dir, ionic_step, output_poscar_file_name)
+        vasp_write.write_poscar_with_force(outcar_file_path, ionic_step, output_poscar_file_path)
         return 'break'
     
     def create_run_bar(self):
@@ -2031,11 +2067,11 @@ class write_poscar_with_force_subtoolkit:
         self.ionic_step_value_widget.grid(row = 0, column = 1, padx = 3, pady = 2)
         ionic_step_str.set(self.get_input_dict()['ionic_step'])
 
-        tk.Label(top_bar_frame, text = 'output_poscar_file_name=').grid(row = 0, column =2)
-        output_poscar_file_name_str = tk.StringVar()
-        self.output_poscar_file_name_value_widget = tk.Entry(top_bar_frame, width = 37, textvariable = output_poscar_file_name_str)
-        self.output_poscar_file_name_value_widget.grid(row = 0, column = 3, padx = 3, pady = 2)
-        output_poscar_file_name_str.set(self.get_input_dict()['output_poscar_file_name'])
+        tk.Label(top_bar_frame, text = 'output_poscar_file_path=').grid(row = 0, column =2)
+        output_poscar_file_path_str = tk.StringVar()
+        self.output_poscar_file_path_value_widget = tk.Entry(top_bar_frame, width = 95, textvariable = output_poscar_file_path_str)
+        self.output_poscar_file_path_value_widget.grid(row = 0, column = 3, padx = 3, pady = 2)
+        output_poscar_file_path_str.set(self.get_input_dict()['output_poscar_file_path'])
 
     def create_top_menu(self):
         self.menu_bar = tk.Menu(self.root)
@@ -2216,6 +2252,211 @@ class concentration_profile_subtoolkit:
         self.create_top_bar()
         self.create_run_bar()
 
+##########################
+#ie_nn
+##########################
+class ie_nn_subtoolkit:
+    def __init__(self, root):
+        self.subtoolkitname = 'ie_nn'
+        self.max_num_of_files = 1
+        self.initial_a0 = 3.545
+        
+        self.root = root
+        self.root.title(self.subtoolkitname)
+        self.all_input_params = [None] * self.max_num_of_files
+        self.current_file_indx = 0
+        self.load_file_entry_widget = [None] * self.max_num_of_files
+        self.init_all_input_params()
+        self.init_gui()
+    def get_input_dict(self):
+        return self.all_input_params[self.current_file_indx]
+    def get_list_of_file_paths(self):
+        return self.get_input_dict()['list_of_file_paths']
+    def set_file_path(self, file_indx, file_path):
+        self.get_list_of_file_paths()[file_indx] = file_path
+    def init_all_input_params(self):
+        self.all_input_params = [{'list_of_file_paths': [None] * self.max_num_of_files,
+                                'a0' : self.initial_a0,
+                                }
+                               for k in range(self.max_num_of_files)]
+    def on_n_shell_changed(self):
+        self.set_n_shell()
+    def on_open_file_button_clicked(self, file_indx):  
+        def event_handler():
+            file_path = tkinter.filedialog.askopenfilename()
+            if not file_path:
+                return
+            self.set_file_path(file_indx, file_path)
+            self.display_all_file_paths()
+        return event_handler
+    def display_all_file_paths(self):
+        '''
+        Description:
+            display the file path in each entry box
+        '''            
+        for indx, file_path in enumerate(self.get_list_of_file_paths()):
+            self.display_file_path(indx, file_path)            
+    def display_file_path(self, text_widget_indx, file_path):
+        '''
+        Description:
+            display the file path in the TextWidgetNum-th entry box
+        '''
+        if file_path is None:
+            return
+        self.load_file_entry_widget[text_widget_indx].delete(0, tk.END)
+        self.load_file_entry_widget[text_widget_indx].insert(0, file_path)
+
+    def on_run_button_clicked(self):
+        for i in range(0, self.max_num_of_files):
+            self.get_input_dict()['list_of_file_paths'][i] = self.load_file_entry_widget[i].get()
+        self.get_input_dict()['a0'] = float(self.a0_value_widget.get())
+        
+        dvm_otput_file_path = self.get_input_dict()['list_of_file_paths'][0]
+        a0 = self.get_input_dict()['a0']
+        
+        dvm_analyze.ie_nn(dvm_otput_file_path, a0)
+        return 'break'
+    
+    def create_run_bar(self):
+        run_bar_frame = tk.Frame(self.root, height = 15)
+        start_row = self.max_num_of_files + 10
+        run_bar_frame.grid(row = start_row, columnspan = 13, sticky = tk.W + tk.E, padx = 15, pady = 10)
+        self.run_button = tk.Button(run_bar_frame, text = 'Run', compound = 'left', command = self.on_run_button_clicked)
+        self.run_button.grid(row = start_row, column = 1, padx = 2)
+        self.run_button.configure(background='lightgreen')
+    def create_left_file_loader(self):
+        left_frame = tk.Frame(self.root)
+        left_frame.grid(row = 10, column = 0, columnspan = 6, sticky = tk.W + tk.E + tk.N + tk.S)
+        for i in range(0, self.max_num_of_files):
+            tk.Label(left_frame, text = '*.otput:').grid(row = i, column = 0, padx =2, pady = 4)
+            open_file_button = tk.Button(left_frame, text='Find',command = self.on_open_file_button_clicked(i))
+            open_file_button.grid(row = i, column = 1, padx = 5, pady =4)
+            filename_str = tk.StringVar()
+            self.load_file_entry_widget[i] = tk.Entry(left_frame, width = 120, textvariable= filename_str)
+            self.load_file_entry_widget[i].grid(row = i, column =4, padx = 6, pady =4)
+            filename_str.set('Enter or choose *.otput file path here')
+    def create_top_bar(self):
+        top_bar_frame = tk.Frame(self.root, height = 25)
+        top_bar_frame.grid(row = 0, columnspan = 12, rowspan = 10, padx = 5, pady = 5)
+
+        tk.Label(top_bar_frame, text = 'a0=').grid(row = 0, column =0)
+        latt_const_str = tk.StringVar()
+        self.a0_value_widget = tk.Entry(top_bar_frame, textvariable = latt_const_str)
+        self.a0_value_widget.grid(row = 0, column = 1, padx = 3, pady = 2)
+        latt_const_str.set(self.get_input_dict()['a0'])
+
+    def create_top_menu(self):
+        self.menu_bar = tk.Menu(self.root)
+        self.file_menu = tk.Menu(self.menu_bar, tearoff = 0)
+        self.file_menu.add_command(label = 'Exit', accelerator='Alt+F4', command=exit_editor)
+        self.menu_bar.add_cascade(label = 'File', menu = self.file_menu)
+        self.about_menu = tk.Menu(self.menu_bar, tearoff = 0)
+        self.about_menu.add_command(label = 'About', command=display_about_messagebox)
+        self.about_menu.add_command(label = 'Help', command=display_help_messagebox)
+        self.menu_bar.add_cascade(label = 'About', menu = self.about_menu)
+        self.root.config(menu = self.menu_bar)
+    def init_gui(self):
+        self.create_left_file_loader()
+        self.create_top_menu()
+        self.create_top_bar()
+        self.create_run_bar()
+
+
+##########################
+# write_ie
+##########################
+class write_ie_subtoolkit:
+    def __init__(self, root):
+        self.subtoolkitname = 'write_ie'
+        self.max_num_of_files = 1
+        
+        self.root = root
+        self.root.title(self.subtoolkitname)
+        self.all_input_params = [None] * self.max_num_of_files
+        self.current_file_indx = 0
+        self.load_file_entry_widget = [None] * self.max_num_of_files
+        self.init_all_input_params()
+        self.init_gui()
+    def get_input_dict(self):
+        return self.all_input_params[self.current_file_indx]
+    def get_list_of_file_paths(self):
+        return self.get_input_dict()['list_of_file_paths']
+    def set_file_path(self, file_indx, file_path):
+        self.get_list_of_file_paths()[file_indx] = file_path
+    def init_all_input_params(self):
+        self.all_input_params = [{'list_of_file_paths': [None] * self.max_num_of_files,
+                                }
+                               for k in range(self.max_num_of_files)]
+    def on_n_shell_changed(self):
+        self.set_n_shell()
+    def on_open_file_button_clicked(self, file_indx):  
+        def event_handler():
+            file_path = tkinter.filedialog.askopenfilename()
+            if not file_path:
+                return
+            self.set_file_path(file_indx, file_path)
+            self.display_all_file_paths()
+        return event_handler
+    def display_all_file_paths(self):
+        '''
+        Description:
+            display the file path in each entry box
+        '''            
+        for indx, file_path in enumerate(self.get_list_of_file_paths()):
+            self.display_file_path(indx, file_path)            
+    def display_file_path(self, text_widget_indx, file_path):
+        '''
+        Description:
+            display the file path in the TextWidgetNum-th entry box
+        '''
+        if file_path is None:
+            return
+        self.load_file_entry_widget[text_widget_indx].delete(0, tk.END)
+        self.load_file_entry_widget[text_widget_indx].insert(0, file_path)
+
+    def on_run_button_clicked(self):
+        for i in range(0, self.max_num_of_files):
+            self.get_input_dict()['list_of_file_paths'][i] = self.load_file_entry_widget[i].get()
+            
+        dvm_otput_file_path = self.get_input_dict()['list_of_file_paths'][0]
+        
+        dvm_write.write_ie(dvm_otput_file_path)
+        return 'break'
+    
+    def create_run_bar(self):
+        run_bar_frame = tk.Frame(self.root, height = 15)
+        start_row = self.max_num_of_files + 10
+        run_bar_frame.grid(row = start_row, columnspan = 13, sticky = tk.W + tk.E, padx = 15, pady = 10)
+        self.run_button = tk.Button(run_bar_frame, text = 'Run', compound = 'left', command = self.on_run_button_clicked)
+        self.run_button.grid(row = start_row, column = 1, padx = 2)
+        self.run_button.configure(background='lightgreen')
+    def create_left_file_loader(self):
+        left_frame = tk.Frame(self.root)
+        left_frame.grid(row = 10, column = 0, columnspan = 6, sticky = tk.W + tk.E + tk.N + tk.S)
+        for i in range(0, self.max_num_of_files):
+            tk.Label(left_frame, text = '*.otput:').grid(row = i, column = 0, padx =2, pady = 4)
+            open_file_button = tk.Button(left_frame, text='Find',command = self.on_open_file_button_clicked(i))
+            open_file_button.grid(row = i, column = 1, padx = 5, pady =4)
+            filename_str = tk.StringVar()
+            self.load_file_entry_widget[i] = tk.Entry(left_frame, width = 120, textvariable= filename_str)
+            self.load_file_entry_widget[i].grid(row = i, column =4, padx = 6, pady =4)
+            filename_str.set('Enter or choose *.otput file path here')
+
+    def create_top_menu(self):
+        self.menu_bar = tk.Menu(self.root)
+        self.file_menu = tk.Menu(self.menu_bar, tearoff = 0)
+        self.file_menu.add_command(label = 'Exit', accelerator='Alt+F4', command=exit_editor)
+        self.menu_bar.add_cascade(label = 'File', menu = self.file_menu)
+        self.about_menu = tk.Menu(self.menu_bar, tearoff = 0)
+        self.about_menu.add_command(label = 'About', command=display_about_messagebox)
+        self.about_menu.add_command(label = 'Help', command=display_help_messagebox)
+        self.menu_bar.add_cascade(label = 'About', menu = self.about_menu)
+        self.root.config(menu = self.menu_bar)
+    def init_gui(self):
+        self.create_left_file_loader()
+        self.create_top_menu()
+        self.create_run_bar()
+
 
 #######################
 #Main GUI
@@ -2380,6 +2621,20 @@ write_poscar_with_force_button.pack()
 plot_proxigram_csv_button = tk.Button(root, text='APT: Plot concentration profile', anchor = tk.W, compound = 'left', width=37)
 plot_proxigram_csv_button.bind('<Button-1>', on_run_concentration_profile_button_clicked)
 plot_proxigram_csv_button.pack()
+
+################
+#ie_nn button
+################
+ie_nn_button = tk.Button(root, text='DVM: extract IE for 1NN atom pairs', anchor = tk.W, compound = 'left', width=37)
+ie_nn_button.bind('<Button-1>', on_run_ie_nn_button_clicked)
+ie_nn_button.pack()
+
+################
+#write_ie button
+################
+write_ie_button = tk.Button(root, text='DVM: extract IE for all the atom pairs', anchor = tk.W, compound = 'left', width=37)
+write_ie_button.bind('<Button-1>', on_run_write_ie_button_clicked)
+write_ie_button.pack()
 
 #####################
 #read_py_script button

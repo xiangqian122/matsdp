@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-def substitution(substitution_list_file, poscar_dir):
+def substitution(substitution_list_file, poscar_file_path):
     '''
     Description:
         Generate new POSCAR based on the input POSCAR by alloying element susbstitution
@@ -34,7 +34,7 @@ def substitution(substitution_list_file, poscar_dir):
 
     - Args
      * substitution_list_file: String format. It specifies the directory of the .subst file (substitution list file)
-     * poscar_dir: String format. The directory of the POSCAR file which is to be subsituted. It can either be full path or relative path.
+     * poscar_file_path: String format. The directory of the POSCAR file which is to be subsituted. It can either be full path or relative path.
     '''
        
     import os
@@ -49,7 +49,7 @@ def substitution(substitution_list_file, poscar_dir):
     output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
     funcs.mkdir(output_dir)
 
-    poscar_dir = os.path.abspath(poscar_dir)
+    poscar_file_path = os.path.abspath(poscar_file_path)
     substitution_list_file_abs_path = os.path.abspath(substitution_list_file)
     substitution_list_file_path,substitution_list_file = os.path.split(substitution_list_file_abs_path)
     if os.path.isfile(substitution_list_file_abs_path) == False:
@@ -58,11 +58,11 @@ def substitution(substitution_list_file, poscar_dir):
         subst_file_name, subst_file_extension = os.path.splitext(substitution_list_file)
         if subst_file_extension != '.subst':
             funcs.write_log(logfile,substitution_list_file + " detected. But the file extension should be .subst ")
-    if os.path.isfile(poscar_dir) == False:
-        funcs.write_log(logfile,poscar_dir + " doesn't exist, please check current folder")
+    if os.path.isfile(poscar_file_path) == False:
+        funcs.write_log(logfile,poscar_file_path + " doesn't exist, please check current folder")
     
     # Extract information from the input POSCAR file
-    poscar_dict = vasp_read.read_poscar(poscar_dir)
+    poscar_dict = vasp_read.read_poscar(poscar_file_path)
     n_atoms = np.sum(poscar_dict['elmt_num_arr']) 
     with open(substitution_list_file_abs_path) as s_lines:
         s_line = s_lines.readlines();
@@ -139,7 +139,7 @@ def substitution(substitution_list_file, poscar_dir):
         if not isExists:
             funcs.write_log(logfile,'WARNING:' + models_path + ' does not exist!')
         poscar_out = models_path + '/POSCAR'
-        with open(poscar_out,'w') as fileobject, open(poscar_dir,'r') as pline:
+        with open(poscar_out,'w') as fileobject, open(poscar_file_path,'r') as pline:
             pline = pline.readlines()
             fileobject.write(pline[0] +
                              pline[1] +
@@ -174,17 +174,17 @@ def substitution(substitution_list_file, poscar_dir):
         logfile,
         'vasp_build.substitution(' + '\n' +
         '    substitution_list_file=' + 'r\'' + str(substitution_list_file_abs_path) + '\'' + ',\n' +
-        '    poscar_dir='  + 'r\'' +str(poscar_dir) + '\'' + ')\n' +
+        '    poscar_file_path='  + 'r\'' +str(poscar_file_path) + '\'' + ')\n' +
         '###############################\n')
     return 0
 
-def rep_elmt(substitution_list_file, poscar_dir, old_elmt, elmt_group):
+def rep_elmt(substitution_list_file, poscar_file_path, old_elmt, elmt_group):
     '''
     - Descriptions
      * replace element in the .subst file by specific elements and generate corresponding models
     - Args
      * substitution_list_file: String format. It specifies the directory of the *.subst file (substitution list file).
-     * poscar_dir: String format. The directory of the POSCAR file. It can either be full path or relative path
+     * poscar_file_path: String format. The directory of the POSCAR file. It can either be full path or relative path
      * old_elmt: String format. It specifies the element in the *.subst which you want to substute with.
      * elmt_group: list format. It specifies the elements which you want to subsitute for.
     '''
@@ -198,7 +198,7 @@ def rep_elmt(substitution_list_file, poscar_dir, old_elmt, elmt_group):
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
     time_start=time.time()
-    poscar_dir = os.path.abspath(poscar_dir)
+    poscar_file_path = os.path.abspath(poscar_file_path)
     substitution_list_file_abs_path = os.path.abspath(substitution_list_file)
     subst_file_name, subst_file_extension = os.path.splitext(substitution_list_file)
     sysname_file =subst_file_name + '.sysname'
@@ -208,7 +208,7 @@ def rep_elmt(substitution_list_file, poscar_dir, old_elmt, elmt_group):
     for i_elmt in elmt_group:
         funcs.replace_file_content(substitution_list_file,str1,i_elmt)
         str1 = i_elmt
-        substitution(substitution_list_file, poscar_dir)
+        substitution(substitution_list_file, poscar_file_path)
         funcs.merge_files('Tempsysname.dat',sysname_file)
     if os.path.isfile(sysname_file):
         os.remove(sysname_file)
@@ -222,18 +222,18 @@ def rep_elmt(substitution_list_file, poscar_dir, old_elmt, elmt_group):
         logfile,
         'vasp_build.rep_elmt(' + '\n' +
         '    substitution_list_file='  + 'r\'' + str(substitution_list_file) + '\'' + ',\n' +
-        '    poscar_dir='  + 'r\'' + str(poscar_dir) + '\'' + ',\n' +
+        '    poscar_file_path='  + 'r\'' + str(poscar_file_path) + '\'' + ',\n' +
         '    old_elmt=' + '\'' + str(old_elmt) + '\'' + ',\n' +
         '    elmt_group=' + str(elmt_group) + ')\n' +
         '###############################\n')
     return 0
 
-def selection_sphere(poscar_dir, origin_atom_name, radius = 7.0, include_mirror_atoms = True, output_file_name = 'example'):
+def selection_sphere(poscar_file_path, origin_atom_name, radius = 7.0, include_mirror_atoms = True, output_file_name = 'example'):
     '''
     Descriptions:
     This module is used to select atoms in a sphere that is centered around an arbitrary atom from the POSCAR file.
     The selected atom coordinates can also be written to the *.incar file of the DVM program.
-    poscar_dir: String format. The directory of the POSCAR file. It can either be full path or relative path.
+    poscar_file_path: String format. The directory of the POSCAR file. It can either be full path or relative path.
     origin_atom_name: String type. It defines the origin atom of the sphere
     radius: Float type. The atoms within a distance 'radius' from the original atom are selected (units in Angstroms);
     include_mirror_atoms: Logical value. Whether to include the mirror atoms or not;
@@ -254,7 +254,7 @@ def selection_sphere(poscar_dir, origin_atom_name, radius = 7.0, include_mirror_
     selection_dir_name = 'atom_selection_sphere'
     funcs.mkdir(output_dir + '/' + selection_dir_name + '/' + output_file_name + '/')
 
-    poscar_dir = os.path.abspath(poscar_dir)
+    poscar_file_path = os.path.abspath(poscar_file_path)
 
     # the *.vasp file which contains the selected atoms
     vasp_file = output_dir + '/' + selection_dir_name + '/' + output_file_name + '/' + output_file_name + '.vasp'
@@ -270,9 +270,9 @@ def selection_sphere(poscar_dir, origin_atom_name, radius = 7.0, include_mirror_
     dvm_incar_temp_file2 = output_file_name + '_2.temp'
 
     # Extract information from the input POSCAR file
-    poscar_dict = vasp_read.read_poscar(poscar_dir)
+    poscar_dict = vasp_read.read_poscar(poscar_file_path)
     n_atoms = poscar_dict['n_atoms']
-    atom_indx = convert.atomname2indx(poscar_dir, origin_atom_name)
+    atom_indx = convert.atomname2indx(poscar_file_path, origin_atom_name)
     origin_atom_pos_arr = np.array([0.000]*3, dtype = np.float)
     origin_atom_pos_arr[0] = poscar_dict['pos_arr'][atom_indx - 1, 3]
     origin_atom_pos_arr[1] = poscar_dict['pos_arr'][atom_indx - 1, 4]
@@ -456,7 +456,7 @@ def selection_sphere(poscar_dir, origin_atom_name, radius = 7.0, include_mirror_
     
     funcs.write_log(logfile,
         'vasp_build.selection_sphere(' + '\n' +
-        '    poscar_dir=' + 'r\'' + str(poscar_dir) + '\'' + ',\n' +
+        '    poscar_file_path=' + 'r\'' + str(poscar_file_path) + '\'' + ',\n' +
         '    origin_atom_name=\'' + str(origin_atom_name) + '\',\n' + 
         '    radius=' + str(radius) + ',\n' +
         '    include_mirror_atoms=' + str(include_mirror_atoms) + ',\n' +
