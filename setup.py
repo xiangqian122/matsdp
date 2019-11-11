@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(name =  'matsdp',
-      version = '0.1.6',
+      version = '0.1.8',
       description = 'The materials simulation and data processing toolkit',
       long_description = open('README.rst.txt').read(),
       author = 'Dianwu Wang',

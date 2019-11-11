@@ -29,7 +29,7 @@ run_replace_elmt = True
 run_selection_sphere = True
 run_get_doscar = True
 run_plot_dos = True
-run_plot_poscar = True
+run_plot_poscar = False
 run_plot_poscar_for_workdir = True
 run_overlap_peak_analyzer = True
 run_estruct = True
@@ -495,9 +495,10 @@ if run_create_multiple_dvm_jobs == True:
     poscar_file_path_dict['dvm_example'] = './tests/vasp/CONTCAR'
     dvm_build.create_multiple_dvm_jobs(
         poscar_file_path_dict = poscar_file_path_dict,
+        elmt_ind_file_dir = './tests/dvm/',
         origin_atom_name_list = ['Re1', 'Ni5'],
         radius = 8,
-        elmt_ind_file_dir = './tests/dvm/'
+        include_mirror_atoms = True
         )
 
 #################################

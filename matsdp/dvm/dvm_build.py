@@ -1,10 +1,11 @@
-def create_multiple_dvm_jobs(poscar_file_path_dict, origin_atom_name_list, radius, elmt_ind_file_dir):
+def create_multiple_dvm_jobs(poscar_file_path_dict, elmt_ind_file_dir, origin_atom_name_list, radius = 8, include_mirror_atoms = True):
     '''
     create multiple DVM jobs (the *.incar, *.input, IND.DAT files will be created) based on atom selection (spherical) of the POSCAR files.
+    elmt_ind_file_dir: the top directory which contains the IND.DAT files of the elements
     poscar_file_path_dict: Dictionary type. A dictionary which contains the POSCAR file path, the key of the dictionary will be used as part of the DVM job name.
     origin_atom_name_list: the origin atom in the center of the sphere in the atom selection (spherical) of the POSCAR
     radius: the radius of the sphere in the atom selection (spherical) of the POSCAR
-    elmt_ind_file_dir: the top directory which contains the IND.DAT files of the elements
+    include_mirror_atoms: whether to include the mirror atoms
     '''
     import os
     from .. import funcs
@@ -27,7 +28,7 @@ def create_multiple_dvm_jobs(poscar_file_path_dict, origin_atom_name_list, radiu
                 poscar_file_path = poscar_file_path_dict[job_id_list[i_job]],
                 origin_atom_name = i_elmt_name,
                 radius = radius,
-                include_mirror_atoms = True,
+                include_mirror_atoms = include_mirror_atoms,
                 output_file_name = job_id_list[i_job] + '_' + i_elmt_name + '_R' + str(radius)
                 )
             # create the *.input file
@@ -43,9 +44,11 @@ def create_multiple_dvm_jobs(poscar_file_path_dict, origin_atom_name_list, radiu
     funcs.write_log(
         logfile,
         'dvm_build.create_multiple_dvm_jobs(\n' +
+        '    elmt_ind_file_dir = ' + 'r\'' + str(elmt_ind_file_dir) + '\',' + '\n'
         '    poscar_file_path_dict = ' + str(poscar_file_path_dict) + ',\n' +
         '    origin_atom_name_list = ' + str(origin_atom_name_list) + ',\n' +
         '    radius = ' + str(radius) + ',\n' +
-        '    elmt_ind_file_dir = ' + 'r\'' + str(elmt_ind_file_dir) + '\')' + '\n'
+        '    include_mirror_atoms = ' + str(include_mirror_atoms) + ')\n' +
+        '#############################\n'
         )
     return 0
