@@ -1,9 +1,9 @@
-def create_multiple_dvm_jobs(poscar_file_path_dict, elmt_ind_file_dir, origin_atom_name_list, radius = 8, include_mirror_atoms = True):
+def create_multiple_dvm_jobs(poscar_file_path_dict, origin_atom_name_list_dict, elmt_ind_file_dir, radius = 8, include_mirror_atoms = True):
     '''
     create multiple DVM jobs (the *.incar, *.input, IND.DAT files will be created) based on atom selection (spherical) of the POSCAR files.
-    elmt_ind_file_dir: the top directory which contains the IND.DAT files of the elements
     poscar_file_path_dict: Dictionary type. A dictionary which contains the POSCAR file path, the key of the dictionary will be used as part of the DVM job name.
-    origin_atom_name_list: the origin atom in the center of the sphere in the atom selection (spherical) of the POSCAR
+    origin_atom_name_list_dict: Dictionary type. A dictionary which contains the list of origin atom names. The origin atoms in the center of the sphere in the atom selection (spherical) of the POSCAR. The key of the dictionary will be used as part of the DVM job name.
+    elmt_ind_file_dir: the top directory which contains the IND.DAT files of the elements
     radius: the radius of the sphere in the atom selection (spherical) of the POSCAR
     include_mirror_atoms: whether to include the mirror atoms
     '''
@@ -20,7 +20,7 @@ def create_multiple_dvm_jobs(poscar_file_path_dict, elmt_ind_file_dir, origin_at
 
     job_id_list = list(poscar_file_path_dict.keys())
     for i_job in range(0, len(job_id_list)):
-        for i_elmt_name in origin_atom_name_list:
+        for i_elmt_name in origin_atom_name_list_dict[job_id_list[i_job]]:
             job_name = job_id_list[i_job] + '_' + i_elmt_name + '_R' + str(radius)
             pos_file_path_str = output_dir + '/atom_selection_sphere/' + job_name + '/' + job_name + '.vasp'
             # create the *.incar file and the *.vasp file
@@ -44,9 +44,9 @@ def create_multiple_dvm_jobs(poscar_file_path_dict, elmt_ind_file_dir, origin_at
     funcs.write_log(
         logfile,
         'dvm_build.create_multiple_dvm_jobs(\n' +
-        '    elmt_ind_file_dir = ' + 'r\'' + str(elmt_ind_file_dir) + '\',' + '\n'
         '    poscar_file_path_dict = ' + str(poscar_file_path_dict) + ',\n' +
-        '    origin_atom_name_list = ' + str(origin_atom_name_list) + ',\n' +
+        '    origin_atom_name_list_dict = ' + str(origin_atom_name_list_dict) + ',\n' +
+        '    elmt_ind_file_dir = ' + 'r\'' + str(elmt_ind_file_dir) + '\',' + '\n'
         '    radius = ' + str(radius) + ',\n' +
         '    include_mirror_atoms = ' + str(include_mirror_atoms) + ')\n' +
         '#############################\n'

@@ -492,11 +492,13 @@ if run_plot_concentration_profile == True:
 #################################
 if run_create_multiple_dvm_jobs == True:
     poscar_file_path_dict = {}
+    origin_atom_name_list_dict = {}
     poscar_file_path_dict['dvm_example'] = './tests/vasp/CONTCAR'
+    origin_atom_name_list_dict['dvm_example'] = ['Re1', 'Ni5']
     dvm_build.create_multiple_dvm_jobs(
         poscar_file_path_dict = poscar_file_path_dict,
+        origin_atom_name_list_dict = origin_atom_name_list_dict,
         elmt_ind_file_dir = './tests/dvm/',
-        origin_atom_name_list = ['Re1', 'Ni5'],
         radius = 8,
         include_mirror_atoms = True
         )

@@ -161,3 +161,65 @@ def ie_nn(dvm_otput_file_path, a0 = 3.545):
         '    a0 = ' + str(a0) + ')\n' +
         '###############################\n')
     return first_nn_ie_au_arr, first_nn_ie_au_up_arr, first_nn_ie_au_dw_arr
+
+def job_status(job_parent_dir):
+    '''
+    Check the job status for multiple jobs
+    job_parent_dir: This is the parent directory which contains the multiple DVM jobs.
+    '''
+    import os
+    from .. import funcs
+    from .. import default_params
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
+    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    funcs.mkdir(output_dir)
+
+    def dvm_job_finished(otput_file_path):
+        import os
+        kwd = 'Job end'
+        retn_val = False
+        otput_file_path = os.path.abspath(otput_file_path)
+        with open(otput_file_path, 'r') as f:
+            lines = f.readlines()
+            for i_line in lines:
+                if kwd in i_line:
+                    retn_val = True
+        return retn_val
+
+    job_parent_dir = os.path.abspath(job_parent_dir)
+    job_dir_list = [job_parent_dir + '/' + x for x in os.listdir(job_parent_dir)]
+    job_dir_name_list = os.listdir(job_parent_dir)
+    max_length_job_dir_name = max([len(x) for x in job_dir_name_list])
+
+    job_status_file_path = output_dir + '/dvm_job_status.txt'
+
+    with open(job_status_file_path, 'w') as f:
+        pass
+    with open(job_status_file_path, 'a') as f:
+        for i_job_indx in range(0, len(job_dir_list)):
+            otput_exist = False
+            # check job status
+            job_status = 'unfinished'
+            for file0 in os.listdir(job_dir_list[i_job_indx]):
+                if '.otput' in file0:
+                    otput_exist = True
+                    otput_file_path = job_dir_list[i_job_indx] + '/' + file0
+                    if dvm_job_finished(otput_file_path) == True:
+                        job_status = 'finished'
+                        # remove redundant files
+                        for i_str in ['basfcn', 'bfnbak', 'grid3d', 'mixbak', 'moinfo', 'potent', 'scfbak']:
+                            for file1 in os.listdir(job_dir_list[i_job_indx]):
+                                if i_str in file1:
+                                    redundant_file_path = job_dir_list[i_job_indx] + '/' + file1
+                                    os.remove(redundant_file_path)
+                    continue
+            f.write(job_dir_name_list[i_job_indx] + ' ' * (max_length_job_dir_name - len(job_dir_name_list[i_job_indx])) + '   ' + job_status + ' ' * (10 - len(job_status)) + ' \n')
+    funcs.write_log(logfile,
+        'dvm_analyze.job_status(\n' +
+        '    job_parent_dir = ' + 'r\'' + job_parent_dir + '\'' + '\n'
+        '    )\n' +
+        '#############\n'
+        )
+
+    return 0

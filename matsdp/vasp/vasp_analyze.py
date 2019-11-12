@@ -981,5 +981,60 @@ def overlap_peak_analyzer(doscar_file_path, sysname, atom_indx_list,n_shell,a0, 
         '###############################\n')
     return 0
 
+def job_status(job_parent_dir):
+    '''
+    Check the job status for mutiple jobs
+    job_parent_dir: This is the parent directory which contains the multiple VASP jobs
+    '''
+    import os
+    from .. import funcs
+    from .. import default_params
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
+    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    funcs.mkdir(output_dir)
+
+    def vasp_job_finished(output_file_path):
+        import os
+        kwd = 'timing'
+        retn_val = False
+        output_file_path = os.path.abspath(output_file_path)
+        with open(output_file_path, 'r') as f:
+            lines = f.readlines()
+            for i_line in lines:
+                if kwd in i_line:
+                    retn_val = True
+        return retn_val
+
+    job_parent_dir = os.path.abspath(job_parent_dir)
+    job_dir_list = [job_parent_dir + '/' + x for x in os.listdir(job_parent_dir)]
+    job_dir_name_list = os.listdir(job_parent_dir)
+    max_length_job_dir_name = max([len(x) for x in job_dir_name_list])
+
+    job_status_file_path = output_dir + '/vasp_job_status.txt'
+
+    with open(job_status_file_path, 'w') as f:
+        pass
+    with open(job_status_file_path, 'a') as f:
+        for i_job_indx in range(0, len(job_dir_list)):
+            output_exist = False
+            # check job status
+            job_status = 'unfinished'
+            for file0 in os.listdir(job_dir_list[i_job_indx]):
+                if 'OUTCAR' in file0:
+                    output_exist = True
+                    output_file_path = job_dir_list[i_job_indx] + '/OUTCAR'
+                    if vasp_job_finished(output_file_path) == True:
+                        job_status = 'finished'
+                    continue
+            f.write(job_dir_name_list[i_job_indx] + ' ' * (max_length_job_dir_name - len(job_dir_name_list[i_job_indx])) + '   ' + job_status + ' ' * (10 - len(job_status)) + ' \n')
+    funcs.write_log(logfile,
+        'vasp_analyze.dvm_job_status(\n' +
+        '    job_parent_dir = ' + 'r\'' + job_parent_dir + '\'' + '\n'
+        '    )\n' +
+        '#############\n'
+        )
+
+    return 0
 
             
