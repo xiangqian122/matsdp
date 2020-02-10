@@ -46,7 +46,7 @@ def substitution(substitution_list_file, poscar_file_path):
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
-    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
     funcs.mkdir(output_dir)
 
     poscar_file_path = os.path.abspath(poscar_file_path)
@@ -59,7 +59,7 @@ def substitution(substitution_list_file, poscar_file_path):
         if subst_file_extension != '.subst':
             funcs.write_log(logfile,substitution_list_file + " detected. But the file extension should be .subst ")
     if os.path.isfile(poscar_file_path) == False:
-        funcs.write_log(logfile,poscar_file_path + " doesn't exist, please check current folder")
+        funcs.write_log(logfile, '#' + poscar_file_path + " doesn't exist.")
     
     # Extract information from the input POSCAR file
     poscar_dict = vasp_read.read_poscar(poscar_file_path)
@@ -71,7 +71,7 @@ def substitution(substitution_list_file, poscar_file_path):
     #Recognize atom index
     composition_arr = np.array([],dtype = np.str)
     composition_arr_count = np.array([],dtype = np.int)
-    sysname_file = substitution_list_file_path + '/' + subst_file_name + '.sysname'
+    sysname_file = os.path.join(substitution_list_file_path, subst_file_name + '.sysname')
     if os.path.isfile(sysname_file):
         os.remove(sysname_file)
     i_line = 1
@@ -133,7 +133,7 @@ def substitution(substitution_list_file, poscar_file_path):
         elmt_species_mod_remove_va = np.delete(elmt_species_mod, val_indx)
         n_elmt_mod_RemoveVa = np.delete(n_elmt_mod, val_indx)
         #Export POSCAR file for each system
-        models_path = output_dir + '/' + subst_file_name + '/' + sysname
+        models_path = os.path.join(output_dir, subst_file_name, sysname)
         funcs.mkdir(models_path)
         isExists = os.path.exists(models_path)
         if not isExists:
@@ -249,23 +249,23 @@ def selection_sphere(poscar_file_path, origin_atom_name, radius = 7.0, include_m
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
-    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
     funcs.mkdir(output_dir)
     selection_dir_name = 'atom_selection_sphere'
-    funcs.mkdir(output_dir + '/' + selection_dir_name + '/' + output_file_name + '/')
+    funcs.mkdir(os.path.join(output_dir, selection_dir_name, output_file_name))
 
     poscar_file_path = os.path.abspath(poscar_file_path)
 
     # the *.vasp file which contains the selected atoms
-    vasp_file = output_dir + '/' + selection_dir_name + '/' + output_file_name + '/' + output_file_name + '.vasp'
+    vasp_file = os.path.join(output_dir, selection_dir_name, output_file_name, output_file_name + '.vasp')
     vasp_temp_file1 = output_file_name + 'vasp_1.temp'
     vasp_temp_file2 = output_file_name + 'vasp_2.temp'
     # the *.xyz file which contains the selected atoms
-    xyz_file = output_dir + '/' + selection_dir_name + '/' + output_file_name + '/' + output_file_name + '.xyz'
+    xyz_file = os.path.join(output_dir, selection_dir_name, output_file_name, output_file_name + '.xyz')
     xyz_temp_file1 = output_file_name + '_xyz_1.temp'
     xyz_temp_file2 = output_file_name + '_xyz_2.temp'
     # the *.incar file which contains the selected atoms
-    dvm_incar_file = output_dir + '/' + selection_dir_name + '/' + output_file_name + '/' + output_file_name + '.incar'
+    dvm_incar_file = os.path.join(output_dir, selection_dir_name, output_file_name, output_file_name + '.incar')
     dvm_incar_temp_file1 = output_file_name + '_1.temp'
     dvm_incar_temp_file2 = output_file_name + '_2.temp'
 
@@ -317,6 +317,13 @@ def selection_sphere(poscar_file_path, origin_atom_name, radius = 7.0, include_m
     xmin = np.min(expanded_pos_arr[:,0])
     ymin = np.min(expanded_pos_arr[:,1])
     zmin = np.min(expanded_pos_arr[:,2])
+
+    # check whether negative value exist in the atom position
+    negative_value_exist = False
+    for item in np.sum(np.array(expanded_pos_arr) < 0, axis=0):
+        if item > 0:
+            negative_value_exist = True
+
     # write the selected atoms to designated files (*.vasp, *.xyz, *.incar)
     new_atom_num = 0
     new_elmt_species_list = []
@@ -336,25 +343,23 @@ def selection_sphere(poscar_file_path, origin_atom_name, radius = 7.0, include_m
                     new_elmt_count_list.append(0)
                 new_elmt_count_list[new_elmt_species_list.index(expanded_atom_species_arr[i_atom])] += 1
                 # *.vasp
-                if include_mirror_atoms == True:
+                if include_mirror_atoms == True or (include_mirror_atoms == False and negative_value_exist == True):
                     # if the mirror atoms are included, then the atom coordinates will be shifted
-                    f_vasp_temp1.write(
-                        str('{:.6f}'.format(expanded_pos_arr[i_atom, 0] - xmin)) + ' ' +
-                        str('{:.6f}'.format(expanded_pos_arr[i_atom, 1] - ymin)) + ' ' +
-                        str('{:.6f}'.format(expanded_pos_arr[i_atom, 2] - zmin)) + ' ' +
-                        str(expanded_atom_species_arr[i_atom])+ ' ' +
-                        expanded_atom_species_arr[i_atom] + str(new_elmt_count_list[new_elmt_species_list.index(expanded_atom_species_arr[i_atom])]) + ' ' +
-                        '    ' + str(expanded_atomname_arr[i_atom]) + ' ' + '\n'
-                        )
-                else: 
-                    f_vasp_temp1.write(
-                        str('{:.6f}'.format(expanded_pos_arr[i_atom, 0])) + ' ' +
-                        str('{:.6f}'.format(expanded_pos_arr[i_atom, 1])) + ' ' +
-                        str('{:.6f}'.format(expanded_pos_arr[i_atom, 2])) + ' ' +
-                        str(expanded_atom_species_arr[i_atom])+ ' ' +
-                        expanded_atom_species_arr[i_atom] + str(new_elmt_count_list[new_elmt_species_list.index(expanded_atom_species_arr[i_atom])]) + ' ' +
-                        '    ' + str(expanded_atomname_arr[i_atom]) + ' ' + '\n'
-                        )
+                    x_value = expanded_pos_arr[i_atom, 0] - xmin
+                    y_value = expanded_pos_arr[i_atom, 1] - ymin
+                    z_value = expanded_pos_arr[i_atom, 2] - zmin
+                else:
+                    x_value = expanded_pos_arr[i_atom, 0]
+                    y_value = expanded_pos_arr[i_atom, 1]
+                    z_value = expanded_pos_arr[i_atom, 2]
+                f_vasp_temp1.write(
+                    str('{:.6f}'.format(x_value)) + ' ' +
+                    str('{:.6f}'.format(y_value)) + ' ' +
+                    str('{:.6f}'.format(z_value)) + ' ' +
+                    str(expanded_atom_species_arr[i_atom])+ ' ' +
+                    expanded_atom_species_arr[i_atom] + str(new_elmt_count_list[new_elmt_species_list.index(expanded_atom_species_arr[i_atom])]) + ' ' +
+                    '    ' + str(expanded_atomname_arr[i_atom]) + ' ' + '\n'
+                    )
     # rearrange the order of the elements in the list
     temp_elmt_species_list = []
     temp_elmt_count_list = []
@@ -402,7 +407,7 @@ def selection_sphere(poscar_file_path, origin_atom_name, radius = 7.0, include_m
     # write the header of the files (*.vasp, *.xyz, *.incar)    
     with open(vasp_temp_file2, 'w') as f_vasp_temp2, open(xyz_temp_file2, 'w') as f_xyz_temp2, open(dvm_incar_temp_file2, 'w') as f_dvm_temp2:
         # *.vasp
-        if include_mirror_atoms == True:
+        if include_mirror_atoms == True or (include_mirror_atoms == False and negative_value_exist == True):
             l_arr_shifted = poscar_dict['l_arr'].copy()
             l_arr_shifted[0,:] = l_arr_shifted[0,:] * len(range(-nx_lo, nx_hi + 1)) 
             l_arr_shifted[1,:] = l_arr_shifted[1,:] * len(range(-ny_lo, ny_hi + 1)) 
@@ -462,3 +467,55 @@ def selection_sphere(poscar_file_path, origin_atom_name, radius = 7.0, include_m
         '    include_mirror_atoms=' + str(include_mirror_atoms) + ',\n' +
         '    output_file_name=\'' + str(output_file_name) + '\')\n')
     return 0 
+
+
+def create_multiple_vasp_jobs(substitution_list_file, poscar_file_path, elmt_potcar_dir, incar_str, kpoints_str):
+    '''
+    create POSCAR, INCAR, KPOINTS, POTCAR files, this module is based on the substitution module
+    The POSCAR is created by atom substitution
+    '''
+    import os
+    from .. import funcs
+    from . import vasp_write
+    from .. import default_params
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
+    funcs.mkdir(output_dir)
+
+    substitution(
+        substitution_list_file = os.path.abspath(substitution_list_file),
+        poscar_file_path = os.path.abspath(poscar_file_path)
+        )
+
+    subst_work_dir, substitution_list_file_txt = funcs.file_path_name(substitution_list_file)
+    sysname_file_path = os.path.join(subst_work_dir, substitution_list_file_txt[:-6] + '.sysname')
+    with open(sysname_file_path, 'r') as f:
+        lines = f.readlines()
+        for indx in range(0, len(lines)):
+            sysname = funcs.split_line(lines[indx])[0]
+            if sysname != '':
+                work_dir = os.path.join(output_dir, substitution_list_file[:-6], sysname)
+                funcs.write_file(
+                    input_str = incar_str,
+                    dest_file_path = os.path.join(work_dir, 'INCAR')
+                    )
+                funcs.write_file(
+                    input_str = kpoints_str,
+                    dest_file_path = os.path.join(work_dir, 'KPOINTS')
+                    )
+                vasp_write.write_potcar(
+                    poscar_path = os.path.join(work_dir, 'POSCAR'),
+                    elmt_potcar_dir = os.path.abspath(elmt_potcar_dir)
+                    )
+    funcs.write_log(logfile,
+        'vasp_build.create_multiple_vasp_jobs(' + '\n' +
+        '    substitution_list_file = ' + 'r\'' + str(substitution_list_file) + '\'' + ',\n' +
+        '    poscar_file_path = ' + 'r\'' + str(poscar_file_path) + '\'' + ',\n' +
+        '    elmt_potcar_dir = ' + 'r\'' + str(elmt_potcar_dir) + '\'' + ',\n' +
+        '    incar_str = \'\'\'' + str(incar_str) + '\'\'\',\n' +
+        '    kpoints_str = \'\'\'' + str(kpoints_str) + '\'\'\')\n' +
+        '############################\n'
+        )
+    return 0

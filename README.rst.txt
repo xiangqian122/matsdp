@@ -1,3 +1,4 @@
+
 =================
 Basic information
 =================
@@ -52,9 +53,9 @@ pip install matsdp
 Release note
 ------------
 
-- version 0.1.9
+- version 0.2.0
 
- * Date: 20191112
+ * Date: 20200210
 
 ======
 Usage
@@ -93,4 +94,4 @@ Running with Python environment
 Tests
 ======
 
-To run the tests, please run the runtests.py.
+To run the tests, please run the runtests.py in the "tests" directory.

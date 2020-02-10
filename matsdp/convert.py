@@ -18,7 +18,7 @@ def poscar2lmp_datafile(poscar_dir):
     poscar_dir = os.path.abspath(poscar_dir)
     poscar_path = os.path.dirname(poscar_dir)
     poscar_filename = os.path.split(poscar_dir)[-1]
-    lmp_datafile = poscar_path + '/' + poscar_filename + '.lmpdata'
+    lmp_datafile = os.path.join(poscar_path, poscar_filename + '.lmpdata')
     
     # Extract information from the input POSCAR file
     poscar_dict = vasp_read.read_poscar(poscar_dir)
@@ -68,7 +68,7 @@ def poscar2dvmincar(poscar_path):
         dvm_atom_elmtindx_arr[i_atom] = poscar_dict['atom_elmtindx_arr'][i_atom] + 1
 
     # the *.incar file which contains the selected atoms
-    dvm_incar_path = workdir + '/' + poscar_file + '_poscar2dvmincar.incar'
+    dvm_incar_path = os.path.join(workdir, poscar_file + '_poscar2dvmincar.incar')
     with open(dvm_incar_path, 'w') as f_dvm_incar:
         temp_str = ''
         for i_atom_indx in range(1, n_atoms + 1):
@@ -139,7 +139,7 @@ def dvmincar2poscar(dvm_incar_file_path):
     
     poscar_dict['slet_dyn_on'] = False
     poscar_dict['coord_arr'] = coord_arr
-    vasp_poscar_file_path = workdir + '/' + dvm_incar_file[0:-6] + '_dvmincar2poscar.vasp'
+    vasp_poscar_file_path = os.path.join(workdir, dvm_incar_file[0:-6] + '_dvmincar2poscar.vasp')
     vasp_write.write_poscar_with_atom_property(
         output_poscar_file_path = vasp_poscar_file_path, 
         poscar_dict = poscar_dict, 

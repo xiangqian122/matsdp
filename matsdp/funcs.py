@@ -6,7 +6,7 @@ def cp(src_filedir,dst_filedir):
     import os
     import shutil
     if not os.path.isfile(src_filedir):
-        print(src_filedir + ' does not exist!')
+        print('WARNING: funcs error. The file ' + src_filedir + ' does not exist!')
     else:
         fpath,fname = os.path.split(dst_filedir)
         if not os.path.exists(fpath):
@@ -24,7 +24,16 @@ def file_path_name(file_dir):
 
 def grep(kwd,file_dir):
     '''extract the line with the keyword(kwd) specified
-    the function the is similar to the "grep" command in linux shell'''
+    the function is similar to the "grep" command in the linux shell
+    '''
+    import os
+    file_dir = os.path.abspath(file_dir)
+    if os.path.exists(file_dir) and os.path.getsize(file_dir) > 0:
+        pass
+    else:
+        print('funcs error: the file ' + str(file_dir) + ' does not exist or is empty')
+        funcs.write_log(logfile, '#' + file_dir + " doesn't exist of is empty")
+        quit()
     line_list = []
     with open(file_dir,'r') as f:
         lines = f.readlines()
@@ -36,6 +45,14 @@ def grep(kwd,file_dir):
 
 def line_num(input_file):
     'Get number of lines from a file'
+    import os
+    input_file = os.path.abspath(input_file)
+    if os.path.exists(input_file) and os.path.getsize(input_file) > 0:
+        pass
+    else:
+        print('funcs error: the file ' + str(input_file) + ' does not exist or is empty')
+        funcs.write_log(logfile, '#' + input_file + " doesn't exist of is empty")
+        quit()
     count=0  
     thefile=open(input_file)  
     while True:  
@@ -47,7 +64,10 @@ def line_num(input_file):
     return count
 
 def merge_files(file1,file2):
-    'Merge Files'
+    '''
+    Merge Files
+    append contents of file2 to file1
+    '''
     import os
     cwd = os.getcwd()
     file1_dir = cwd + '/' + file1
@@ -90,6 +110,10 @@ def write_log(logfile,output_str):
        Note that output_str must be string format'''
     import os
     import time
+    from . import default_params
+    defaults_dict = default_params.default_params()
+    version = defaults_dict['version']
+
     current_time = time.time()
     formatted_time = time.strftime('## time: %Y%m%d %H:%M:%S',time.localtime(current_time))
     if os.path.exists(logfile) == False or (os.path.exists(logfile) and os.path.getsize(logfile) == 0):
@@ -97,6 +121,7 @@ def write_log(logfile,output_str):
         with open(logfile,'w') as logfile_object:
             logfile_object.write(
                 '################log file###############\n' +
+                '########version: matsdp-' + version + '##########\n' +
                 '# -*- coding: utf-8 -*-' + '\n' +
                 '##possible imports:' + '\n' +
                 'import matsdp' + '\n' +
@@ -149,11 +174,12 @@ def rm_empty_lines_in_file(in_file):
     mv(ftemp,in_file)
     return 0
 
-def write_file(input_str, dest_file_path):
+def write_file(input_str, dest_file_path, mode = 'w'):
     '''
     write sepcified string to a desiginated file
     input_str: the string which is to be included in the destination file
     dest_file_path: destination file path, the specific string will be written to the destination file
+    mode: the mode for writing. The values could be 'w' or 'a'
     if the destination file exists, then it will be created.
     '''    
     import os
@@ -161,7 +187,7 @@ def write_file(input_str, dest_file_path):
     dest_file_path = os.path.abspath(dest_file_path)
     workdir, dest_file = file_path_name(dest_file_path)
     mkdir(workdir)
-    with open(dest_file_path, 'w') as f:
+    with open(dest_file_path, mode) as f:
         f.write(input_str)
     return 0
 
@@ -174,7 +200,93 @@ def touch(file_path):
     with open(file_path, 'w') as f:
         pass
     return 0
-##########################################
+
+def dir_tree(input_dir):
+    '''
+    list the directory tree structure
+    '''
+    import os
+    import time
+    current_time = time.time()
+    formatted_time = time.strftime('%Y%m%d %H:%M:%S',time.localtime(current_time))
+
+    input_dir = os.path.abspath(input_dir)
+    if os.path.exists(input_dir) == True and os.path.isdir(input_dir) == True:
+        pass
+    else:
+        print('funcs error: the directory ' + input_dir + ' does not exist. Exiting ...')
+        quit()
+    dir_tree_str = ''
+    for root, dirs, files in os.walk(input_dir):
+        dirs.sort()
+        level = root.replace(input_dir, '').count(os.sep)
+        indent = ' ' * 4 * (level)
+        dir_tree_str = dir_tree_str + '{}{}/'.format(indent, os.path.basename(root)) + '\n'
+        subindent = ' ' * 4 * (level + 1)
+        for f in files:
+            dir_tree_str = dir_tree_str + '{}{}'.format(subindent, f) + '\n'
+    input_dir_tree_file = os.path.join(input_dir, 'dir_tree.txt')
+    with open(input_dir_tree_file, 'w') as f:
+        f.write(
+            'directory:\n' +
+            input_dir + '\n\n' +
+            'time:\n' +
+            formatted_time + '\n\n' +
+            'directory tree structure:\n' +
+            dir_tree_str
+            )
+    return dir_tree_str
+
+def file_status(file_path):
+    '''
+    check the status of the file: file exist, file not found, empty file etc.
+    return value: the status of the file
+    '''
+    import os
+    from . import default_params
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
+    status = 0
+    file_path = os.path.abspath(file_path)
+    if os.path.exists(file_path) == False:
+        # file does not exist
+        status = 0
+        print('# WARNING: The file ' + str(file_path) + ' does not exist')
+        write_log(logfile, '# WARNING: The file ' + file_path + " does not exist")
+    elif os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+        # the file exists and is non-empty
+        status = 1
+    elif os.path.exists(file_path) and os.path.getsize(file_path) == 0:
+        # emtpy file exist
+        status = 2
+        print('# WARNING: The file ' + str(file_path) + ' is empty')
+        write_log(logfile, '# WARNING: The file ' + file_path + " is empty")
+    return status
+
+def dir_status(dir_path):
+    '''
+    check the status of the directory: dir exist, dir not found, empty dir
+    return value: the status of the directory
+    '''
+    import os
+    from . import default_params
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
+    status = 0
+    dir_path = os.path.abspath(dir_path)
+    if os.path.exists(dir_path) == False:
+        # file directory not exist
+        status = 0
+        print('# WARNING: The directory ' + str(dir_path) + ' does not exist')
+        write_log(logfile, '# WARNING: The directory ' + dir_path + " does not exist")
+    elif os.path.exists(dir_path) and os.path.isdir(dir_path) ==True:
+        # the directory exists
+        status = 1
+    return status
+
+########################################
 #String manipulation
 ##########################################
 def extract_num(Str):
@@ -244,6 +356,38 @@ def find_kwd_line_indx(kwd, file_path):
         lines = f.readlines()
         indx = [x for x in range(len(lines)) if kwd in lines[x]]
     return indx
+
+def str_format(input_str, max_len = 13):
+    '''
+    get formatted string
+    e.g. str_format('aaa', 6) would return 'aaa   '
+    '''
+    if str(max_len).isdigit() == False:
+        print('ERROR: funcs error. Not an integer')
+        exit()
+    input_str = str(input_str)
+    if len(input_str) > max_len:
+        max_len = len(input_str) + 1
+    formatted_str = input_str + ' ' * (max_len - len(input_str))
+    return formatted_str
+    
+def float_format(input_float, max_len = 13, format_str = '{:.2f}'):
+    '''
+    get formatted float
+    e.g. float_format('3.1415926', 6, '{:.2f}') would return '3.14  '
+    '''    
+    if str(max_len).isdigit() == False:
+        print('ERROR: funcs error. Not an integer')
+        exit()
+    try :
+        float(input_float)
+    except ValueError :
+        print('ERROR: funcs error. Not a float')
+    if len(str(input_float)) > max_len:
+        max_len = len(str(input_float)) + 1
+    formatted_float = format_str.format(float(input_float)) + ' ' * (max_len - len(format_str.format(float(input_float))))
+    return formatted_float
+
 ##########################################
 #Other functions
 ##########################################
@@ -483,4 +627,36 @@ def t_euler(euler_angle_type, angle_unit, phi, theta, psi):
         t = np.dot(t_rot,t)
     return t
 
+def lorentzian_lineshape_func(x, x_i, delta):
+    '''
+    Reference:
+        Shan-Ying Wang and Jing-Zhi Yu and Hiroshi Mizuseki and Qiang Sun and Chong-Yu Wang and Yoshiyuki Kawazoe, PRB, 2004, 70
+        Peter F. Bernath, Spectra of Atoms and Molecules, Oxford University Press, 2015
+    delta: The half width at half maximum (HWHM). For the broadening of the DOS, the delta is the broadening width
+    '''
+    import numpy as np
+    result = delta / np.pi /(np.power((x - x_i),2) + np.power(delta,2))
+    return result
 
+def lorentzian_broadening(x_arr, y_arr, delta):
+    '''
+    Reference:
+        Shan-Ying Wang and Jing-Zhi Yu and Hiroshi Mizuseki and Qiang Sun and Chong-Yu Wang and Yoshiyuki Kawazoe, PRB, 2004, 70
+        Peter F. Bernath, Spectra of Atoms and Molecules, Oxford University Press, 2015
+    delta: The half width at half maximum (HWHM). For the broadening of the DOS, the delta is the broadening width
+    x_grid: the spacing of the x points for the broadened data
+    the dimension of the x_arr should be the same as that of the y_arr
+    for the density fo states: x_arr = energy_arr, y_arr = dos_arr
+    If the generated number of x points are larger than the original number of x points and the delta is too small, it may induce fictitious peaks. That is to say, if the original number of x points is too sparse (too sparse points across the spectrum will not make the curve look good), do not expect the broadening scheme to make the curves with sparse points look better. If one wants the sparse curve to look better, the interpolation algorithm can be used instead of directly using broadening scheme. Based on this thought, the generated points of the broadened curve will not exceed the number of points of the original dataset.
+    '''
+    import numpy as np
+    ##x_min = np.min(x_arr)
+    ##x_max = np.max(x_arr)
+    ##x_grid_num = len(x_arr)
+    ##x_arr_broadening = np.linspace(x_min, x_max, x_grid_num)
+    x_arr_broadening = x_arr
+    y_arr_broadening = np.array([0.0000000] * len(x_arr_broadening), dtype = np.float)
+    for i in range(0, len(x_arr_broadening)):
+        for j in range(0, len(x_arr)):
+            y_arr_broadening[i] = y_arr_broadening[i] + y_arr[j] * lorentzian_lineshape_func(float(x_arr_broadening[i]), float(x_arr[j]), delta)
+    return x_arr_broadening, y_arr_broadening

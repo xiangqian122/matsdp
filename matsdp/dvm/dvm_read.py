@@ -6,7 +6,13 @@ def read_ind(ind_file_path):
     import os
     import numpy as np
     from .. import funcs
+    from .. import default_params
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
     ind_file_path = os.path.abspath(ind_file_path)
+    if funcs.file_status(ind_file_path) != 1:
+        quit()
     dvm_ind_dict = {}
     temp_list = funcs.split_line(line = funcs.grep(kwd = 'ATOM',file_dir = ind_file_path), separator = '\n')
     num_elmts = len(temp_list)
@@ -24,9 +30,15 @@ def read_incar(incar_file_path):
     import os
     import numpy as np
     from .. import funcs
+    from .. import default_params
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
     incar_file_path = os.path.abspath(incar_file_path)
     # designate the working directory
     workdir, incar_file = funcs.file_path_name(incar_file_path)
+    if funcs.file_status(incar_file_path) != 1:
+        quit()
 
     dvm_incar_dict = {}
     with open(incar_file_path, 'r') as f_incar:
@@ -55,7 +67,7 @@ def read_incar(incar_file_path):
                 dvm_incar_dict['dvm_atom_elmt_indx_arr'][atom_indx] = int(funcs.split_line(lines[i_line])[3]) ## index starts from 1
                 dvm_incar_dict['atom_indx_arr'][atom_indx] = atom_indx + 1   ## atom index starts from 1
                 atom_indx += 1
-        dvm_ind_dict = read_ind(workdir + '/IND.DAT')
+        dvm_ind_dict = read_ind(os.path.join(workdir, 'IND.DAT'))
         dvm_incar_dict['num_elmts'] = len(dvm_ind_dict['elmt_species_arr'])
         dvm_incar_dict['elmt_species_arr'] = dvm_ind_dict['elmt_species_arr']
         dvm_incar_dict['dvm_elmt_indx_arr'] = set(list(dvm_incar_dict['dvm_atom_elmt_indx_arr']))
@@ -76,9 +88,15 @@ def read_otput(otput_file_path):
     import os
     import numpy as np
     from .. import funcs
+    from .. import default_params
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
     otput_file_path = os.path.abspath(otput_file_path)
     # designate the working directory
     workdir, otput_file = funcs.file_path_name(otput_file_path)
+    if funcs.file_status(otput_file_path) != 1:
+        quit()
 
     dvm_otput_dict = {}
     dvm_otput_dict['unitscale'] = float(funcs.split_line(funcs.grep('unitscale', otput_file_path))[2])
@@ -160,12 +178,14 @@ def read_input(input_file_path):
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
-    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
     funcs.mkdir(output_dir)
 
     input_file_path = os.path.abspath(input_file_path)
     # designate the working directory
     workdir, dvm_otput_file = funcs.file_path_name(input_file_path)
+    if funcs.file_status(input_file_path) != 1:
+        quit()
 
     dvm_input_dict = dvm_default.input_default()
     with open(input_file_path, 'r') as f:

@@ -15,16 +15,16 @@ def ie_nn(dvm_otput_file_path, a0 = 3.545):
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
-    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
     funcs.mkdir(output_dir)
 
     dvm_otput_file_path = os.path.abspath(dvm_otput_file_path)
     # designate the working directory
     workdir, dvm_otput_file = funcs.file_path_name(dvm_otput_file_path)
 
-    dvm_incar_file_path = workdir + '/' + dvm_otput_file[0:-6] + '.incar'
+    dvm_incar_file_path = os.path.join(workdir, dvm_otput_file[0:-6] + '.incar')
     convert.dvmincar2poscar(dvm_incar_file_path)
-    dvmincar2poscar_poscar_file_path = workdir + '/' + dvm_otput_file[0:-6] + '_dvmincar2poscar.vasp'
+    dvmincar2poscar_poscar_file_path = os.path.join(workdir, dvm_otput_file[0:-6] + '_dvmincar2poscar.vasp')
     poscar_dict = vasp_read.read_poscar(dvmincar2poscar_poscar_file_path)
     atom_name_list = poscar_dict['atomname_list']
     atom_indx_arr = poscar_dict['atom_indx_arr'] 
@@ -51,16 +51,18 @@ def ie_nn(dvm_otput_file_path, a0 = 3.545):
 #########################
 # IE for 1NN results
 #########################
-    # rlated files
-    nn_atomname_list_file_path = output_dir + '/nn_atomname_list_without_mirror_label_1NN.txt'
-    ie_au_nn_file_path = workdir + '/' + dvm_otput_file[0:-6] + '_ie_au_nn.txt'
-    ie_ev_nn_file_path = workdir + '/' + dvm_otput_file[0:-6] + '_ie_ev_nn.txt'
+    # related files
+    ie_au_nn_file_path = os.path.join(workdir, 'ie_nn_au.txt')
+    ie_ev_nn_file_path = os.path.join(workdir, 'ie_nn_ev.txt')
     # call nearest neighbor analysis
     vasp_analyze.nn_map(
     poscar_file_path = dvmincar2poscar_poscar_file_path,
     a0 = a0,
     n_shell = 1
     )
+    nn_atomname_list_file_path = os.path.join(workdir, 'nn_atomname_list_without_mirror_label_1NN.txt')
+    if funcs.file_status(nn_atomname_list_file_path) != 1:
+        quit()
     # prepare the data
     first_nn_ie_au_arr = None
     first_nn_ie_au_up_arr = None
@@ -162,6 +164,8 @@ def ie_nn(dvm_otput_file_path, a0 = 3.545):
         '###############################\n')
     return first_nn_ie_au_arr, first_nn_ie_au_up_arr, first_nn_ie_au_dw_arr
 
+
+
 def job_status(job_parent_dir):
     '''
     Check the job status for multiple jobs
@@ -172,54 +176,83 @@ def job_status(job_parent_dir):
     from .. import default_params
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
-    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
     funcs.mkdir(output_dir)
 
     def dvm_job_finished(otput_file_path):
+        '''
+        check whether the DVM job has been finished or not
+        '''
         import os
+        from .. import funcs
         kwd = 'Job end'
         retn_val = False
         otput_file_path = os.path.abspath(otput_file_path)
+        if funcs.file_status(otput_file_path) == 0:
+            quit()
         with open(otput_file_path, 'r') as f:
             lines = f.readlines()
-            for i_line in lines:
+            num_lines = len(lines)
+            num_tail_lines = 30
+            num_tail_lines = min(num_lines, num_tail_lines)
+            for indx in range(num_lines - 1, num_lines - num_tail_lines -1, -1):
+                i_line = lines[indx]
                 if kwd in i_line:
                     retn_val = True
+                    break
         return retn_val
 
     job_parent_dir = os.path.abspath(job_parent_dir)
-    job_dir_list = [job_parent_dir + '/' + x for x in os.listdir(job_parent_dir)]
-    job_dir_name_list = os.listdir(job_parent_dir)
-    max_length_job_dir_name = max([len(x) for x in job_dir_name_list])
 
-    job_status_file_path = output_dir + '/dvm_job_status.txt'
+    if funcs.dir_status(job_parent_dir) == 0:
+        quit()
 
+    folder_level_list = []
+    folder_path_list = []
+    folder_path_str_list = []
+    for root, dirs, files in os.walk(job_parent_dir):
+        dirs.sort()
+        level = root.replace(job_parent_dir, '').count(os.sep)
+        indent = ' ' * 4 * (level)
+        folder_level_list.append(level)
+        folder_path_list.append(os.path.abspath(root))
+        folder_path_str_list.append('{}{}/'.format(indent, os.path.basename(root)))
+     
+    max_length_folder_path_str = max([len(x) for x in folder_path_str_list])
+
+    job_status_file_path = os.path.join(output_dir, 'job_status_dvm_' + os.path.split(job_parent_dir)[-1] + '.txt')
+
+    temp_str = ''
+    for i_folder_indx in range(0, len(folder_path_list)):
+        otput_exist = False
+        # check job status
+        job_status = 'unfinished'
+        job_status_str = '--'
+        for file0 in os.listdir(folder_path_list[i_folder_indx]):
+            if '.otput' in file0:
+                otput_exist = True
+                otput_file_path = os.path.join(folder_path_list[i_folder_indx], file0)
+                if dvm_job_finished(otput_file_path) == True:
+                    job_status = 'finished'
+                    job_status_str = 'finished'
+                    # remove redundant files
+                    for i_str in ['basfcn', 'bfnbak', 'grid3d', 'mixbak', 'moinfo', 'potent', 'scfbak']:
+                        for file1 in os.listdir(folder_path_list[i_folder_indx]):
+                            if i_str in file1:
+                                redundant_file_path = os.path.join(folder_path_list[i_folder_indx], file1)
+                                os.remove(redundant_file_path)
+                continue
+        temp_str = temp_str + (folder_path_str_list[i_folder_indx] + ' ' * (max_length_folder_path_str - len(folder_path_str_list[i_folder_indx])) + '   ' + 
+            job_status_str + ' ' * (10 - len(job_status_str)) + ' \n')
     with open(job_status_file_path, 'w') as f:
-        pass
-    with open(job_status_file_path, 'a') as f:
-        for i_job_indx in range(0, len(job_dir_list)):
-            otput_exist = False
-            # check job status
-            job_status = 'unfinished'
-            for file0 in os.listdir(job_dir_list[i_job_indx]):
-                if '.otput' in file0:
-                    otput_exist = True
-                    otput_file_path = job_dir_list[i_job_indx] + '/' + file0
-                    if dvm_job_finished(otput_file_path) == True:
-                        job_status = 'finished'
-                        # remove redundant files
-                        for i_str in ['basfcn', 'bfnbak', 'grid3d', 'mixbak', 'moinfo', 'potent', 'scfbak']:
-                            for file1 in os.listdir(job_dir_list[i_job_indx]):
-                                if i_str in file1:
-                                    redundant_file_path = job_dir_list[i_job_indx] + '/' + file1
-                                    os.remove(redundant_file_path)
-                    continue
-            f.write(job_dir_name_list[i_job_indx] + ' ' * (max_length_job_dir_name - len(job_dir_name_list[i_job_indx])) + '   ' + job_status + ' ' * (10 - len(job_status)) + ' \n')
+        f.write(
+            'job_dir' + ' '* (max_length_folder_path_str - len('job_dir')) + 
+            '   status' + ' ' * (13 - len('status')) + '\n' + 
+            temp_str) 
     funcs.write_log(logfile,
         'dvm_analyze.job_status(\n' +
         '    job_parent_dir = ' + 'r\'' + job_parent_dir + '\'' + '\n'
         '    )\n' +
         '#############\n'
         )
-
     return 0

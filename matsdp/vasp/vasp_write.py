@@ -11,7 +11,7 @@ def write_poscar_with_atom_property(output_poscar_file_path, poscar_dict, added_
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
-    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
     funcs.mkdir(output_dir)
 
     output_poscar_file_path = os.path.abspath(output_poscar_file_path)
@@ -26,9 +26,9 @@ def write_poscar_with_atom_property(output_poscar_file_path, poscar_dict, added_
     formatted_len1 = 13 #For example len('-54.0812')=8, len('-54.081283453')=13   
     poscar_dict_header_temp = poscar_dict['header'].copy()
     added_atom_property_columns_str = str(added_atom_property_columns_str).strip('=').strip(':').strip('\n')
-    if added_atom_property_str == None:
+    if added_atom_property_str in [None,'None','none']:
         added_atom_property_str = ''
-    if added_atom_property_columns_str == None:
+    if added_atom_property_columns_str in [None,'None','none']:
         added_atom_property_columns_str = ''
     if ',' in added_atom_property_columns_str:
         added_atom_property_columns_str = ' '.join(funcs.split_line(line = added_atom_property_columns_str, separator = ','))
@@ -83,9 +83,9 @@ def write_poscar_with_force(outcar_file_path, ionic_step = 'last', output_poscar
     logfile = defaults_dict['logfile']
 
     outcar_file_path = os.path.abspath(outcar_file_path)    
-    incar_params_dict, outcar_params_dict = vasp_read.read_outcar(outcar_file_path)
+    outcar_params_dict = vasp_read.read_outcar(outcar_file_path)
     workdir, dos_file = funcs.file_path_name(outcar_file_path)
-    poscar_file_path = workdir + '/POSCAR'
+    poscar_file_path = os.path.join(workdir, 'POSCAR')
     poscar_dict = vasp_read.read_poscar(poscar_file_path)
     # write the POSCAR file with atom property data
     added_atom_property_str1 = 'force'
@@ -100,10 +100,10 @@ def write_poscar_with_force(outcar_file_path, ionic_step = 'last', output_poscar
         i_ionic_step = ionic_step - 1
         if ionic_step > outcar_params_dict['num_ionic_step']:
             i_ionic_step = outcar_params_dict['num_ionic_step']
-    if output_poscar_file_name == None:
-        output_poscar_file_path = workdir + '/POSCAR_with_force_step_' + str(i_ionic_step + 1) + '.vasp'
+    if output_poscar_file_name in [None,'None','none']:
+        output_poscar_file_path = os.path.join(workdir, 'POSCAR_with_force_step_' + str(i_ionic_step + 1) + '.vasp')
     else:
-        None
+        output_poscar_file_path = os.path.join(workdir, str(output_poscar_file_name) + '_step_' + str(i_ionic_step + 1) + '.vasp')
     write_poscar_with_atom_property(
         output_poscar_file_path = output_poscar_file_path,
         poscar_dict = poscar_dict,
@@ -124,17 +124,28 @@ def write_poscar_with_force(outcar_file_path, ionic_step = 'last', output_poscar
         '    ionic_step=' + str(ionic_step_list).strip('[').strip(']') + ',\n' +
         '    output_poscar_file_name=' + '\'' + str(output_poscar_file_name) + '\'' + ')\n' +
         '###############################\n')
+    return 0
 
 def write_potcar(poscar_path, elmt_potcar_dir):
     '''
     Description:
     prepare the POTCAR for a calculation
+    /elmt_potcar_dir/
+        /H/POTCAR.Z
+        /He/POTCAR.Z
+        ...
+        /Ni/POTCAR.Z
+        ...
+        ...
     '''
     import os
     from . import vasp_read
+    from .. import funcs
+    from .. import default_params
+
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
-    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
 
     # atom position file and element potential file
     poscar_path = os.path.abspath(poscar_path)
@@ -147,18 +158,22 @@ def write_potcar(poscar_path, elmt_potcar_dir):
         lines = f_poscar.readlines()
         elmt_species_arr = poscar_dict['elmt_species_arr']
     # concatenate potential files of elements
-    potcar_file = 'POTCAR'
-    potcar_file_path = workdir + '/' + potcar_file 
-    with open(potcar_file_path, 'w') as f_pot:
-        pass
-    with open(potcar_file_path, 'a') as f_pot:
-        for i_elmt_name in elmt_species_arr:
-            if program_name == 'VASP' or program_name == 'vasp':
-                elmt_potcar_file = 'POTCAR.Z'
-                elmt_potcar_file_path = elmt_potcar_dir + '/' + i_elmt_name + '/' + elmt_potcar_file
-            with open(elmt_potcar_file_path, 'r') as f_elmt_pot:
-                lines = f_elmt_pot.readlines()
-                for i_line in lines:
-                    f_pot.write(i_line)
-            f_pot.write('\n')
+    # untill now I can't find a way of reading POTCAR.Z file using Python, so we will call the system command 'zcat' in the Unix or the Linux
+    potcar_file_path = os.path.join(workdir, 'POTCAR')
+    funcs.touch(potcar_file_path)
+    for i_elmt_name in elmt_species_arr:
+        elmt_potcar_file = 'POTCAR.Z'
+        elmt_potcar_file_path = os.path.join(elmt_potcar_dir, i_elmt_name, elmt_potcar_file)
+        try:
+            os.system('zcat ' + elmt_potcar_file_path + ' >> ' + potcar_file_path)
+        except:
+            try:
+                os.system('gunzip -c ' + elmt_potcar_file_path + ' >> ' + potcar_file_path)
+            except:
+                print('vasp_write error: the call of the zcat and the gunzip -c command failed. Make sure you are in a Linux system and the zcat or the gunzip command can work successfully, or please check the files in the elemental POTCAR directory')
+                funcs.write_log(
+                    logfile,
+                    '# vasp_write error: the call of the zcat and the gunzip -c command failedi. Make sure you are in a Linux system and the zcat or the gunzip command can work successfully, or please check the files in the elemental POTCAR directory')
+                exit()
     return 0
+

@@ -1,0 +1,59 @@
+
+v0.2.0, 2020-02-10 
+--------------------------------
+ 
+- Added new features in the vasp_plot module (e.g. Lorentzian broadening of the DOS curve).
+- Added new features for common neighbor analysis in the vasp module.
+- Added feature of labeling atom with their atom properties in the vasp_plot module. 
+- Fixed some bugs in the vasp_plot module (e.g. the MatplotlibDeprecationWarning caused by fig_dos.add_subplot())
+- Enable the conversion of DVM interatomic energy results to a .tex LaTeX file.
+- Added frozeninfo of some transition elements in the DVM module.
+- Added new tests files under the pytest framework.
+- Rewrote the GUI program using PyQt5.
+- Added versioning info to the matsdp.log file.
+- Fixed bugs in opening empty files.
+
+v0.1.9, 2019-11-20
+-------------------------------- 
+
+- Added the function of checking the job finished status in the vasp and the dvm module.
+- Fixed some bugs in building multiple DVM jobs function in the dvm module.
+
+v0.1.8, 2019-11-20 
+-------------------------------- 
+- The v0.1.7 was removed and unable to be uploaded because of the version naming problem in PyPI (Only allow to upload the same version once without minor modification).
+- Some changes in the dvm module.
+
+v0.1.6, 2019-11-10 
+-------------------------------- 
+
+- The dvm module is added
+- The information of the interatomic energy can be extracted and the DVM input files can be written.
+
+v0.1.5, 2019-11-06 
+-------------------------------- 
+
+- The dvm module is removed.
+- The function of atom selection is added to the vasp_build module, which allowes the users to build the dvm model and automatically generate the *.incar file of the DVM program.
+
+v0.1.4, 2019-11-06 
+--------------------------------
+
+- The dvm module is added, which allows the users to build the dvm model by atom selection from the POSCAR file and automatically generate the *.incar file.
+
+v0.1.3, 2019-10-31
+-------------------------------- 
+
+- The format of the *.subst file format has been changed.
+- Users can directly run the log file to get the previous results.
+
+v0.1.2, 2019-09-22 
+-------------------------------- 
+
+- Color mapping of atom properties in the vasp module.
+- Simple common neighbor analysis in the vasp module.
+
+v0.1.1, 2019-09-12 
+--------------------------------
+ 
+- First release.

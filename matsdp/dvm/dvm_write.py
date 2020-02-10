@@ -16,28 +16,13 @@ def write_input(pos_file_path, dvm_input_dict = None):
  
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
-    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
 
     dvm_help_dict = dvm_help.dvm_help()
 
     # set the predefined value of parameters in the .input file
-    # grid3dinfo
-    grid3dinfo_str = '600   1.00000   2.00000'
     # frozeninfo
-    dvm_frozeninfo_dict = {}
-    dvm_frozeninfo_dict['Al'] = '3  100  200 210'
-    dvm_frozeninfo_dict['Ti'] = '5  100  200 210 300 310'
-    dvm_frozeninfo_dict['Cr'] = '5  100  200 210 300 310'
-    dvm_frozeninfo_dict['Co'] = '5  100  200 210 300 310'
-    dvm_frozeninfo_dict['Ni'] = '5  100  200 210 300 310'
-    dvm_frozeninfo_dict['Mo'] = '8  100  200 210 300 310 320 400 410'
-    dvm_frozeninfo_dict['Ru'] = '8  100  200 210 300 310 320 400 410'
-    dvm_frozeninfo_dict['Hf'] = '12  100  200 210 300 310 320 400 410 420 430 500 510'
-    dvm_frozeninfo_dict['Ta'] = '12  100  200 210 300 310 320 400 410 420 430 500 510'
-    dvm_frozeninfo_dict['W'] = '12  100  200 210 300 310 320 400 410 420 430 500 510'
-    dvm_frozeninfo_dict['Re'] = '12  100  200 210 300 310 320 400 410 420 430 500 510'
-    dvm_frozeninfo_dict['Ir'] = '12  100  200 210 300 310 320 400 410 420 430 500 510'
-    dvm_frozeninfo_dict['Au'] = '12  100  200 210 300 310 320 400 410 420 430 500 510'
+    dvm_frozeninfo_dict = dvm_default.input_frozeninfo()
 
     dvm_input_header ='''#------------------------------------------------------------------------------- 
 #
@@ -62,6 +47,8 @@ def write_input(pos_file_path, dvm_input_dict = None):
     pos_file_path = os.path.abspath(pos_file_path)
     # designate the working directory
     workdir, pos_file = funcs.file_path_name(pos_file_path)
+    if funcs.file_status(pos_file_path) != 1:
+        quit()
 
     # extract the job name
     file_list = os.listdir(workdir)
@@ -100,9 +87,9 @@ def write_input(pos_file_path, dvm_input_dict = None):
         for indx in range(0,len(elmt_species_arr)):
             i_species = elmt_species_arr[indx]
             if indx < len(elmt_species_arr) - 1:
-                grid3dinfo = grid3dinfo + grid3dinfo_str + '     &' + '\n' + ' ' * 17
+                grid3dinfo = grid3dinfo + dvm_input_dict['grid3dinfo'] + '     &' + '\n' + ' ' * 17
             else:
-                grid3dinfo = grid3dinfo + grid3dinfo_str
+                grid3dinfo = grid3dinfo + dvm_input_dict['grid3dinfo']
         dvm_input_dict['grid3dinfo'] = grid3dinfo
         
     else:
@@ -130,7 +117,7 @@ def write_input(pos_file_path, dvm_input_dict = None):
         if input_key.strip() == 'grid3dinfo':
             input_str = input_str + '\n'
 
-    dest_input_file_path = workdir + '/' + job_name + '.input' 
+    dest_input_file_path = os.path.join(workdir, job_name + '.input')
     with open(dest_input_file_path,'w') as f_dest_input:
         f_dest_input.write(input_str)
     funcs.write_log(
@@ -155,7 +142,7 @@ def write_ind(pos_file_path, elmt_ind_file_dir):
     from .. import default_params
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
-    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
 
     # atom position file and element potential file
     pos_file_path = os.path.abspath(pos_file_path)
@@ -173,19 +160,19 @@ def write_ind(pos_file_path, elmt_ind_file_dir):
             lines = f_poscar.readlines()
             elmt_species_arr = poscar_dict['elmt_species_arr']
         # concatenate IND.DAT files of elements
-        ind_file_path = workdir + '/IND.DAT'
+        ind_file_path = os.path.join(os.path.join(workdir, 'IND.DAT'))
+        ind_file_str = ''
+        for i_elmt_name in elmt_species_arr:
+            elmt_ind_file = 'IND_' + i_elmt_name + '.DAT'
+            elmt_ind_file_path = os.path.join(elmt_ind_file_dir, elmt_ind_file)
+            with open(elmt_ind_file_path, 'r') as f_elmt_ind:
+                lines = f_elmt_ind.readlines()
+                for i_line in lines:
+                    ind_file_str = ind_file_str + i_line
+            ind_file_str = ind_file_str.strip('\n') + '\n0.\n'
+        ind_file_str = ind_file_str + ' -1 THAT\'S ALL.'
         with open(ind_file_path, 'w') as f_ind:
-            pass
-        with open(ind_file_path, 'a') as f_ind:
-            for i_elmt_name in elmt_species_arr:
-                elmt_ind_file = 'IND_' + i_elmt_name + '.DAT'
-                elmt_ind_file_path = elmt_ind_file_dir + '/' + elmt_ind_file
-                with open(elmt_ind_file_path, 'r') as f_elmt_ind:
-                    lines = f_elmt_ind.readlines()
-                    for i_line in lines:
-                        f_ind.write(i_line)
-                f_ind.write('\n0.\n')
-            f_ind.write(' -1 THAT\'S ALL.')
+            f_ind.write(ind_file_str)
     funcs.write_log(
         logfile,
         'dvm_write.write_ind(\n' +
@@ -212,16 +199,16 @@ def write_ie(dvm_otput_file_path):
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
-    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
     funcs.mkdir(output_dir)
 
     dvm_otput_file_path = os.path.abspath(dvm_otput_file_path)
     # designate the working directory
     workdir, dvm_otput_file = funcs.file_path_name(dvm_otput_file_path)
 
-    dvm_incar_file_path = workdir + '/' + dvm_otput_file[0:-6] + '.incar'
+    dvm_incar_file_path = os.path.join(workdir, dvm_otput_file[0:-6] + '.incar')
     convert.dvmincar2poscar(dvm_incar_file_path)
-    dvmincar2poscar_poscar_file_path = workdir + '/' + dvm_otput_file[0:-6] + '_dvmincar2poscar.vasp'
+    dvmincar2poscar_poscar_file_path = os.path.join(workdir, dvm_otput_file[0:-6] + '_dvmincar2poscar.vasp')
     poscar_dict = vasp_read.read_poscar(dvmincar2poscar_poscar_file_path)
     atom_name_list = poscar_dict['atomname_list']
     atom_indx_arr = poscar_dict['atom_indx_arr'] 
@@ -250,114 +237,120 @@ def write_ie(dvm_otput_file_path):
 
     # the output indices based on the atom names
     # write the data into files
-    ie_au_file_path = workdir + '/' + dvm_otput_file[0:-6] + '_ie_au_all_atoms.txt'
-    ie_ev_file_path = workdir + '/' + dvm_otput_file[0:-6] + '_ie_ev_all_atoms.txt'
-    with open(ie_au_file_path, 'w') as f_ie_au, open(ie_ev_file_path, 'w') as f_ie_ev:
-        pass
-    with open(ie_au_file_path, 'a') as f_ie_au, open(ie_ev_file_path, 'a') as f_ie_ev:
-        for i_atom in range(0, n_atoms):
-            i_atom_str = atom_name_list[i_atom] + ' (' + str(added_atom_data_arr[i_atom, 3]) + ')'
-            atom_name_str = ', '.join([str(x) + ' (' + str(added_atom_data_arr[atom_name_list.index(x), 3]) + ')' + ' ' * (13 - len(str(x) + ' (' + str(added_atom_data_arr[atom_name_list.index(x), 3]) + ')')) for x in atom_name_list]) + '\n'
+    ie_au_file_path = os.path.join(workdir, dvm_otput_file[0:-6] + '_ie_au_all_atoms.txt')
+    ie_ev_file_path = os.path.join(workdir, dvm_otput_file[0:-6] + '_ie_ev_all_atoms.txt')
+    ie_au_file_str = ''
+    ie_ev_file_str = ''
+    
+    for i_atom in range(0, n_atoms):
+        i_atom_str = atom_name_list[i_atom] + ' (' + str(added_atom_data_arr[i_atom, 3]) + ')'
+        atom_name_str = ', '.join([str(x) + ' (' + str(added_atom_data_arr[atom_name_list.index(x), 3]) + ')' + ' ' * (13 - len(str(x) + ' (' + str(added_atom_data_arr[atom_name_list.index(x), 3]) + ')')) for x in atom_name_list]) + '\n'
 
-            if dvm_otput_dict['spin'] == 0:
-                temp_au_arr = ie_au_arr[i_atom,:]
-                temp_ev_arr = temp_au_arr * convert.unitconvert('a.u.','eV')
-                ie_au_str = ', '.join([str(x) + ' ' * (13 - len(str(x))) for x in temp_au_arr]) + '\n'
-                ie_ev_str = ', '.join(['{:.4f}'.format(x) + ' ' * (13 - len('{:.4f}'.format(x))) for x in temp_ev_arr]) + '\n'
-                f_ie_au.write(
-                    i_atom_str + ' ' * (13 - len(i_atom_str)) + ', ' + 
-                    atom_name_str +
-                    ' IE (a.u.)' + ' ' * (13 - len(' IE (a.u.)')) + ', ' +
-                    ie_au_str
-                    )
-                f_ie_ev.write(
-                    i_atom_str + ' ' * (13 - len(i_atom_str)) + ', ' + 
-                    atom_name_str +
-                    ' IE (eV)'  + ' ' * (13 - len(' IE (eV)')) + ', ' +
-                    ie_ev_str
-                    )
-            if dvm_otput_dict['spin'] == 1:
-                temp_au_up_arr = ie_au_up_arr[i_atom,:]
-                temp_ev_up_arr = temp_au_up_arr * convert.unitconvert('a.u.','eV')
-                temp_au_dw_arr = ie_au_dw_arr[i_atom,:]
-                temp_ev_dw_arr = temp_au_dw_arr * convert.unitconvert('a.u.','eV')
-                ie_au_up_str = ', '.join([str(x) + ' ' * (13 - len(str(x))) for x in temp_au_up_arr]) + '\n'
-                ie_ev_up_str = ', '.join(['{:.4f}'.format(x) + ' ' * (13 - len('{:.4f}'.format(x))) for x in temp_ev_up_arr]) + '\n'
-                ie_au_dw_str = ', '.join([str(x) + ' ' * (13 - len(str(x))) for x in temp_au_dw_arr]) + '\n'
-                ie_ev_dw_str = ', '.join(['{:.4f}'.format(x) + ' ' * (13 - len('{:.4f}'.format(x))) for x in temp_ev_dw_arr]) + '\n'
-                f_ie_au.write(
-                    i_atom_str + ' ' * (13 - len(i_atom_str)) + ', ' + 
-                    atom_name_str +
-                    ' IE (a.u.) up' + ' ' * (13 - len(' ' * len(' IE (a.u.) up'))) + ', ' +
-                    ie_au_up_str +
-                    ' IE (a.u.) dw' + ' ' * (13 - len(' ' * len(' IE (a.u.) dw'))) + ', ' +
-                    ie_au_dw_str
-                    )
-                f_ie_ev.write(
-                    i_atom_str + ' ' * (13 - len(i_atom_str)) + ', ' + 
-                    atom_name_str +
-                    ' IE (eV) up' + ' ' * (13 - len(' ' * len(' IE (eV) up'))) + ', ' +
-                    ie_ev_up_str +
-                    ' IE (eV) dw' + ' ' * (13 - len(' ' * len(' IE (eV) dw'))) + ', ' +
-                    ie_ev_dw_str
-                    )
+        if dvm_otput_dict['spin'] == 0:
+            temp_au_arr = ie_au_arr[i_atom,:]
+            temp_ev_arr = temp_au_arr * convert.unitconvert('a.u.','eV')
+            ie_au_str = ', '.join([str(x) + ' ' * (13 - len(str(x))) for x in temp_au_arr]) + '\n'
+            ie_ev_str = ', '.join(['{:.4f}'.format(x) + ' ' * (13 - len('{:.4f}'.format(x))) for x in temp_ev_arr]) + '\n'
+            ie_au_file_str = ie_au_file_str + (
+                i_atom_str + ' ' * (13 - len(i_atom_str)) + ', ' + 
+                atom_name_str +
+                ' IE (a.u.)' + ' ' * (13 - len(' IE (a.u.)')) + ', ' +
+                ie_au_str
+                )
+            ie_ev_file_str = ie_ev_file_str + (
+                i_atom_str + ' ' * (13 - len(i_atom_str)) + ', ' + 
+                atom_name_str +
+                ' IE (eV)'  + ' ' * (13 - len(' IE (eV)')) + ', ' +
+                ie_ev_str
+                )
+        if dvm_otput_dict['spin'] == 1:
+            temp_au_up_arr = ie_au_up_arr[i_atom,:]
+            temp_ev_up_arr = temp_au_up_arr * convert.unitconvert('a.u.','eV')
+            temp_au_dw_arr = ie_au_dw_arr[i_atom,:]
+            temp_ev_dw_arr = temp_au_dw_arr * convert.unitconvert('a.u.','eV')
+            ie_au_up_str = ', '.join([str(x) + ' ' * (13 - len(str(x))) for x in temp_au_up_arr]) + '\n'
+            ie_ev_up_str = ', '.join(['{:.4f}'.format(x) + ' ' * (13 - len('{:.4f}'.format(x))) for x in temp_ev_up_arr]) + '\n'
+            ie_au_dw_str = ', '.join([str(x) + ' ' * (13 - len(str(x))) for x in temp_au_dw_arr]) + '\n'
+            ie_ev_dw_str = ', '.join(['{:.4f}'.format(x) + ' ' * (13 - len('{:.4f}'.format(x))) for x in temp_ev_dw_arr]) + '\n'
+            ie_au_file_str = ie_au_file_str + (
+                i_atom_str + ' ' * (13 - len(i_atom_str)) + ', ' + 
+                atom_name_str +
+                ' IE (a.u.) up' + ' ' * (13 - len(' ' * len(' IE (a.u.) up'))) + ', ' +
+                ie_au_up_str +
+                ' IE (a.u.) dw' + ' ' * (13 - len(' ' * len(' IE (a.u.) dw'))) + ', ' +
+                ie_au_dw_str
+                )
+            ie_ev_file_str = ie_ev_file_str + (
+                i_atom_str + ' ' * (13 - len(i_atom_str)) + ', ' + 
+                atom_name_str +
+                ' IE (eV) up' + ' ' * (13 - len(' ' * len(' IE (eV) up'))) + ', ' +
+                ie_ev_up_str +
+                ' IE (eV) dw' + ' ' * (13 - len(' ' * len(' IE (eV) dw'))) + ', ' +
+                ie_ev_dw_str
+                )
+    with open(ie_au_file_path, 'w') as f_ie_au, open(ie_ev_file_path, 'w') as f_ie_ev:
+        f_ie_au.write(ie_au_file_str)
+        f_ie_ev.write(ie_ev_file_str)
 
 
     # the output indices based on the DVM atom indices
     # write the data into files
-    ie_au_dvm_indx_file_path = workdir + '/' + dvm_otput_file[0:-6] + '_ie_au_all_atoms_dvm_index.txt'
-    ie_ev_dvm_indx_file_path = workdir + '/' + dvm_otput_file[0:-6] + '_ie_ev_all_atoms_dvm_index.txt'
-    with open(ie_au_dvm_indx_file_path, 'w') as f_ie_au_dvm_indx, open(ie_ev_dvm_indx_file_path, 'w') as f_ie_ev_dvm_indx_:
-        pass
-    with open(ie_au_dvm_indx_file_path, 'a') as f_ie_au_dvm_indx, open(ie_ev_dvm_indx_file_path, 'a') as f_ie_ev_dvm_indx:
-        for i_dvm_atom_indx in range(1, n_atoms + 1):
-            #i_atom = int(list(added_atom_data_arr[:, 3]).index(str(i_dvm_atom_indx)))
-            i_atom = int(np.argwhere(added_atom_data_arr[:, 3] == str(i_dvm_atom_indx)))
-            i_dvm_indx_str = str(i_dvm_atom_indx) + ' (' + atom_name_list[i_atom] + ')'
-            dvm_atom_indx_str = ', '.join([str(x) + ' (' + atom_name_list[int(np.argwhere(added_atom_data_arr[:, 3] == str(x)))] + ')' + ' ' * (13 - len(str(x) + ' (' + atom_name_list[int(np.argwhere(added_atom_data_arr[:, 3] == str(x)))] + ')')) for x in list(range(1, n_atoms + 1))]) + '\n'
+    ie_au_dvm_indx_file_path = os.path.join(workdir, dvm_otput_file[0:-6] + '_ie_au_all_atoms_dvm_index.txt')
+    ie_ev_dvm_indx_file_path = os.path.join(workdir, dvm_otput_file[0:-6] + '_ie_ev_all_atoms_dvm_index.txt')
+    ie_au_dvm_indx_file_str = ''
+    ie_ev_dvm_indx_file_str = ''
+    for i_dvm_atom_indx in range(1, n_atoms + 1):
+        #i_atom = int(list(added_atom_data_arr[:, 3]).index(str(i_dvm_atom_indx)))
+        i_atom = int(np.argwhere(added_atom_data_arr[:, 3] == str(i_dvm_atom_indx)))
+        i_dvm_indx_str = str(i_dvm_atom_indx) + ' (' + atom_name_list[i_atom] + ')'
+        dvm_atom_indx_str = ', '.join([str(x) + ' (' + atom_name_list[int(np.argwhere(added_atom_data_arr[:, 3] == str(x)))] + ')' + ' ' * (13 - len(str(x) + ' (' + atom_name_list[int(np.argwhere(added_atom_data_arr[:, 3] == str(x)))] + ')')) for x in list(range(1, n_atoms + 1))]) + '\n'
 
-            if dvm_otput_dict['spin'] == 0:
-                temp_au_arr = dvm_otput_dict['ie_arr'][i_dvm_atom_indx -1 , :]
-                temp_ev_arr = temp_au_arr * convert.unitconvert('a.u.','eV')
-                ie_au_str = ', '.join([str(x) + ' ' * (13 - len(str(x))) for x in temp_au_arr]) + '\n'
-                ie_ev_str = ', '.join(['{:.4f}'.format(x) + ' ' * (13 - len('{:.4f}'.format(x))) for x in temp_ev_arr]) + '\n'
-                f_ie_au_dvm_indx.write(
-                    i_dvm_indx_str + ' ' * (13 - len(i_dvm_indx_str)) + ', ' + 
-                    dvm_atom_indx_str +
-                    ' IE (a.u.)' + ' ' * (13 - len(' IE (a.u.)')) + ', ' +
-                    ie_au_str
-                    )
-                f_ie_ev_dvm_indx.write(
-                    i_dvm_indx_str + ' ' * (13 - len(i_dvm_indx_str)) + ', ' + 
-                    dvm_atom_indx_str +
-                    ' IE (eV)'  + ' ' * (13 - len(' IE (eV)')) + ', ' +
-                    ie_ev_str
-                    )
-            if dvm_otput_dict['spin'] == 1:
-                temp_au_up_arr = dvm_otput_dict['ie_up_arr'][i_dvm_atom_indx -1 , :]
-                temp_ev_up_arr = temp_au_up_arr * convert.unitconvert('a.u.','eV')
-                temp_au_dw_arr = dvm_otput_dict['ie_dw_arr'][i_dvm_atom_indx -1 , :]
-                temp_ev_dw_arr = temp_au_dw_arr * convert.unitconvert('a.u.','eV')
-                ie_au_up_str = ', '.join([str(x) + ' ' * (13 - len(str(x))) for x in temp_au_up_arr]) + '\n'
-                ie_ev_up_str = ', '.join(['{:.4f}'.format(x) + ' ' * (13 - len('{:.4f}'.format(x))) for x in temp_ev_up_arr]) + '\n'
-                ie_au_dw_str = ', '.join([str(x) + ' ' * (13 - len(str(x))) for x in temp_au_dw_arr]) + '\n'
-                ie_ev_dw_str = ', '.join(['{:.4f}'.format(x) + ' ' * (13 - len('{:.4f}'.format(x))) for x in temp_ev_dw_arr]) + '\n'
-                f_ie_au_dvm_indx.write(
-                    i_dvm_indx_str + ' ' * (13 - len(i_dvm_indx_str)) + ', ' + 
-                    dvm_atom_indx_str +
-                    ' IE (a.u.) up' + ' ' * (13 - len(' ' * len(' IE (a.u.) up'))) + ', ' +
-                    ie_au_up_str +
-                    ' IE (a.u.) dw' + ' ' * (13 - len(' ' * len(' IE (a.u.) dw'))) + ', ' +
-                    ie_au_dw_str
-                    )
-                f_ie_ev_dvm_indx.write(
-                    i_dvm_indx_str + ' ' * (13 - len(i_dvm_indx_str)) + ', ' + 
-                    dvm_atom_indx_str +
-                    ' IE (eV) up' + ' ' * (13 - len(' ' * len(' IE (eV) up'))) + ', ' +
-                    ie_ev_up_str +
-                    ' IE (eV) dw' + ' ' * (13 - len(' ' * len(' IE (eV) dw'))) + ', ' +
-                    ie_ev_dw_str
-                    )
+        if dvm_otput_dict['spin'] == 0:
+            temp_au_arr = dvm_otput_dict['ie_arr'][i_dvm_atom_indx -1 , :]
+            temp_ev_arr = temp_au_arr * convert.unitconvert('a.u.','eV')
+            ie_au_str = ', '.join([str(x) + ' ' * (13 - len(str(x))) for x in temp_au_arr]) + '\n'
+            ie_ev_str = ', '.join(['{:.4f}'.format(x) + ' ' * (13 - len('{:.4f}'.format(x))) for x in temp_ev_arr]) + '\n'
+            ie_au_dvm_indx_file_str = ie_au_dvm_indx_file_str + (
+                i_dvm_indx_str + ' ' * (13 - len(i_dvm_indx_str)) + ', ' + 
+                dvm_atom_indx_str +
+                ' IE (a.u.)' + ' ' * (13 - len(' IE (a.u.)')) + ', ' +
+                ie_au_str
+                )
+            ie_ev_dvm_indx_file_str = ie_ev_dvm_indx_file_str + (
+                i_dvm_indx_str + ' ' * (13 - len(i_dvm_indx_str)) + ', ' + 
+                dvm_atom_indx_str +
+                ' IE (eV)'  + ' ' * (13 - len(' IE (eV)')) + ', ' +
+                ie_ev_str
+                )
+        if dvm_otput_dict['spin'] == 1:
+            temp_au_up_arr = dvm_otput_dict['ie_up_arr'][i_dvm_atom_indx -1 , :]
+            temp_ev_up_arr = temp_au_up_arr * convert.unitconvert('a.u.','eV')
+            temp_au_dw_arr = dvm_otput_dict['ie_dw_arr'][i_dvm_atom_indx -1 , :]
+            temp_ev_dw_arr = temp_au_dw_arr * convert.unitconvert('a.u.','eV')
+            ie_au_up_str = ', '.join([str(x) + ' ' * (13 - len(str(x))) for x in temp_au_up_arr]) + '\n'
+            ie_ev_up_str = ', '.join(['{:.4f}'.format(x) + ' ' * (13 - len('{:.4f}'.format(x))) for x in temp_ev_up_arr]) + '\n'
+            ie_au_dw_str = ', '.join([str(x) + ' ' * (13 - len(str(x))) for x in temp_au_dw_arr]) + '\n'
+            ie_ev_dw_str = ', '.join(['{:.4f}'.format(x) + ' ' * (13 - len('{:.4f}'.format(x))) for x in temp_ev_dw_arr]) + '\n'
+            ie_au_dvm_indx_file_str = ie_au_dvm_indx_file_str + (
+                i_dvm_indx_str + ' ' * (13 - len(i_dvm_indx_str)) + ', ' + 
+                dvm_atom_indx_str +
+                ' IE (a.u.) up' + ' ' * (13 - len(' ' * len(' IE (a.u.) up'))) + ', ' +
+                ie_au_up_str +
+                ' IE (a.u.) dw' + ' ' * (13 - len(' ' * len(' IE (a.u.) dw'))) + ', ' +
+                ie_au_dw_str
+                )
+            ie_ev_dvm_indx_file_str = ie_ev_dvm_indx_file_str + (
+                i_dvm_indx_str + ' ' * (13 - len(i_dvm_indx_str)) + ', ' + 
+                dvm_atom_indx_str +
+                ' IE (eV) up' + ' ' * (13 - len(' ' * len(' IE (eV) up'))) + ', ' +
+                ie_ev_up_str +
+                ' IE (eV) dw' + ' ' * (13 - len(' ' * len(' IE (eV) dw'))) + ', ' +
+                ie_ev_dw_str
+                )
+    with open(ie_au_dvm_indx_file_path, 'w') as f_ie_au_dvm_indx, open(ie_ev_dvm_indx_file_path, 'w') as f_ie_ev_dvm_indx:
+        f_ie_au_dvm_indx.write(ie_au_dvm_indx_file_str)
+        f_ie_ev_dvm_indx.write(ie_ev_dvm_indx_file_str)
+
     funcs.write_log(
         logfile,
         'dvm_write.write_ie(\n' + 
@@ -366,3 +359,94 @@ def write_ie(dvm_otput_file_path):
         )
     return ie_au_arr, ie_au_up_arr, ie_au_dw_arr
 
+def write_tex_ie_nn(ie_nn_file_path):
+    '''
+    write the .tex file of the IE result.
+    the spin restricted and spin polarized situations are considered
+    ie_nn_file_path: the path for the IE result, it can either be *_ie_ev_nn.txt or *_ie_eu_nn.txt
+    '''
+    import os
+    from .. import funcs
+    from . import dvm_default
+    from .. import default_params
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
+    ie_nn_file_path = os.path.abspath(ie_nn_file_path)
+    workdir, ie_nn_file = funcs.file_path_name(ie_nn_file_path)
+    if funcs.file_status(ie_nn_file_path) != 1:
+        quit()
+    with open(ie_nn_file_path, 'r') as f:
+        lines = f.readlines()
+        temp = funcs.split_line(lines[1],',')[0]
+        if 'up' in temp:
+            # spin polarized
+            spin = 1
+        else:
+            # spin restricted
+            spin = 0
+        if 'eV' in temp:
+            unit_tex_str = 'eV'
+            unit_file_str = 'ev'
+        elif 'a.u.' in temp:
+            unit_tex_str = 'a.u.'
+            unit_file_str = 'au'
+    ie_nn_tex_file_path = os.path.join(workdir, 'ie_nn_' + unit_file_str + '.tex')
+    ie_nn_tex_str = ''
+    ie_nn_tex_str = ie_nn_tex_str + (
+        r'\documentclass[12pt]{article}' + '\n' +
+        r'\usepackage{hyperref}' + '\n' +
+        r'\usepackage{longtable}' + '\n' +
+        r'\title{Interatomic energy of the nearest neighbor atoms}' + '\n' +
+        r'\date{}' + '\n' +
+        r'\author{}' + '\n' +
+        r'\begin{document}' + '\n' +
+        r'\maketitle' + '\n' +
+        r'\section{Interatomic energy}' + '\n')
+    if spin == 0:
+        ie_nn_tex_str = ie_nn_tex_str + (
+        r'\begin{longtable}{lll}' + '\n' +
+        r'\caption{IE (' + unit_tex_str + r')}\\' + '\n' +
+        r'\hline' + '\n' +
+        r'atom (i) & atom (j) & IE (' + unit_tex_str + r') \\' + '\n' +
+        r'\hline' + '\n')
+    elif spin == 1:
+        ie_nn_tex_str = ie_nn_tex_str + (
+        r'\begin{longtable}{llll}' + '\n' +
+        r'\caption{IE (' + unit_tex_str + r')}\\' + '\n' +
+        r'\hline\n' +
+        r'atom (i) & atom (j) & IE (' + unit_tex_str + ')-up & IE (' + unit_tex_str + r')-dw \\' + '\n' +
+        r'\hline' + '\n')
+        
+    with open(ie_nn_file_path, 'r') as f:
+        lines = f.readlines()
+    for i_line in range(0, len(lines)):
+        if spin == 0 and i_line%2 == 0:
+            num_col = len(funcs.split_line(lines[i_line],','))
+            i_atom_name = str(funcs.split_line(lines[i_line],',')[0])
+            j_atom_name_list = [str(x) for x in funcs.split_line(lines[i_line],',')[1:]]
+            ie_list = [float(x) for x in funcs.split_line(lines[i_line + 1],',')[1:]]
+            for indx in range(0, len(j_atom_name_list)):
+                ie_nn_tex_str = ie_nn_tex_str + (
+                    i_atom_name + ' ' * (13 - len(i_atom_name)) + '&' +
+                    j_atom_name_list[indx] + ' ' * (13 - len(j_atom_name_list[indx])) + '&' +
+                    '{:.4f}'.format(ie_list[indx]) + ' ' * (13 - len('{:.4f}'.format(ie_list[indx]))) + r'\\' + '\n')
+        elif spin == 1 and i_line%3 == 0:
+            num_col = len(funcs.split_line(lines[i_line],','))
+            i_atom_name = str(funcs.split_line(lines[i_line],',')[0])
+            j_atom_name_list = [str(x) for x in funcs.split_line(lines[i_line],',')[1:]]
+            ie_up_list = [float(x) for x in funcs.split_line(lines[i_line + 1],',')[1:]]
+            ie_dw_list = [float(x) for x in funcs.split_line(lines[i_line + 2],',')[1:]]
+            for indx in range(0, len(j_atom_name_list)):
+                ie_nn_tex_str = ie_nn_tex_str + (
+                    i_atom_name + ' ' * (13 - len(i_atom_name)) + '&' +
+                    j_atom_name_list[indx] + ' ' * (13 - len(j_atom_name_list[indx])) + '&' +
+                    '{:.4f}'.format(ie_up_list[indx]) + ' ' * (13 - len('{:.4f}'.format(ie_up_list[indx]))) + '&' +
+                    '{:.4f}'.format(ie_dw_list[indx]) + ' ' * (13 - len('{:.4f}'.format(ie_dw_list[indx]))) + r'\\' + '\n')
+    ie_nn_tex_str = ie_nn_tex_str + (
+        r'\hline' + '\n' +
+        r'\end{longtable}' + '\n' +
+        r'\end{document}')
+    with open(ie_nn_tex_file_path, 'w') as f_tex:
+        f_tex.write(ie_nn_tex_str)
+    return 0

@@ -15,14 +15,14 @@ def create_multiple_dvm_jobs(poscar_file_path_dict, origin_atom_name_list_dict, 
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
-    output_dir = os.getcwd() + '/' + defaults_dict['output_dir_name']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
     funcs.mkdir(output_dir)
 
     job_id_list = list(poscar_file_path_dict.keys())
     for i_job in range(0, len(job_id_list)):
         for i_elmt_name in origin_atom_name_list_dict[job_id_list[i_job]]:
             job_name = job_id_list[i_job] + '_' + i_elmt_name + '_R' + str(radius)
-            pos_file_path_str = output_dir + '/atom_selection_sphere/' + job_name + '/' + job_name + '.vasp'
+            pos_file_path_str = os.path.join(output_dir, 'atom_selection_sphere', job_name, job_name + '.vasp')
             # create the *.incar file and the *.vasp file
             vasp_build.selection_sphere(
                 poscar_file_path = poscar_file_path_dict[job_id_list[i_job]],

@@ -1,3 +1,4 @@
+
 # matsdp
 
 The materials simulation and data processing toolkit.
@@ -50,9 +51,9 @@ pip install matsdp
 
 ### Release note
 
-- version 0.1.9
+- version 0.2.0
 
- * Date: 20191112
+ * Date: 20200210
 
 ## Usage
 
@@ -88,4 +89,4 @@ modules that may be imported before using the dvm package
 
 ## Tests
 
-To run the tests, please run the runtests.py.
+To run the tests, please run the runtests.py in the "tests" directory.

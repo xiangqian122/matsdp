@@ -22,8 +22,17 @@ def read_poscar(poscar_file_path):
     import sys
     import time
     from .. import funcs
+    from .. import default_params
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
 
     poscar_file_path = os.path.abspath(poscar_file_path)
+
+    if funcs.file_status(poscar_file_path) != 1:
+        quit()
+
     poscar_dict = {}
     with open(poscar_file_path) as f:
         lines = f.readlines()
@@ -120,16 +129,20 @@ def read_poscar(poscar_file_path):
             elif poscar_dict['slet_dyn_on'] == False:
                 added_atom_data_arr[i,0:num_added_atom_data_column] = temp[3:(3+num_added_atom_data_column)]
             if poscar_dict['coord_system'] == "Direct":
+                # fractional coordinate
                 pos_arr[i,0] = coord_arr[i,0]
                 pos_arr[i,1] = coord_arr[i,1]
                 pos_arr[i,2] = coord_arr[i,2]
+                # cartesian coordinate
                 pos_arr[i,3] = np.dot(coord_arr[i,:], l_arr[:,[0]])
                 pos_arr[i,4] = np.dot(coord_arr[i,:], l_arr[:,[1]])
                 pos_arr[i,5] = np.dot(coord_arr[i,:], l_arr[:,[2]])
             elif poscar_dict['coord_system'] == "Cartesian":
+                # fractional coordinate
                 pos_arr[i,0] = np.dot(L_Inv_Arr[0,:], coord_arr[i,:])
                 pos_arr[i,1] = np.dot(L_Inv_Arr[1,:], coord_arr[i,:])
                 pos_arr[i,2] = np.dot(L_Inv_Arr[2,:], coord_arr[i,:])
+                #cartesian coordinate
                 pos_arr[i,3] = coord_arr[i,0] * poscar_dict['uni_scale_fac']
                 pos_arr[i,4] = coord_arr[i,1] * poscar_dict['uni_scale_fac']
                 pos_arr[i,5] = coord_arr[i,2] * poscar_dict['uni_scale_fac']
@@ -140,6 +153,7 @@ def read_poscar(poscar_file_path):
         poscar_dict['atom_subindx_arr'] = atom_subindx_arr
         poscar_dict['atomname_list'] = atomname_list
         poscar_dict['atom_indx_arr'] = np.array([ x + 1 for x in range(0, poscar_dict['n_atoms'])])  # atom index start from 1
+        poscar_dict['atom_key_arr'] = np.array([ x for x in range(0, poscar_dict['n_atoms'])])  # atom key start from 0
         poscar_dict['pos_arr'] = pos_arr
         poscar_dict['coord_arr'] = coord_arr
         poscar_dict['fix_arr'] = fix_arr
@@ -165,41 +179,90 @@ def read_outcar(outcar_file_path):
     Args:
         outcar_file_path: String format. The directory of the OUTCAR file. It can either be full path or relative path
     Return:
-        @.incar_params_dict
         @.outcar_params_dict
     '''
     import os
     import numpy as np
     from .. import funcs
+    from .. import default_params
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
 
     outcar_file_path = os.path.abspath(outcar_file_path)
-    incar_params_dict = {}
+
+    if funcs.file_status(outcar_file_path) != 1:
+        quit()
+
     outcar_params_dict = {}
-    incar_params_dict['LORBIT'] = int(funcs.split_line(line=funcs.split_line(line=funcs.grep('LORBIT',outcar_file_path),separator='=')[-1],separator = ' ')[0])
-    outcar_params_dict['e_fermi'] = float(funcs.split_line(line=funcs.split_line(line=funcs.grep('E-fermi',outcar_file_path),separator=':')[1],separator = ' ')[0])
-    outcar_params_dict['XC(G=0)'] = float(funcs.split_line(line=funcs.split_line(line=funcs.grep('E-fermi',outcar_file_path),separator=':')[2],separator = ' ')[0])
-    incar_params_dict['ISPIN'] = int(funcs.split_line(line=funcs.split_line(line=funcs.grep('ISPIN',outcar_file_path),separator='=')[-1],separator = ' ')[0])
-    outcar_params_dict['alpha+bet'] = float(funcs.split_line(line = funcs.grep('E-fermi',outcar_file_path), separator = ':')[-1].strip())
-
-    num_elmt_type = len(funcs.split_line(line=funcs.split_line(line=funcs.grep('ions per type',outcar_file_path),separator='=')[-1],separator=' '))
-    num_elmt_type_list = funcs.split_line(line=funcs.split_line(line=funcs.grep('ions per type',outcar_file_path),separator='=')[-1],separator=' ')[:]
-    n_atoms = np.sum([int(item) for item in num_elmt_type_list])
-    num_ionic_step = funcs.grep('TOTAL-FORCE',outcar_file_path).count('TOTAL-FORCE')
-    force_arr = np.array([None] * num_ionic_step * n_atoms * 6)
-    force_arr.shape = num_ionic_step , n_atoms , 6
-    outcar_params_dict['num_ionic_step'] = num_ionic_step
-
+    outcar_params_dict['num_atoms'] = 0
+    outcar_params_dict['num_elmt_type'] = None
+    outcar_params_dict['num_elmt_type_list'] = None
+    outcar_params_dict['num_ionic_step'] = 0
+    outcar_params_dict['num_ionic_step'] = funcs.grep('TOTAL-FORCE',outcar_file_path).count('TOTAL-FORCE')
+    outcar_params_dict['LORIBT'] = None
+    outcar_params_dict['e_fermi'] = None
+    outcar_params_dict['XC(G=0)'] = None
+    outcar_params_dict['alpha+bet'] = None
+    outcar_params_dict['TOTEN'] = None
+    outcar_params_dict['energy_without_entropy'] = None
+    outcar_params_dict['energy(sigma->0)'] = None
+    outcar_params_dict['force'] = None
     with open(outcar_file_path,'r') as f:
         line = f.readlines()
         i_ionic_step = 0
         for i in range(len(line)):
-            if 'TOTAL-FORCE' in line[i]:
-                for i_atom in range(0,n_atoms):
-                    i_atomLine = i + i_atom + 2
-                    force_arr[i_ionic_step,i_atom,:] = [float(item) for item in funcs.split_line(line[i_atomLine])]
+            if 'ions per type' in line[i]:
+                outcar_params_dict['num_elmt_type'] = len(funcs.split_line(line = line[i], separator='=')[-1].split())
+                outcar_params_dict['num_elmt_type_list'] = funcs.split_line(line = funcs.split_line(line = line[i], separator='=')[-1], separator = ' ')[:]
+                outcar_params_dict['num_atoms'] = np.sum([int(item) for item in outcar_params_dict['num_elmt_type_list']])
+                outcar_params_dict['force'] = np.array([None] * outcar_params_dict['num_ionic_step'] * outcar_params_dict['num_atoms'] * 6)
+                outcar_params_dict['force'].shape = outcar_params_dict['num_ionic_step'] , outcar_params_dict['num_atoms'] , 6
+                
+            if 'LORBIT' in line[i]:
+                outcar_params_dict['LORBIT'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
+            if 'ISPIN' in line[i]:
+                outcar_params_dict['ISPIN'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
+            if 'E-fermi' in line[i]:
+                outcar_params_dict['e_fermi'] = float(funcs.split_line(line = line[i],separator = ':')[1].split()[0]) 
+                outcar_params_dict['XC(G=0)'] = float(funcs.split_line(line = line[i],separator = ':')[2].split()[0]) 
+                outcar_params_dict['alpha+bet'] = float(funcs.split_line(line = line[i],separator = ':')[-1].strip()) 
+                outcar_params_dict['e_fermi_mod'] = outcar_params_dict['e_fermi'] + outcar_params_dict['alpha+bet']
+            if 'TOTEN' in line[i] and 'time' not in line[i]:
+                outcar_params_dict['TOTEN'] = float(funcs.split_line(line[i], '=')[1].split()[0])
+            if 'energy' in line[i] and 'without' in line[i] and 'entropy' in line[i] and 'time' not in line[i]:
+                outcar_params_dict['energy_without_entropy'] = float(funcs.split_line(line[i], '=')[1].split()[0])
+            if 'energy' in line[i] and 'sigma' in line[i] and 'entropy' in line[i] and 'time' not in line[i]:
+                outcar_params_dict['energy(sigma->0)'] = float(funcs.split_line(line[i], '=')[2].split()[0])
+            if 'TOTAL-FORCE' in line[i] and outcar_params_dict['num_elmt_type'] != None:
+                for i_atom in range(0, outcar_params_dict['num_atoms']):
+                    i_atom_line = i + i_atom + 2
+                    if len(funcs.split_line(line[i_atom_line])) != 6:
+                        # in case of the following situation, this problem still exists until vasp5.3:
+                        #POSITION                                       TOTAL-FORCE (eV/Angst)
+                        #-----------------------------------------------------------------------------------
+                        #0.02082      0.00016     -0.02030    473254.270891  -6163.613158-493186.317939
+                        print('WARNING: vasp_analyze warning. The OUTCAR file format is not correct for matsdp to read\n' + outcar_file_path + '\n' + 'line number: ' + str(i_atom_line + 1) + '\n' + line[i_atom_line] + '\n' + 'trying to solve this problem ...\n')
+                        funcs.write_log(logfile, '# WARNING: vasp_analyze warning. Please check the format of the file: ' + outcar_file_path + '\n' + '#line number: ' + str(i_atom_line + 1) + '\n' + '#' + line[i_atom_line] + '\n' + '#trying to solve this problem ...\n')
+                        # this formatting problem is caused by too large force on an atom
+                        line[i_atom_line] = ' '.join(funcs.split_line(line[i_atom_line])[0:3]) + ' ' + line[i_atom_line].strip('\n').strip()[-42:-28] + ' ' + line[i_atom_line].strip('\n').strip()[-28:-14] + ' ' + line[i_atom_line].strip('\n').strip()[-14:] + '\n'
+                        all_are_digits = True
+                        for item in funcs.split_line(line[i_atom_line]):
+                            try:
+                                float(item)
+                            except ValueError:
+                                # not a float
+                                all_are_digits = False
+                        if all_are_digits == True:
+                            print('the line ' + str(i_atom_line + 1) + ' is converted to: \n' + line[i_atom_line])
+                            funcs.write_log(logfile, '# the line ' + str(i_atom_line + 1) + ' is converted to: \n' + '#' + line[i_atom_line])
+                        else:
+                            print('ERROR: vasp_analyze error. The problem has not been solved. Please check the OUTCAR file. Exiting ...\n')
+                            funcs.write_log(logfile, '# ERROR: vasp_analyze error. The problem has not been solved. Please check the OUTCAR file. Exiting ...\n')
+                            exit()
+                    else:
+                        outcar_params_dict['force'][i_ionic_step,i_atom,:] = [float(item) for item in funcs.split_line(line[i_atom_line])]
                 i_ionic_step += 1
-    outcar_params_dict['force'] = force_arr
-    return incar_params_dict, outcar_params_dict
+    return outcar_params_dict
 
 def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
     '''
@@ -231,6 +294,10 @@ def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
 
     doscar_file_path = os.path.abspath(doscar_file_path)
     workdir, dos_file = funcs.file_path_name(doscar_file_path)
+    
+    if funcs.file_status(doscar_file_path) != 1:
+        quit()
+
     #Also Required files are OUTCAR and POSCAR
     with open(doscar_file_path,'r') as f:
         lines = f.readlines()
@@ -248,13 +315,13 @@ def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
             for i in range(0,NEDOS):
                 for j in range(0,NC):
                     dos_arr[i][j] = float(funcs.split_line(lines[StartLine + i])[j]) * funcs.logic_retn_val(j % 2 == 0 and j > 0, -1, 1)
-            dos_file = workdir + '/TDOS.dat'
+            dos_file = os.path.join(workdir, 'TDOS.dat')
         #DOS
         if atom_indx != 0:
             StartLine = 6 + (NEDOS + 1) * atom_indx
             EndLine = StartLine + NEDOS - 1
             NC = len(funcs.split_line(lines[StartLine]))
-            dos_arr = np.array([0.000000]*NEDOS*NC,dtype = np.float)
+            dos_arr = np.array([0.000000] * NEDOS * NC,dtype = np.float)
             dos_arr.shape = NEDOS,NC
             if NC == 10 or NC == 17:
                 for i in range(0,NEDOS):
@@ -264,7 +331,7 @@ def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
                 for i in range(0,NEDOS):
                     for j in range(0,NC):
                         dos_arr[i][j] = float(funcs.split_line(lines[StartLine + i])[j]) * funcs.logic_retn_val(j % 2 == 0 and j > 0, -1, 1)
-            dos_file = workdir + '/DOS' + str(atom_indx) + '.dat'
+            dos_file = os.path.join(workdir, 'DOS' + str(atom_indx) + '.dat')
         if save_dos_arr == True:
             np.savetxt(dos_file, dos_arr)
         else:
@@ -370,12 +437,20 @@ def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
 
 def read_oszicar(oszicar_file_path, dpi = 100):
     '''Read OSZICAR'''
+    import os
     import numpy as np
     import matplotlib.pyplot as plt
     from .. import funcs
+
+    oszicar_file_path = os.path.abspath(oszicar_file_path)
+
+    if funcs.file_status(oszicar_file_path) != 1:
+        quit()
+
     with open(oszicar_file_path,'r') as f:
         line = f.readlines()
 
+    oszicar_dict = {}
     ionic_step_num = 0
     for i_line in range(len(line)):
             if funcs.split_line(line[i_line])[1] == 'F=':
@@ -386,13 +461,14 @@ def read_oszicar(oszicar_file_path, dpi = 100):
         if split_line(line[i_line])[1] == 'F=':
             etot_arr[ionic_step] = float(funcs.split_line(line[i_line])[2])
             ionic_step += 1
+    oszicar_dict['etot_arr'] = etot_arr
     fig = plt.figure('n_etot')
     ax = fig.add_subplot(111)
     plt.plot(range(len(etot_arr)), etot_arr, marker = '.')
     ax.set(xlabel = 'Ionic steps')
     ax.set(ylabel = '$E_{tot}(eV)$')
-    etot_oszicar_figfile = 'etot_OSZICAR.pdf'
+    etot_oszicar_figfile = 'etot_oszicar.pdf'
     plt.savefig(etot_oszicar_figfile,dpi = dpi)
     plt.close
-    return etot_arr
+    return oszicar_dict
 
