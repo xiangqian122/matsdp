@@ -10,5 +10,7 @@ def test_nn_map():
         poscar_file_path = './vasp/POSCAR',
         a0 = 3.545,
         n_shell = 2,
+        elmt_selector_list = ['Re'],
+        atom_label = 'n_xyz',
         )
     assert isinstance(retn_val,dict) == True

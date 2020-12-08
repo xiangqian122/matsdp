@@ -11,7 +11,8 @@ def test_simple_cna():
     retn_val1 = vasp_analyze.simple_cna(
         poscar_file_path = './vasp/POSCAR',
         a0 = 3.545,
-        common_neighbor_elmt_list = ['Re', 'W', 'Ta','Ni']
+        common_neighbor_elmt_list = ['Re', 'W', 'Ta','Ni'],
+        atom_label = None,
         )
     retn_val2 = vasp_plot.plot_poscar(
         poscar_file_path = './vasp/POSCAR_simple_common_neighbor_pair_count_ReNi.vasp',

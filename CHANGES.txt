@@ -1,3 +1,12 @@
+v0.2.1, 2020-12-09 
+--------------------------------
+ 
+- Added new features in the vasp_plot module (e.g. plot band structure and fat band).
+- Added new features in the vasp_read module (e.g. read KPOINTS, EIGENVAl, PROCAR).
+- Added new function of pms (project management system), which includes project_manager and task_manager. This is the prototype of automatic project and job management.
+- Added new feature of writing task summary for a specific task.
+- Fixed some bugs in the vasp_plot module.
+- Removed some test examples.
 
 v0.2.0, 2020-02-10 
 --------------------------------

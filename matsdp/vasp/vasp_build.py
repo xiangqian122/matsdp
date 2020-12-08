@@ -23,11 +23,11 @@ def substitution(substitution_list_file, poscar_file_path):
         Then each of the following n_subst lines specifies the element(s) to be substituted and the element(s) which take its/their place(s).
         A specific example SubstList.in file is as follow:
             1
-            Ni 244 W
+            Ni244 W
             
             2
-            Ni 244 Re
-            Al 12 Re
+            Ni244 Re
+            Al12 Re
 
             ...
         sysname is L$(line_number)_composition_D$(Duplicate)
@@ -96,6 +96,10 @@ def substitution(substitution_list_file, poscar_file_path):
         n_elmt_mod = np.array([0]*len(elmt_species_mod),dtype = np.int)
         for i in range(0,len(elmt_species_mod)):
             n_elmt_mod[i] = sum(atom_species_name_subst_arr==elmt_species_mod[i])
+        # remove the element when the number of atoms for an element is zero
+        val_indx = np.argwhere(n_elmt_mod == 0)
+        n_elmt_mod = np.delete(n_elmt_mod, val_indx)
+        elmt_species_mod = np.delete(elmt_species_mod, val_indx) 
         #Define the System Name
         composition = ""
         for i in range(len(elmt_species_mod)-1,-1,-1):
@@ -129,9 +133,10 @@ def substitution(substitution_list_file, poscar_file_path):
                     temp2 = temp2 + 1
                     if temp2 >= n_elmt_mod[i]:
                         break
+        # remove the vacancy
         val_indx = np.argwhere(elmt_species_mod == 'Va')
         elmt_species_mod_remove_va = np.delete(elmt_species_mod, val_indx)
-        n_elmt_mod_RemoveVa = np.delete(n_elmt_mod, val_indx)
+        n_elmt_mod_remove_va = np.delete(n_elmt_mod, val_indx)
         #Export POSCAR file for each system
         models_path = os.path.join(output_dir, subst_file_name, sysname)
         funcs.mkdir(models_path)
@@ -139,7 +144,7 @@ def substitution(substitution_list_file, poscar_file_path):
         if not isExists:
             funcs.write_log(logfile,'WARNING:' + models_path + ' does not exist!')
         poscar_out = models_path + '/POSCAR'
-        with open(poscar_out,'w') as fileobject, open(poscar_file_path,'r') as pline:
+        with open(poscar_out, 'w') as fileobject, open(poscar_file_path,'r') as pline:
             pline = pline.readlines()
             fileobject.write(pline[0] +
                              pline[1] +
@@ -147,7 +152,7 @@ def substitution(substitution_list_file, poscar_file_path):
                              pline[3] +
                              pline[4] +
                              str(" ".join(elmt_species_mod_remove_va)) + '\n' +
-                             str(n_elmt_mod_RemoveVa).strip('[').strip(']') + '\n')
+                             str(n_elmt_mod_remove_va).strip('[').strip(']') + '\n')
             if poscar_dict['slet_dyn_on'] == True:
                 fileobject.write(pline[7] +
                                  pline[8])
@@ -155,15 +160,15 @@ def substitution(substitution_list_file, poscar_file_path):
                 fileobject.write(pline[7])
         with open(poscar_out,'a') as fileobject:
             if poscar_dict['slet_dyn_on'] == True:
-                for i in range(0,n_atoms):
+                for i in range(0, n_atoms):
                     if atom_species_name_sort_arr[i] == 'Va':
                         continue
-                    fileobject.write(str(coord_subst_arr[i][0])+' '+str(coord_subst_arr[i][1])+' '+str(coord_subst_arr[i][2])+' '+str(fix_subst_arr[i][0])+' '+str(fix_subst_arr[i][1])+' '+str(fix_subst_arr[i][2])+'\n')
+                    fileobject.write('{:.9f}'.format(coord_subst_arr[i][0]) + ' ' + '{:.9f}'.format(coord_subst_arr[i][1]) + ' ' + '{:.9f}'.format(coord_subst_arr[i][2]) + ' ' + str(fix_subst_arr[i][0]) + ' ' + str(fix_subst_arr[i][1]) + ' ' + str(fix_subst_arr[i][2]) + '\n')
             else:
-                for i in range(0,n_atoms):
+                for i in range(0, n_atoms):
                     if atom_species_name_sort_arr[i] == 'Va':
                         continue
-                    fileobject.write(str(coord_subst_arr[i][0])+' '+str(coord_subst_arr[i][1])+' '+str(coord_subst_arr[i][2])+'\n')
+                    fileobject.write('{:.9f}'.format(coord_subst_arr[i][0]) + ' ' + '{:.9f}'.format(coord_subst_arr[i][1]) + ' ' + '{:.9f}'.format(coord_subst_arr[i][2]) + '\n')
         with open(sysname_file,'a') as sysnamefileobject:
             sysnamefileobject.write(sysname + '\n')
         
@@ -174,7 +179,7 @@ def substitution(substitution_list_file, poscar_file_path):
         logfile,
         'vasp_build.substitution(' + '\n' +
         '    substitution_list_file=' + 'r\'' + str(substitution_list_file_abs_path) + '\'' + ',\n' +
-        '    poscar_file_path='  + 'r\'' +str(poscar_file_path) + '\'' + ')\n' +
+        '    poscar_file_path='  + 'r\'' + str(poscar_file_path) + '\'' + ')\n' +
         '###############################\n')
     return 0
 
@@ -467,7 +472,6 @@ def selection_sphere(poscar_file_path, origin_atom_name, radius = 7.0, include_m
         '    include_mirror_atoms=' + str(include_mirror_atoms) + ',\n' +
         '    output_file_name=\'' + str(output_file_name) + '\')\n')
     return 0 
-
 
 def create_multiple_vasp_jobs(substitution_list_file, poscar_file_path, elmt_potcar_dir, incar_str, kpoints_str):
     '''

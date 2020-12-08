@@ -45,12 +45,12 @@
 
 \vfill
 
-\small Dianwu Wang \\
-\small dianwuwang@163.com \\
+%\small Dianwu Wang \\
+%\small dianwuwang@163.com \\
 \vspace{0.8cm}
 
-\small version 0.2.0\\
-\small Feb. 10, 2020
+\small version 0.2.1\\
+\small Dec. 9, 2020
 
 \end{center}
 \end{titlepage}
@@ -65,13 +65,13 @@ MATSDP is a materials simulation and data processing toolkit. The Vienna ab-init
 VASP analyzing and data processing tools:
 \begin{itemize}
 \item Build model by atom substitution or atom selection based on a POSCAR file
-\item Read information DOSCAR, OUTCAR, POSCAR, and OSZICAR
-\item Plot model in the POSCAR/CONTCAR (also support color mapping of atom properties), Required files: POSCAR/CONTCAR or POSCAR with data of atom properties
-\item Plot DOS (PDOS, LDOS, TDOS) information. Required input: DOSCAR, OUTCAR, POSCAR
-\item Calculate the nearest neighbor information. Required input: POSCAR
+\item Read VASP inputs and outputs
+\item Plot model in the POSCAR/CONTCAR (also support color mapping of atom properties).
+\item Plot DOS (PDOS, LDOS, TDOS), band structure (including fat band).
+\item Calculate the nearest neighbor information.
 \item Perform simple common neighbor analysis
-\item Calculate structural energy ($E_{struct}$). Required files: CONTCAR, OUTCAR, POSCAR
-\item Write atom force information into the POSCAR
+\item Calculate structural energy.
+\item Write atom force information into the POSCAR file.
 \end{itemize}
 
 APT postprocessing tools:
@@ -91,6 +91,7 @@ DVM tools:
 Others tools:
 \begin{itemize}
 \item file format conversion
+\item project manager
 \end{itemize}
 
 %\begin{tikzpicture}[line width=3pt, node distance=4cm]
@@ -124,13 +125,15 @@ The matsdp package contains the vasp module, the apt module and the dvm module a
 \begin{tikzpicture}[line width=3pt, node distance=4.3cm]
 \def \smbwd{2cm}
 \node (matsdp) [startstop] {matsdp};
-\node (vasp) [process1, right of=matsdp,yshift=4.3cm] {vasp module};
+\node (vasp) [process1, right of=matsdp,yshift=6.5cm] {vasp module};
 \node (apt) [process1, below of=vasp] {apt module};
 \node (dvm) [process1, below of=apt] {dvm module};
+\node (pms) [process1, below of=dvm] {pms module};
 
 \draw[arrow] (matsdp) -- (vasp);
 \draw[arrow] (matsdp) -- (apt);
 \draw[arrow] (matsdp) -- (dvm);
+\draw[arrow] (matsdp) -- (pms);
 \end{tikzpicture}
 \caption{\label{fig:matsdp_main_structure} subpackages of the matsdp program.}
 \end{figure}
@@ -139,7 +142,7 @@ The matsdp package contains the vasp module, the apt module and the dvm module a
 \centering
 \begin{tikzpicture}[line width=3pt, node distance=4.3cm]
 %\tikzstyle{every node}=[font=\small,scale=0.9]
-\tikzstyle{every node}=[scale=0.8]
+\tikzstyle{every node}=[scale=0.65]
 \def \smbwd{2cm}
 \node (vasp) [startstop] {vasp module};
 \node (vasp_read) [process1, right of=vasp,yshift=12.90cm] {vasp\_read};
@@ -147,14 +150,16 @@ The matsdp package contains the vasp module, the apt module and the dvm module a
 \node (vasp_plot) [process1, below of=vasp_build] {vasp\_plot};
 \node (vasp_analyze) [process1, below of=vasp_plot] {vasp\_analyze};
 \node (vasp_write) [process1, below of=vasp_analyze] {vasp\_write};
-\node (vasp_default) [process1, below of=vasp_write] {vasp\_default};
+\node (vasp_tools) [process1, below of=vasp_write] {vasp\_tools};
+\node (vasp_default) [process1, below of=vasp_tools] {vasp\_default};
 \node (vasp_help) [process1, below of=vasp_default] {vasp\_help};
 
-\node (vasp_read_sub) [process2, right of=vasp_read] {read\_incar\\read\_poscar\\read\_outcar\\read\_doscar};
+\node (vasp_read_sub) [process2, right of=vasp_read] {read\_incar\\read\_poscar\\read\_outcar\\read\_doscar\\read\_oszicar\\read\_kpoints\\read\_eigenval\\read\_procar};
 \node (vasp_build_sub) [process2, right of=vasp_build] {substitution\\rep\_elmt\\selection\_sphere};
-\node (vasp_plot_sub) [process2, right of=vasp_plot] {plot\_dos\\plot\_poscar\\plot\_poscar\_for\_workdir};
-\node (vasp_analyze_sub) [process2, right of=vasp_analyze] {nn\_map\\estruct\\overlap\_peak\_analyzer\\job\_status};
-\node (vasp_write_sub) [process2, right of=vasp_write] {write\_poscar\\ \_with\_atom\_property\\write\_poscar\\ \_with\_force};
+\node (vasp_plot_sub) [process2, right of=vasp_plot] {plot\_dos\\plot\_poscar\\plot\_poscar\_for\_workdir\\plot\_bs};
+\node (vasp_analyze_sub) [process2, right of=vasp_analyze] {nn\_map\\simple\_cna\\estruct\\overlap\_peak\_analyzer\\get\_band\_gap};
+\node (vasp_write_sub) [process2, right of=vasp_write] {write\_poscar\\ \_with\_atom\_property\\write\_poscar\\ \_with\_force\\write\_potcar\\write\_incar\\write\_kpoints};
+\node (vasp_tools_sub) [process2, right of=vasp_tools] {ordered\_incar\_dict\\check\_warning\\check\_error\\error\_handler\\vasp\_job\_finished\\job\_status\\check\_file\_type};
 \node (vasp_default_sub) [process2, right of=vasp_default] {vasp\_default};
 \node (vasp_help_sub) [process2, right of=vasp_help] {vasp\_help};
 
@@ -163,6 +168,7 @@ The matsdp package contains the vasp module, the apt module and the dvm module a
 \draw[arrow] (vasp) -- (vasp_plot);
 \draw[arrow] (vasp) -- (vasp_analyze);
 \draw[arrow] (vasp) -- (vasp_write);
+\draw[arrow] (vasp) -- (vasp_tools);
 \draw[arrow] (vasp) -- (vasp_default);
 \draw[arrow] (vasp) -- (vasp_help);
 
@@ -171,6 +177,7 @@ The matsdp package contains the vasp module, the apt module and the dvm module a
 \draw[arrow] (vasp_plot) -- (vasp_plot_sub);
 \draw[arrow] (vasp_analyze) -- (vasp_analyze_sub);
 \draw[arrow] (vasp_write) -- (vasp_write_sub);
+\draw[arrow] (vasp_tools) -- (vasp_tools_sub);
 \draw[arrow] (vasp_default) -- (vasp_default_sub);
 \draw[arrow] (vasp_help) -- (vasp_help_sub);
 \end{tikzpicture}
@@ -370,6 +377,7 @@ Modules that may be imported before using the vasp package
 \item from matsdp.vasp import vasp\_plot
 \item from matsdp.vasp import vasp\_analyze
 \item from matsdp.vasp import vasp\_write
+\item from matsdp.vasp import vasp\_tools
 \item from matsdp.vasp import vasp\_default
 \item from matsdp.vasp import vasp\_help
 \end{itemize}
@@ -538,7 +546,7 @@ vasp_plot.plot_poscar(
 \item box\_on: Logical value. Whether to plot the box or not
 \item axis\_indicator: Logic value. Whether to plot the axis indicator
 \item plot\_cell\_basis\_vector\_label: Logical value. Whether to plot the cell basis vector labels( i.e., to label the three basis vectors of the cell as a, b, and c)
-\item plot\_atom\_label: String value. values: ``atom\_name'', ``atom\_index'', ``atom\_species'', or None/``None''. It plots atom label to each atom
+\item plot\_atom\_label: String value. values: ``atom\_name'', ``atom\_index'', ``atom\_species'', ``fix\_info'', ``position\_direct'', ``position\_cartesian', ``added\_atom\_data'' or None/``None''. It plots atom label to each atom
 \item fig\_format: String format. fig\_format is a string that defines output figure format. Supported fig\_format: 'png', 'eps', 'pdf', 'tif', 'tiff', 'jpg', 'jpeg', 'svg', 'svgz', 'pgf', 'ps', 'raw', 'rgba'
 \item fig\_dpi: float format. The DPI for non-vector graphics.
 \item draw\_colormap: Logical value. If true, the color mapping of atom properties will be Performed. Default: False.
@@ -860,6 +868,159 @@ The examples are shown in the Figure \ref{fig:outputs_plot_doscar1} and Figure \
 \includegraphics[width=0.7\textwidth]{outputs_plot_doscar2.pdf}
 \caption{Result of the plot\_doscar module.}
 \label{fig:outputs_plot_doscar2}
+\end{figure}
+
+\subsection{vasp\_plot.plot\_band}
+\subsubsection{Description}
+Plot band structure, including fat band.
+\subsubsection{Syntax}
+\begin{lstlisting}
+plot_bs(
+    infile_path_list, 
+    xlim = None, 
+    ylim = None, 
+    fermi_shift_zero = True, 
+    band_list = None,
+    interp_on = True, 
+    show_band_data_point = False,
+    band_gap_label = False,
+    band_palette_dict = None, 
+    band_lty_dict = None,
+    system_color_list = None, 
+    system_lty_list = None,
+    spd_and_site_projections_file_path_list = None, 
+    projections_point_size_factor = 1,
+    legend_on = True, 
+    plot_fermi_level = False,
+    xtick_direction = 'out', 
+    ytick_direction = 'out',
+    line_width = 2.0, 
+    font_size = 23, 
+    fig_format = 'png', 
+    fig_size = [15,10], 
+    fig_dpi = 600)
+\end{lstlisting}
+
+\subsubsection{Arguments}
+\begin{itemize}
+\item infile\_path\_list: A list of input files. The input file can either be EIGENVAL or PROCAR.
+\item xlim: the limit of the x axis for the band structure plot.
+\item ylim: the limit of the y axis for the band structure plot.
+\item fermi\_shift\_zero: whether the energies are shifted to zero or not.
+\item band\_list: Defines which bands are to be plotted. Band number starts from 1 (numbered from 1).
+\item interp\_on: whether to interpolate the band data pionts or not.
+\item show\_band\_data\_point: this is only valid when interp\_on = True. if show\_band\_data\_point = True, the raw data of the data points will be shown.
+\item band\_gap\_label: Logic value. If band\_gap\_label = True, then the band gap, CBM, CVM will be labeled.
+\item band\_palette\_dict: this is used to define the color of specific band. Dictionary key is the band index (numbered from 1).
+\item band\_lty\_dict: this is used to define the linestyle of specific band. Dictionary key is the band index (numbered from 1).
+\item system\_color\_list: if multiple infile are to be plotted. the label only label the system index. The line color of different systems, this is used when the band structure for different systems are to be compared.
+\item system\_lty\_list: if multiple infile are to be plotted. the band linestyles are designated for each infile. The line style of different systems, this is used when the band structure for different systems are to be compared.
+\item spd\_and\_site\_projections\_file\_path\_list: The parameter denotes the file which can be used to designate the spd- and site projected wave function character or each orbit. This parameter is only valid when the input file has the PROCAR file format. This file contains five columns: spin, mag, ion, orbit, color.
+    \begin{itemize}
+    \item spin: spin status of the projected contribution.
+
+    \item mag: Magnetization\_density. The total and local magnetizations, i.e. rho (orbital-projected contributions to the wavefunctions for each ion) and magnetization density (orbital-projected contributions to the magnetization) in the x(mx), y(my) and z(mz) directions. Please choose from the quadruplet of texts: \['rho', 'mx', 'my', 'mz'\] or \['tot', 'mx', 'my', 'mz'\]. The 'rho' represents 'tot'. The default is \['rho'\].
+
+    \item ion: the ion name. for example, 'Ni1', 'Al3', 'Te2'.
+
+    \item orbit: It contains one of the following orbits: 's', 'py', 'pz', 'px', 'dxy', 'dyz', 'dz2', 'dxz', 'dx2'(or 'dx2-y2'), 'tot'. 
+
+    \item color: the color for each plotted projected contribution.
+
+    One example of the spd\_and\_site\_projections\_file is as follows:
+        \begin{lstlisting}[basicstyle=\tiny]
+        spin, mag, ions\_list  , orbit, color   , legend 
+        None, tot, ['Li1',2]  , s    , black   ,  None
+        None, tot, ['tot']    , px   , red     ,  Auto
+        None, tot, ['Li']     , py   , pink    ,  'Li'
+        None, tot, ['Li3']    , pz   , blue    ,  None
+        None, mx , [1,3]      , py   , green   ,  Li1+Li3 $p_{y}$ $m_x$
+        ...
+        \end{lstlisting}
+    in which, the first line 'spin, mag, ion, orbit, color' is the header line.
+    The parameter choices for the spd\_and\_site\_projections\_file is as follows (In " x / y ", x is the parameter, y is the internal label of the parameters in the program.):
+        \begin{landscape}
+        \begin{lstlisting}[basicstyle=\scriptsize,linewidth=1.2\linewidth]
+           spin     ,         mag      ,             ions\_list     ,      orbit      ,    color    ,     legend
+        None /  0   ,      None / 0    ,    ['tot']       / [4 ]   ,    s   /  0     ,    black    ,     None
+        up   /  1   ,      tot  / 0    ,    ['Te2','Li5'] / [2, 7] ,    py  /  1     ,    red      ,     Auto
+        dw   /  2   ,      mx   / 1    ,    ['Se5']       / [4 ]   ,    pz  /  2     ,    blue     ,     'Li'
+                    ,      my   / 2    ,    ['Al3']       / [3 ]   ,    px  /  3     ,    pink     ,     'Li3 py $m_{x}$'
+                    ,      mz   / 3    ,    ['Bi3']       / [12]   ,    dxy /  4     ,    green    ,
+                    ,                  ,                           ,    dyz /  5     ,             ,   
+                    ,                  ,                           ,    dz2 /  6     ,             ,   
+                    ,                  ,                           ,    dxz /  7     ,             ,  
+                    ,                  ,                           ,    dx2 /  8     ,             ,     
+                    ,                  ,                           ,    tot /  9     ,             , 
+        \end{lstlisting}
+        \end{landscape}
+    \end{itemize}
+\item projections\_point\_size\_factor: the scaling factor for the fat band point size. Default value is 1.
+\item legend\_on: if True, the legend will be shown.
+\item plot\_fermi\_level: if True, the Fermi level will be shown.
+\end{itemize}
+\subsubsection{Output}
+A figure of band structure
+\subsubsection{Examples}
+
+\begin{lstlisting}[basicstyle=\small]
+# -*- coding: utf-8 -*-
+import os
+import sys
+package_path = '/user/specified/path/to/matsdp/'
+sys.path.insert(0, os.path.abspath(package_path))
+
+from matsdp.vasp import vasp_plot
+
+vasp_plot.plot_bs(infile_path_list = ['./bs_soc/PROCAR'],
+                  xlim = None,
+                  ylim = [-4, 8.5],
+                  interp_on = True,
+                  spd_and_site_projections_file_path_list = None,
+                  legend_on = True,
+                  plot_fermi_level = True,
+                  fig_size = [13, 9],
+                  band_gap_label = True,
+                  )
+
+vasp_plot.plot_bs(infile_path_list = ['./bs/PROCAR'],
+                  xlim = None,
+                  ylim = [-4, 8.5],
+                  interp_on = False,
+                  spd_and_site_projections_file_path_list = ['./projections_li.txt'],
+                  projections_point_size_factor = 0.7,
+                  legend_on = True,
+                  plot_fermi_level = True,
+                  fig_size = [13, 9],
+                  )
+\end{lstlisting}
+projections\_li.txt内容如下：
+\begin{lstlisting}
+spin, mag, ions_list  , orbit    , color      , legend
+up  , tot, ['Li']     , tot      , black      , Auto
+dw  , tot, ['Li']     , tot      , gray       , Auto
+up  , tot, ['Li']     , px       , red        , Auto
+dw  , tot, ['Li']     , px       , darkviolet , Auto
+up  , tot, ['Li']     , py       , blue       , Auto
+dw  , tot, ['Li']     , py       , steelblue  , Auto
+up  , tot, ['Li']     , pz       , green      , Auto
+dw  , tot, ['Li']     , pz       , seagreen   , Auto
+\end{lstlisting}
+
+The examples are shown in the Figure \ref{fig:bs_li} and Figure \ref{fig:fatband_li}.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.7\textwidth]{fig_20201208_21-57-28_band.pdf}
+\caption{Result of the plot\_bs module.}
+\label{fig:bs_li}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.7\textwidth]{fig_20201208_21-59-17_band.pdf}
+\caption{Result of the plot\_bs module.}
+\label{fig:fatband_li}
 \end{figure}
 
 %%%%%%%%%%%%%%%
@@ -1187,12 +1348,12 @@ The example is shown in the Figure \ref{fig:outputs_plot_doscar1}.
 
 Modules that may be imported before using the dvm package
 \begin{itemize}
-\item from dvm.dvm import dvm\_read
-\item from dvm.dvm import dvm\_build
-\item from dvm.dvm import dvm\_analyze
-\item from dvm.dvm import dvm\_write
-\item from dvm.dvm import dvm\_default
-\item from dvm.dvm import dvm\_help
+\item from matsdp.dvm import dvm\_read
+\item from matsdp.dvm import dvm\_build
+\item from matsdp.dvm import dvm\_analyze
+\item from matsdp.dvm import dvm\_write
+\item from matsdp.dvm import dvm\_default
+\item from matsdp.dvm import dvm\_help
 \end{itemize}
 
 %%%%%%%%%%%%%%
@@ -1475,6 +1636,39 @@ dvm_write.write_ie(dvm_otput_file_path)
 
 The files which contains the information of interatomic energies between the atoms pairs.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%pms (Porject management system)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Subpackage: pms}
+
+Modules that may be imported before using the pms package
+\begin{itemize}
+\item from matsdp.pms import project\_manager
+\item from matsdp.pms import task\_manager
+\end{itemize}
+
+\section{task\_manager module}
+
+\subsection{task\_manager.write\_task\_summary}
+\subsubsection{Functions}
+Write task summary for the jobs in a specific directory
+\subsubsection{Syntax}
+\begin{lstlisting}
+write_task_summary(
+    task_dir, 
+    task_type = 'VASP', 
+    band_gap_label = True, 
+    plot_fatband = False, 
+    band_struct_ylim = None, 
+    num_added_bands = 3)
+\end{lstlisting}
+\subsubsection{Examples}
+\begin{lstlisting}
+from matsdp.pms import task_manager
+
+task_manager.write_task_summary('./outputs/example/')
+\end{lstlisting}
+
 \chapter{Other functions}
 \section{funcs.py}
 
@@ -1524,6 +1718,8 @@ The named colors which can be used by the program is listed in Figure \ref{fig:n
 \label{fig:named_colors}
 \end{figure}
 
+
+
 \chapter*{Acknowledgements}
 Thanks to Dr. Yuancheng Lin for the helpful discussions of the dvm module.
 
@@ -1532,5 +1728,6 @@ Thanks to Dr. Yuancheng Lin for the helpful discussions of the dvm module.
 \bibitem{Chongyu1988PRB38} Chongyu Wang and Feng An and Binglin Gu and Liu Fusui and Ying Chen, Electronic structure of the light-impurity (boron){\textendash}vacancy complex in iron. Physical Review B, 1988: 3905--3912.
 \bibitem{Chong-yu1990PRB41} Chong-yu Wang, Sen-ying Liu and Lin-guang Han, Electronic structure of impurity (oxygen){\textendash}stacking-fault complex in nickel. Physical Review B, 1990: 1359--1367.
 \end{thebibliography}
+
 
 \end{document}

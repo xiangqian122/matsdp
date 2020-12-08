@@ -2,7 +2,6 @@
 from setuptools import setup, find_packages
 
 def package_files(directory):
-    '''https://stackoverflow.com/questions/27664504/how-to-add-package-data-recursively-in-python-setup-py'''
     import os
     paths = []
     for (path, directories, filenames) in os.walk(directory):
@@ -14,7 +13,7 @@ extra_files = package_files('./matsdp/tests')
 
 
 setup(name =  'matsdp',
-      version = '0.2.0',
+      version = '0.2.1',
       description = 'The materials simulation and data processing toolkit',
       long_description = open('README.rst.txt').read(),
       author = 'Dianwu Wang',
@@ -27,11 +26,13 @@ setup(name =  'matsdp',
                   'matsdp.vasp',
                   'matsdp.apt',
                   'matsdp.dvm',
+		  'matsdp.pms',
                   ],
       package_dir = {'matsdp': './matsdp',
                      'matsdp.vasp' : './matsdp/vasp',
                      'matsdp.apt' : './matsdp/apt',
                      'matsdp.dvm' : './matsdp/dvm',
+		     'matsdp.pms' : './matsdp/pms',
                      },
       package_data = {'':extra_files,
                       },
@@ -55,6 +56,7 @@ setup(name =  'matsdp',
       keywords = [
           'VASP',
           'DOS',
+	  'bands',
           'APT',
           'DVM',
           'data processing',

@@ -7,8 +7,6 @@ The materials simulation and data processing toolkit.
 
 MATSDP--The materials simulation and data processing toolkit.
 
-For more information please contact dianwuwang@163.com.
-
 ### Requirements
 
 - numpy
@@ -21,29 +19,34 @@ For more information please contact dianwuwang@163.com.
 Vienna ab-initio simulation package (VASP) analyzing and postprocessing tools 
 
  * Build model by atom substitution or atom selection based on a POSCAR file
- * Read information DOSCAR, OUTCAR, POSCAR, and OSZICAR
- * Plot Plot model in the POSCAR/CONTCAR (also support color mapping of atom properties), Required files: POSCAR/CONTCAR or POSCAR with data of atom properties
- * Plot DOS (PDOS, LDOS, TDOS) information. Required files: DOSCAR, OUTCAR, POSCAR
- * Calculate the nearest neighbor information. Required file: POSCAR
+ * Read VASP inputs and outputs
+ * Plot model in the POSCAR/CONTCAR (also support color mapping of atom properties).
+ * Plot DOS (PDOS, LDOS, TDOS), band structure (including fat band).
+ * Calculate the nearest neighbor information.
  * Perform simple common neighbor analysis
- * Calculate structural energy (E_struct). Required files: CONTCAR, OUTCAR, POSCAR
- * Write atom force information into the POSCAR
+ * Calculate structural energy.
+ * Write atom force information into the POSCAR file.
 
 Three-dimensional atom probe tomography (APT) postprocessing tools
 
- * Read the concentration profile .csv file
- * Plot the concentration profile
+ * Extract information from the concentration profile.csv file.
+ * Visualization of the concentration profile across the interface.
  
 DVM tools
 
  * Read the .input, .incar, .otput files
  * Write the .input, .incar, IND.DAT files
- * Write the interatomic energy (IE) files (including the IEs of the first nearest neighbor atoms)
+ * Ouput the interatomic energy (IE) files (including the IEs of the first nearest neighbor atoms)
  * The .incar file can also be prepared by atom selection from the vasp_build function in the vasp module 
+
+PMS tools
+
+ * Write task summary (of VASP jobs)
 
 Others tools
 
  * file format conversion
+ * fig2pdf (converting multiple images to a single .pdf file)
 
 ### Installation
 
@@ -51,9 +54,9 @@ pip install matsdp
 
 ### Release note
 
-- version 0.2.0
+- version 0.2.1
 
- * Date: 20200210
+ * Date: 20201209
 
 ## Usage
 
@@ -70,6 +73,7 @@ modules that may be imported before using the vasp package
  * from matsdp.vasp import vasp_plot
  * from matsdp.vasp import vasp_analyze
  * from matsdp.vasp import vasp_write
+ * from matsdp.vasp import vasp_tools
  * from matsdp.vasp import vasp_default
  * from matsdp.vasp import vasp_help
  
@@ -86,6 +90,11 @@ modules that may be imported before using the dvm package
  * from matsdp.dvm import dvm_write
  * from matsdp.dvm import dvm_default
  * from matsdp.dvm import dvm_help
+ 
+modules that may be imported before using the pms package
+
+ * from matsdp.pms import project_manager
+ * from matsdp.pms import task_manager
 
 ## Tests
 

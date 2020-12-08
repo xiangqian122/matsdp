@@ -3,7 +3,7 @@ def atomname2indx(poscar_dir,atom_name):
     '''Convert atom name to atom index according to POSCAR file of vasp'''
     from .vasp import vasp_read
     poscar_dict = vasp_read.read_poscar(poscar_dir)
-    atom_indx = poscar_dict['atomname_list'].index(atom_name) + 1
+    atom_indx = poscar_dict['atomname_list'].index(atom_name.strip()) + 1
     return atom_indx
 
 def poscar2lmp_datafile(poscar_dir):
@@ -148,3 +148,70 @@ def dvmincar2poscar(dvm_incar_file_path):
         added_atom_property_columns_str = added_atom_property_columns_str
         )
     return 0
+
+def img2pdf(img_path_list, img_rotate_list = None, pdf_path = './img2pdf.pdf', quality = 100, optimize = True, merge_method = 'pypdf2'):
+    '''
+    convert images to one single pdf
+    img_path_list: a list of image paths, relative paths can be used
+    rotate_list: the rotate angle of each image
+    pdf_path: output pdf file path
+    quality: quality of the output file
+    optimize: can optimize the image and reduce the output file size
+    merge_method: can choose from 'pypdf2' and 'pdfunite'. This function uses either the 'PyPDF2' or 'pdfunite' to merge the pdf files
+    '''
+    import os
+    import numpy as np
+    from PIL import Image
+    from . import funcs 
+    num_img = len(img_path_list)
+    img_arr = [None] * num_img
+    pdf_path = os.path.abspath(pdf_path)
+    temp_pdf_dir = os.path.abspath('./img2pdf_separate/')
+    funcs.mkdir(temp_pdf_dir)
+    if len(img_rotate_list) != num_img:
+        print('the dimension of img_path_list and rotate_list do not match')
+        quit()   
+    for i in range(0, num_img):
+        with Image.open(os.path.abspath(img_path_list[i])) as img:
+            if img_rotate_list != None:
+                img = img.rotate(img_rotate_list[i], expand=1)
+            #width, height = img_arr[i].size
+            #img_arr[i] = img_arr[i].resize((width,height),Image.ANTIALIAS)
+            img.save(os.path.join(temp_pdf_dir, str(i) + '.pdf'), 'PDF' , save_all = True, quality = quality, optimize = True)
+    else:
+        pass
+    # merge the pdfs
+    if merge_method == 'pdfunite':
+        # use pdfunite to merge the pdfs
+        unite_command = 'pdfunite '
+        for i in range(0, num_img):
+            unite_command = unite_command + os.path.join(temp_pdf_dir, str(i) + '.pdf') + ' ' 
+        unite_command = unite_command + ' ' + pdf_path
+        os.system(unite_command)
+    elif merge_method == 'pypdf2':
+        # use PyPDF2 to merge the pdfs 
+        from PyPDF2 import PdfFileMerger
+        pdfs_list = []
+        for i in range(0, num_img):
+            pdfs_list.append(os.path.join(temp_pdf_dir, str(i) + '.pdf'))
+        merger = PdfFileMerger()
+        
+        for pdf in pdfs_list:
+            merger.append(pdf)
+        
+        merger.write(pdf_path)
+        merger.close()
+    return 0
+
+def time_converter(hour, min, sec, unit = 'hour'):
+    '''
+    convert time to seconds
+    unit: unit of the reuturn value if unit='sec', then the return value is in unit of seconds
+    '''
+    if unit in ['sec', 's', 'second', 'seconds', 'Second', 'Seconds', 'SECOND', 'SECONDS']:
+        return hour * 3600 + min * 60 + sec
+    elif unit in ['min', 'm', 'minute', 'minutes', 'Minute', 'Minutes', 'MINUTE', 'MINUTES']:
+        return hour * 60 + min + sec / 60
+    elif unit in ['hour', 'h', 'hours', 'Hour', 'Hours', 'HOUR', 'HOURS']:
+        return hour + min / 60 + sec /3600
+

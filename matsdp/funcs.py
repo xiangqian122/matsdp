@@ -2,16 +2,21 @@
 ##########################################
 #Folder and file manipulation
 ##########################################
-def cp(src_filedir,dst_filedir):
+def cp(src_filedir,dst_filedir, suppress_warning = False):
     import os
     import shutil
     if not os.path.isfile(src_filedir):
-        print('WARNING: funcs error. The file ' + src_filedir + ' does not exist!')
+        if suppress_warning == False:
+            print('WARNING: funcs error. The file ' + src_filedir + ' does not exist!')
     else:
-        fpath,fname = os.path.split(dst_filedir)
+        fpath, fname = os.path.split(dst_filedir)
         if not os.path.exists(fpath):
             os.makedirs(fpath)
-        shutil.copyfile(src_filedir,dst_filedir)
+        if src_filedir == dst_filedir:
+            if suppress_warning == False:
+                print('WARNING(from funcs.cp):' + dst_filedir + ' already exist and is skipped.')
+        else:
+            shutil.copyfile(src_filedir, dst_filedir)
     return 0
         
 def file_path_name(file_dir):
@@ -22,7 +27,7 @@ def file_path_name(file_dir):
     filename = os.path.split(file_dir)[-1]
     return parent_path, filename
 
-def grep(kwd,file_dir):
+def grep(kwd, file_dir, suppress_warning = False):
     '''extract the line with the keyword(kwd) specified
     the function is similar to the "grep" command in the linux shell
     '''
@@ -31,26 +36,32 @@ def grep(kwd,file_dir):
     if os.path.exists(file_dir) and os.path.getsize(file_dir) > 0:
         pass
     else:
-        print('funcs error: the file ' + str(file_dir) + ' does not exist or is empty')
-        funcs.write_log(logfile, '#' + file_dir + " doesn't exist of is empty")
-        quit()
+        if suppress_warning == False:
+            print('ERROR (from funcs.grep): the file ' + str(file_dir) + ' does not exist or is empty')
+        ##funcs.write_log(logfile, '#' + file_dir + " doesn't exist of is empty")
+        ##quit()
+    line_str = ''
     line_list = []
-    with open(file_dir,'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            if kwd in line:
-                line_list.append(line)
+    try:
+        with open(file_dir,'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if kwd in line:
+                    line_list.append(line)
+    except:
+        pass
     line_str = ''.join(line_list)
     return line_str
 
-def line_num(input_file):
+def line_num(input_file, suppress_warning = False):
     'Get number of lines from a file'
     import os
     input_file = os.path.abspath(input_file)
     if os.path.exists(input_file) and os.path.getsize(input_file) > 0:
         pass
     else:
-        print('funcs error: the file ' + str(input_file) + ' does not exist or is empty')
+        if suppress_warning == False:
+            print('funcs error: the file ' + str(input_file) + ' does not exist or is empty')
         funcs.write_log(logfile, '#' + input_file + " doesn't exist of is empty")
         quit()
     count=0  
@@ -130,11 +141,13 @@ def write_log(logfile,output_str):
                 'from matsdp import vasp' + '\n' +
                 'from matsdp import apt' + '\n' +
                 'from matsdp import dvm' + '\n' +
+                'from matsdp import pms' + '\n' +
                 'from matsdp.vasp import vasp_read' + '\n' +
                 'from matsdp.vasp import vasp_plot' + '\n' +
                 'from matsdp.vasp import vasp_analyze' + '\n' +
                 'from matsdp.vasp import vasp_build' + '\n' +
                 'from matsdp.vasp import vasp_write' + '\n' +
+                'from matsdp.vasp import vasp_tools' + '\n' +
                 'from matsdp.vasp import vasp_default' + '\n' +
                 'from matsdp.vasp import vasp_help' + '\n' +
                 'from matsdp.apt import apt_read' + '\n' +
@@ -145,11 +158,13 @@ def write_log(logfile,output_str):
                 'from matsdp.dvm import dvm_write' + '\n' +
                 'from matsdp.dvm import dvm_default' + '\n' +
                 'from matsdp.dvm import dvm_help' + '\n' +
+                'from matsdp.pms import project_manager' + '\n' +
+                'from matsdp.pms import task_manager' + '\n' +
                 '######################################\n')
         with open(logfile,'a') as logfile_object:
             logfile_object.write(
                 formatted_time + '\n' +
-                output_str +  '\n')
+                output_str +  '\n') 
     else:
         with open(logfile,'a') as logfile_object:
             logfile_object.write(
@@ -174,12 +189,26 @@ def rm_empty_lines_in_file(in_file):
     mv(ftemp,in_file)
     return 0
 
+def get_file_str(file_path):
+    
+    '''
+    get file content, and convert it to string
+    '''
+    import os
+    file_path = os.path.abspath(file_path)
+    file_str = ''
+    with open(file_path, 'r') as f:
+        line = f.readlines()
+        for i_line in line:
+            file_str = file_str + i_line
+    return file_str
+
 def write_file(input_str, dest_file_path, mode = 'w'):
     '''
     write sepcified string to a desiginated file
     input_str: the string which is to be included in the destination file
     dest_file_path: destination file path, the specific string will be written to the destination file
-    mode: the mode for writing. The values could be 'w' or 'a'
+    mode: the mode for writing. The values could be 'w' or 'a' (write or append)
     if the destination file exists, then it will be created.
     '''    
     import os
@@ -237,7 +266,7 @@ def dir_tree(input_dir):
             )
     return dir_tree_str
 
-def file_status(file_path):
+def file_status(file_path, suppress_warning = False):
     '''
     check the status of the file: file exist, file not found, empty file etc.
     return value: the status of the file
@@ -252,16 +281,18 @@ def file_status(file_path):
     if os.path.exists(file_path) == False:
         # file does not exist
         status = 0
-        print('# WARNING: The file ' + str(file_path) + ' does not exist')
-        write_log(logfile, '# WARNING: The file ' + file_path + " does not exist")
+        if suppress_warning == False:
+            print('# WARNING #20120305 (from funcs.file_status): The file ' + str(file_path) + ' does not exist')
+        ##write_log(logfile, '# WARNING (from funcs.file_status): The file ' + file_path + " does not exist")
     elif os.path.exists(file_path) and os.path.getsize(file_path) > 0:
         # the file exists and is non-empty
         status = 1
     elif os.path.exists(file_path) and os.path.getsize(file_path) == 0:
         # emtpy file exist
         status = 2
-        print('# WARNING: The file ' + str(file_path) + ' is empty')
-        write_log(logfile, '# WARNING: The file ' + file_path + " is empty")
+        if suppress_warning == False:
+            print('# WARNING 20120306 (from funcs.file_status): The file ' + str(file_path) + ' is empty')
+        ##write_log(logfile, '# WARNING (from funcs.file_status): The file ' + file_path + " is empty")
     return status
 
 def dir_status(dir_path):
@@ -286,14 +317,64 @@ def dir_status(dir_path):
         status = 1
     return status
 
+def get_files(dir_path, extension = None):
+    '''
+    Get files in a specific directory
+    dir_path: the path of the directory.
+    extension: get the files with the extension "extension_filter".
+    '''
+    import os
+    file_path_list = []
+    file_name_list = []
+    for ifile in os.listdir(dir_path):
+        file_path = os.path.join(dir_path, ifile)
+        if os.path.isfile(file_path):
+            if extension not in [None,'None','none']:
+                if file_path.endswith(extension):
+                    file_path_list.append(file_path)
+                    file_name_list.append(ifile)
+            else:
+                file_path_list.append(file_path)
+                file_name_list.append(ifile)
+    return file_path_list, file_name_list
+
+def get_dirs(dir_path):
+    '''
+    get all the directories (include the directory itself and its subdirectories) in dir_path and put them in a list
+    '''
+    import os
+    dir_list = []
+    path1, name1 = os.path.split(dir_path)
+    path_recorder_list = [path1]
+    path_level_list = [None] * 99
+    temp_indx = 0
+    for root, dirs, files in os.walk(dir_path):
+        dirs.sort()
+        temp_indx = temp_indx + 1
+        level = root.replace(dir_path, '').count(os.sep)
+        path_level_list[level] = os.path.basename(root)
+        ##if level >= 1:
+        ##    path_recorder_list = [path1] + path_level_list[:level]
+        path_recorder_list = [path1] + path_level_list[:level]
+        path_recorder_list.append(os.path.basename(root))
+        i_dir_path = os.path.join('', *path_recorder_list)
+        dir_list.append(i_dir_path)
+    return dir_list
+
 ########################################
 #String manipulation
 ##########################################
-def extract_num(Str):
-    '''Extract number from string using regular expression'''
+def extract_num(input_str):
+    '''Extract number from string using regular expression, and put them in a list'''
     import re
-    Num = re.findall(r"\d+\.?\d*", Str)
-    return Num
+    num = re.findall(r"\d+\.?\d*", input_str)
+    return num
+
+def extract_alpha_str(input_str):
+    '''Extract english letters from string using regular expression, and put them in a list'''
+    import re
+    alpha_str = [x for x in re.split(r'[^A-Za-z]', input_str) if x != '']
+    return alpha_str
 
 def insert_str(old_str,indx,inserted_str):
     '''Insert a specified string(IndsetedStr) into sepecified location of an input string(old_str)
@@ -322,22 +403,21 @@ def replace(file_path, pattern, subst):
     move(abs_path, file_path)
     return 0
 
-def replace_file_content(filename,oldStr,newStr):
+def replace_file_content(file_path, old_str, new_str):
     'Replace string in file'
     import os
-    cwd = os.getcwd()
-    fileObj = cwd + '/' + filename
-    f = open(fileObj,'r+')
+    file_obj = os.path.abspath(file_path)
+    f = open(file_obj,'r+')
     all_the_lines=f.readlines()
     f.seek(0)
     f.truncate()
     for line in all_the_lines:
-        f.write(line.replace(oldStr,newStr))
+        f.write(line.replace(old_str,new_str))
     f.close()
     return 0
   
 def split_line(line, separator = ' '):
-    '''split the line using white space 
+    '''split the line using the specified separator, the default separator is white space 
     and put the splitted line string into a list'''
     temp_list = [item.strip() for item in str(line).replace('\t', '    ').strip('\n').strip().split(separator)]
     while '' in temp_list:
@@ -388,6 +468,35 @@ def float_format(input_float, max_len = 13, format_str = '{:.2f}'):
     formatted_float = format_str.format(float(input_float)) + ' ' * (max_len - len(format_str.format(float(input_float))))
     return formatted_float
 
+def str_strip(text):
+    '''string manipulation: strip'''
+    try:
+        return text.strip()
+    except AttributeError:
+        return text
+
+def str2int(text):
+    '''
+    convert string to integer
+    Note: if there are NaN values in the column of integers, the whole column would be designated as float type.
+    '''
+    try:
+        return int(text.strip('" ').strip())
+    except AttributeError:
+        return text
+    except ValueError:
+        return None
+
+def str2float(text):
+    '''convert string to float'''
+    import math
+    try:
+        return float(text.strip('" ').strip())
+    except AttributeError:
+        return text
+    except ValueError:
+        return math.nan
+
 ##########################################
 #Other functions
 ##########################################
@@ -405,7 +514,7 @@ def convert_bool(var):
         pass
     return var
 
-def logic_retn_val(input_logic_val,true_return_val,false_return_val):
+def logic_retn_val(input_logic_val, true_return_val, false_return_val):
     '''Return value according to the input logic value
     If input logic value is True then return true_return_val
     If input logic value is False then return false_return_val'''
@@ -432,6 +541,13 @@ def sigmoid(x, a, b, c, d):
     '''
     import numpy as np
     return a / (1. + np.exp(-c * (x - d))) + b
+
+def linear(x, a, b):
+    '''
+    fitting using the linear function
+    '''
+    import numpy as np
+    return a * x + b
 
 def data_normalize(input_data_value, data_list, colormap_vmin = None, colormap_vmax = None):
     '''
@@ -660,3 +776,186 @@ def lorentzian_broadening(x_arr, y_arr, delta):
         for j in range(0, len(x_arr)):
             y_arr_broadening[i] = y_arr_broadening[i] + y_arr[j] * lorentzian_lineshape_func(float(x_arr_broadening[i]), float(x_arr[j]), delta)
     return x_arr_broadening, y_arr_broadening
+
+def morse(r, D_e, a, r_e):
+    '''
+    Morse-like potential
+    $V\prime(r)=D_{e}(1-e^{-a(r-r_{e})})^{2}$
+    '''
+    import numpy as np
+    return np.power(D_e * (1 - np.exp(-a * (r - r_e))),2)
+
+def lennard_jones(r, epsilon, r_m):
+    '''
+    Lennard Jones potential
+    $V_{LJ}=\epsilon[(r_m/r)^{12}-(r_m/r)^{6}]$
+    '''
+    import numpy as np
+    return epsilon * (np.power((r_m/r),12)-2*np.power((r_m/r),6))
+
+def uber(a, a_m, l):
+    import numpy as np
+    '''
+    UBER relation
+    '''
+    astar = (a-a_m)/l
+    return np.exp(- np.sqrt(2) * astar) - 2 * np.exp(-astar/np.sqrt(2))
+
+def birch_murnaghan(x_list, energy_list, x_type = 'V', b_0prime = 160):
+    '''
+    Birch Murnaghan equation of state (EOS)
+    $E(V)=E_{0}+\frac{B_{0}V}{B_{0}^{\prime}}(\frac{(V_{0}/V)^{B_{0}^{\prime}}}{B_{0}^{\prime}-1}+1)-\frac{B_{0}V_{0}}{B_{0}^{\prime}-1}$
+    x_list: the value of the x axis
+    x_type: values can be 'V' or 'a0', which means volume or lattice constant.
+    energy_list: energy of the systems
+    '''
+    pass
+    return 0
+
+def e_subst(etot_doped, etot_undoped, composition_str, base_compostion_str, chem_pot_dict):
+    '''function of calculating the substitution formation energy
+    etot_doped: the model after doping;
+    etot_undoped: the model before doping;
+    composition_str: a string of the composition of the doped system;
+    base_composition_str: a string of the composition of the undoped system;
+    chem_pot_dict: a dictionary of the chemical potential of elements.
+    '''
+    import math
+    from . import periodic_table
+
+    periodic_table_dict = periodic_table.periodic_tab()
+
+    base_elmt_list = extract_alpha_str(base_compostion_str)
+    elmt_list = extract_alpha_str(composition_str)
+    base_elmt_num_list = extract_num(base_compostion_str)
+    elmt_num_list = extract_num(composition_str)
+    # initialization
+    base_elmt_num_dict = {}
+    elmt_num_dict = {}
+    for i_elmt in periodic_table_dict['symbol'].keys():
+        base_elmt_num_dict[i_elmt] = 0
+        elmt_num_dict[i_elmt] = 0
+
+    # refresh the dictionary
+    for i in range(0, len(base_elmt_list)):
+        base_elmt_num_dict[base_elmt_list[i]] = int(base_elmt_num_list[i])
+    for i in range(0, len(elmt_list)):
+        elmt_num_dict[elmt_list[i]] = int(elmt_num_list[i])
+
+    num_subst_dict = {}
+    for i_elmt in periodic_table_dict['symbol'].keys():
+        num_subst_dict[i_elmt] = abs(elmt_num_dict[i_elmt] - base_elmt_num_dict[i_elmt])
+
+    solute_elmt_list = list(set(elmt_list) - set(base_elmt_list))
+
+    num_tot = 0
+    solute_elmt_dict = {}
+    solute_elmt_num_dict = {}
+    for i_elmt in solute_elmt_list:
+        solute_elmt_dict[i_elmt] = i_elmt
+        solute_elmt_num_dict[i_elmt] = elmt_num_dict[i_elmt]
+        num_tot += solute_elmt_num_dict[i_elmt]
+        
+    etot_fin = etot_doped
+    etot_ini = etot_undoped
+    for i_base_elmt in base_elmt_list:
+        etot_fin += num_subst_dict[i_base_elmt] * chem_pot_dict[i_base_elmt]
+
+    for i_solute_elmt in solute_elmt_list:
+        etot_ini += num_subst_dict[i_solute_elmt] * chem_pot_dict[i_solute_elmt]
+
+    if num_tot != 0:
+        res = (etot_fin - etot_ini) / num_tot
+    else:
+        res = math.nan
+
+#    try:
+#        res = (etot_fin - etot_ini) / num_tot
+#    except ZeroDivisionError:
+#        res = float('NaN')
+#    except RuntimeWarning:
+#        # RuntimeWarning: invalid value encountered in double_scalars
+#        res = float('NaN')
+
+    return res
+
+# atom numbering according to the order of three orthogonalized directions
+def atom_number_ortho(atom_key_arr, pos_arr_cartesian, delta = 0.05, number_order = 'xyz'):
+    '''
+    - Define atom number without considering axis rotation. In the future, axis rotation can be added.
+    - The basic idea is to sorting atom indices independently in three dimensions, then
+    grouping the atoms according to their coordinate in each direction (the atoms with 
+    similar positions in one direction are grouped in the same group), then
+    sorting the atom indices again according to the position and groups.
+    - The numbering starts from the origin, i.e. (0,0,0)
+    - atom_key_arr: Atom index starts from 0
+    - pos_arr_cartesian: It is a two dimensional 'N by 3' array, where N denotes number of atoms, 
+    the array columns are x, y, and z Cartesian coordinates.
+    - delta: This is the spacial resolution, for example z=0.24 and z=0.25 are considered to be in the same position if delta=0.01.
+    - number_order: choices are 'xyz', 'yzx', 'zxy', 'xzy', 'yxz', 'zyx'. Designate the atom number according to the order in each axis directions.
+    for example, xyz denotes number starts from 0 in the origin, then the index first increases in x direction, then in y and z.
+    '''
+    import numpy as np
+    n_atoms = len(atom_key_arr)
+    # sorted and grouped indices
+    indx_arr = np.array([0] * n_atoms * 3)
+    indx_arr.shape = n_atoms, 3
+    #max_indx_arr denotes the maximum index in each direction
+    max_indx_arr = np.array([None] * 3)
+    # three directions
+    for i in range(0,3):
+        running_indx = 0
+        sorted_pos_arr_cartesian = np.sort(pos_arr_cartesian[:,i])
+        sorted_pos_arr_cartesian_indx = np.argsort(pos_arr_cartesian[:,i])
+        temp_pos = np.min(sorted_pos_arr_cartesian)
+        for temp_indx in sorted_pos_arr_cartesian_indx:
+            if (pos_arr_cartesian[temp_indx, i] - temp_pos) <= delta:
+                pass
+            else:
+                running_indx += 1
+            temp_pos = pos_arr_cartesian[temp_indx, i]
+            indx_arr[temp_indx, i] = running_indx
+        max_indx_arr[i] = np.max(indx_arr[:,i])
+    #analyzing the numbering order
+    number_order_list = [0, 1, 2]
+    max_indx_arr_order = np.array([None] * 3)
+    for i in range(0,3):
+        axis_direction = number_order.strip()[i]
+        if axis_direction == 'x':
+            axis_direction_indx = 0
+        elif axis_direction == 'y':
+            axis_direction_indx = 1
+        elif axis_direction == 'z':
+            axis_direction_indx = 2
+        else:
+            print('Error: error in reading the parameter number_order')
+        number_order_list[i] = axis_direction_indx
+        max_indx_arr_order[i] =  max_indx_arr[number_order_list[i]]
+    grid_arr = np.array([None] * n_atoms)
+    for temp_indx in range(0, n_atoms):
+        grid_arr[temp_indx] = str(indx_arr[temp_indx, number_order_list[0]]) + ',' + str(indx_arr[temp_indx, number_order_list[1]]) + ',' + str(indx_arr[temp_indx, number_order_list[2]])
+    #from collections import Counter
+    #b = dict(Counter(grid_arr))
+    #print ([key for key,value in b.items() if value > 1])
+    #print ({key:value for key,value in b.items()if value > 1})
+    atom_number_ortho_arr = np.array([None] * n_atoms)
+    running_number = 1
+    for k in range(0, max_indx_arr_order[2]+1):
+        for j in range(0, max_indx_arr_order[1]+1):
+            for i in range(0, max_indx_arr_order[0]+1):
+                temp_grid_str = str(i) + ',' + str(j) + ',' + str(k)
+                temp_indx = np.argwhere(grid_arr == temp_grid_str).squeeze()
+                #if np.isfinite(temp_indx):
+                if temp_indx.size > 0:
+                    atom_number_ortho_arr[int(temp_indx)] = running_number
+                    #print(pos_arr_cartesian[int(temp_indx),:])
+                    running_number += 1
+    return atom_number_ortho_arr
+
+######################
+#Notes
+######################
+'''
+At the end of this file, there a need to take the following notes:
+    1. NaN value: Because the type of nan in python is float, it would not cause too much errors when dealing with floats. So we use nan instead of None, although sometimes the ``None'' value would be better.
+'''
