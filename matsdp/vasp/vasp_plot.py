@@ -516,10 +516,10 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
                 if subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] in [None,'None','none']:
                     subplot_dict['ylo_list'][subplot_indx] = min(subplot_dict['ylo_list'][subplot_indx], min(i_dos_arr[xlo_energy_indx:xhi_energy_indx]))
                 if subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] in [None,'None','none']:
-                    subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], min(i_dos_arr[xlo_energy_indx:xhi_energy_indx]))
+                    subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], max(i_dos_arr[xlo_energy_indx:xhi_energy_indx]))
                 if subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] not in [None,'None','none'] and subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] not in [None,'None','none'] and subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] >= subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])]:
                     subplot_dict['ylo_list'][subplot_indx] = min(subplot_dict['ylo_list'][subplot_indx], min(i_dos_arr[xlo_energy_indx:xhi_energy_indx]))
-                    subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], min(i_dos_arr[xlo_energy_indx:xhi_energy_indx]))
+                    subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], max(i_dos_arr[xlo_energy_indx:xhi_energy_indx]))
        
             elif doscar_dict['num_col'] == 5:
                 i_dos_arr_original_up = doscar_dict['TDOS_up']
@@ -541,10 +541,10 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
                 if subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] in [None,'None','none']:
                     subplot_dict['ylo_list'][subplot_indx] = min(subplot_dict['ylo_list'][subplot_indx], min(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
                 if subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] in [None,'None','none']:
-                    subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], min(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
+                    subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], max(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
                 if subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] not in [None,'None','none'] and subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] not in [None,'None','none'] and subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] >= subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])]:
                     subplot_dict['ylo_list'][subplot_indx] = min(subplot_dict['ylo_list'][subplot_indx], min(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
-                    subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], min(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
+                    subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], max(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
 
             #Subplot y axis limit
             subplot_dict['ylo_list'][subplot_indx] = subplot_dict['ylo_list'][subplot_indx] * lower_spine_scale
@@ -890,6 +890,8 @@ def plot_poscar(poscar_file_path, euler_angle_type = 'zyx', phi = -3, theta = 5,
     label_size1 = float(label_size) / 2  # This is for labeling the atom position (the x, y, z coordinates), recommended value label_size1=6.5
     elmt_color_tikz = ['gray','magenta','blue','red','green','yellow','cyan','gray','magenta','blue','red','green','yellow','cyan','gray','magenta','blue','red','green','yellow','cyan','gray','magenta','blue','red','green','yellow','cyan']
     periodic_table_dict = periodic_table.periodic_tab()
+    periodic_table_dict['elmt_color']['--'] = 'black'
+    periodic_table_dict['atomic_radius']['--'] = 100
     if elmt_color in [None,'None','none']:
         pass
     else:
@@ -1367,7 +1369,10 @@ def plot_poscar(poscar_file_path, euler_angle_type = 'zyx', phi = -3, theta = 5,
 ##                      color=periodic_table_dict['elmt_color'][atom_species_add_mirror_atoms_arr[i]],
 ##                      s=scaled_atomic_radius_for_pyplot_dict[atom_species_add_mirror_atoms_arr[i]])
             #Draw atoms for pyplot figure (with shiny shpere effect)
-            original_ball_size = scaled_atomic_radius_for_pyplot_dict[atom_species_add_mirror_atoms_arr[i]]
+            if atom_species_add_mirror_atoms_arr[i] not in ['--', None, 'None', 'none']:
+                original_ball_size = scaled_atomic_radius_for_pyplot_dict[atom_species_add_mirror_atoms_arr[i]]
+            else: 
+                original_ball_size = 100
             if len(poscar_dict['added_atom_data'][0,:]) != 0 and not isinstance(poscar_dict['added_atom_data'][0,:], str):
                 if not isinstance(selected_added_atom_data_arr[i], str):
                     colormap_normalized_data, colormap_vmin, colormap_vmax = funcs.data_normalize(input_data_value = float(selected_added_atom_data_arr[i]),
@@ -1815,7 +1820,9 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
             spd_and_site_projections_file_path_list = None, projections_point_size_factor = 1,
             legend_on = True, plot_fermi_level = False,
             xtick_direction = 'out', ytick_direction = 'out',
-            line_width = 2.0, font_size = 23, fig_format = 'png', fig_size = [15,10], fig_dpi = 600):
+            line_width = 2.0, font_size = 23, fig_format = 'png', fig_size = [15,10], fig_dpi = 600,
+            write_band_data = True,
+           ):
     '''
     Functions: Plot band structure
     - infile_path_list: A list of input files. The input file can either be EIGENVAL or PROCAR.
@@ -1860,6 +1867,7 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     - projections_point_size_factor: the scaling factor for the fat band point size. Default value is 1.
     - legend_on: if True, the legend will be shown.
     - plot_fermi_level: if True, the Fermi level will be shown.
+    - write_band_data: write band data file or not
     '''
     import os
     import sys
@@ -1873,6 +1881,7 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     from .. import funcs
     from .. import convert
     from . import vasp_read
+    from . import vasp_write
     from . import vasp_tools
     from . import vasp_analyze
     from .. import default_params
@@ -2023,6 +2032,7 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
             eigenval_dict = vasp_read.read_eigenval(infile_path_list[i_sys])
             eigenval_or_procar_dict = eigenval_dict
             ispin = eigenval_dict['ispin']
+            #ispin = outcar_params_dict['ISPIN']
             num_kpoints = eigenval_dict['num_kpoints']
             num_bands = eigenval_dict['num_bands'] 
             num_ions = eigenval_dict['num_ions']
@@ -2059,6 +2069,9 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                 elif file_type == 'PROCAR_noncollinear':
                     projections_up_noncollinear = procar_dict['projections_up_noncollinear']
                     projections_dw_noncollinear = procar_dict['projections_dw_noncollinear']
+        #write band data to a specific file
+        if write_band_data == True:
+            vasp_write.write_band_data(eigenval_or_procar_dict, e_fermi = e_fermi)
 
         # get information form spd_and_site_projections_file_path
         if spd_and_site_projections_file_path_list not in [None, 'None', 'none'] and isinstance(spd_and_site_projections_file_path_list, list):
@@ -2277,7 +2290,8 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
             elif ispin == 2:
                 #band_palette_dict[str(i_band_indx)] = ['black', 'red'] # one for spin up, one for spin down
                 band_palette_dict[str(i_band_indx)] = [default_palette_list[0], default_palette_list[1]] # one for spin up, one for spin down
-                band_lty_dict[str(i_band_indx)] = ['-', '--'] # one for spin up, one for spin down
+                #band_lty_dict[str(i_band_indx)] = ['-', '--'] # one for spin up, one for spin down
+                band_lty_dict[str(i_band_indx)] = ['-', '-'] # one for spin up, one for spin down
 
             if band_palette_customize == True:
                 if ispin == 1:
@@ -2304,14 +2318,15 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                 xhi = max(xhi, np.max(kpoints_arr))
                 ylo = min(ylo, np.min(band_arr))
                 yhi = max(yhi, np.max(band_arr))
+                band_label = 'system ' + str(i_sys + 1)
                 if num_sys == 1: #for single system
                     band_color = band_palette_dict[str(i_band_indx)][0]
                     band_lty = band_lty_dict[str(i_band_indx)][0]
+                    band_label = ''
                 elif num_sys > 1: #for multiple system
                     band_color = system_color_list[i_sys] 
                     #band_lty = system_lty_list[i_sys] 
                     band_lty = system_lty_list[0] 
-                band_label = 'system ' + str(i_sys + 1)
                 if show_band_data_point == False:
                     band_marker = ''
                 elif show_band_data_point == True:
@@ -2368,6 +2383,8 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                         interp_dw = interp1d(kpoints_slice_arr, eigs_slice_arr_dw, kind='cubic')
                         plot_line_up, = active_axes.plot(kpoints_dense_arr, interp_up(kpoints_dense_arr), color = band_color_up, linestyle = band_lty_up, linewidth = general_params_dict['line_width'])
                         plot_line_dw, = active_axes.plot(kpoints_dense_arr, interp_dw(kpoints_dense_arr), color = band_color_dw, linestyle = band_lty_dw, linewidth = general_params_dict['line_width'])
+                        #plot_line_up, = plt.plot(kpoints_slice_arr, eigs_slice_arr_up, color = band_color_up, linestyle = '-', marker = band_marker, label = band_label_up)
+                        #plot_line_dw, = plt.plot(kpoints_slice_arr, eigs_slice_arr_dw, color = band_color_dw, linestyle = '-', marker = band_marker, label = band_label_dw)
                         plot_dot_up, = plt.plot(kpoints_slice_arr, eigs_slice_arr_up, color = band_color_up, linestyle = '', marker = band_marker, label = band_label_up)
                         plot_dot_dw, = plt.plot(kpoints_slice_arr, eigs_slice_arr_dw, color = band_color_dw, linestyle = '', marker = band_marker, label = band_label_dw)
                         
@@ -2662,13 +2679,14 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
             ncol = 5
         else:
             ncol = 6
-        lgnd = plt.legend(handles = handle_list, labels = label_list, loc = 'best', frameon = True, fontsize = general_params_dict['font_size'] * legend_fontsize_scale, ncol = ncol)
-        # rescale the legend marker sizes to ensure all the marker sizes are the same.
-        if spd_and_site_projections_file_path_list not in [None, 'None', 'none']:
-            uniform_legend_marker_size = font_size
-            for lgnd_handle in lgnd.legendHandles:
-                #lgnd_handle._legmarker.set_markersize(120)
-                lgnd_handle._legmarker.set_markersize(uniform_legend_marker_size)
+        if num_sys != 1:
+            lgnd = plt.legend(handles = handle_list, labels = label_list, loc = 'best', frameon = True, fontsize = general_params_dict['font_size'] * legend_fontsize_scale, ncol = ncol)
+            # rescale the legend marker sizes to ensure all the marker sizes are the same.
+            if spd_and_site_projections_file_path_list not in [None, 'None', 'none']:
+                uniform_legend_marker_size = font_size
+                for lgnd_handle in lgnd.legendHandles:
+                    #lgnd_handle._legmarker.set_markersize(120)
+                    lgnd_handle._legmarker.set_markersize(uniform_legend_marker_size)
     active_axes.set(title='')
     #plt.set_xlim(xlim[0], xlim[1])
     if xlim not in [None,'None','none']:
@@ -2680,8 +2698,8 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     #plt.yaxis.set_major_locator(plt.MaxNLocator(5))
     #plt.xaxis.set_minor_locator(AutoMinorLocator(5))
     #plt.yaxis.set_minor_locator(AutoMinorLocator(5))
-
     formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time.time()))
+
     fig_file = os.path.join(output_dir, 'fig_' + str(formatted_time) + '_band.' + general_params_dict['fig_format'])
     plt.savefig(fig_file, dpi = general_params_dict['fig_dpi'])
     plt.close()
@@ -2736,7 +2754,8 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
         '    font_size = ' + str(initial_font_size) + ',\n' +
         '    fig_format = ' + '\'' + str(fig_format) + '\'' + ',\n' +
         '    fig_size = ' + str(fig_size) + ',\n' +
-        '    fig_dpi = ' + str(fig_dpi) + ')\n' +
+        '    fig_dpi = ' + str(fig_dpi) + ',\n' +
+        '    write_band_data = ' + str(write_band_data) + ')\n' +
         '################################################\n')
     funcs.write_log(fig_log_file, log_str)
     funcs.write_log(logfile, log_str)

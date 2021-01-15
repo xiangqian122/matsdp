@@ -1,4 +1,4 @@
-def write_poscar_with_atom_property(output_poscar_file_path, poscar_dict, added_atom_data = None, added_atom_property_str = None, added_atom_property_columns_str = None):
+def write_poscar(output_poscar_file_path, poscar_dict, coord_system = 'Direct', added_atom_data = None, added_atom_property_str = None, added_atom_property_columns_str = None):
     '''
     write the poscar file with atom property data
     
@@ -36,53 +36,77 @@ def write_poscar_with_atom_property(output_poscar_file_path, poscar_dict, added_
         else:
             added_atom_property_columns_str = ' '.join(funcs.split_line(line = added_atom_property_columns_str, separator = ' '))
 
-    with open(output_poscar_file_path,'w') as f1:
-        if added_atom_data in [None, 'None', 'none']:
-            poscar_dict['header'][0] = (poscar_dict['header'][0].strip('\n').rstrip() +
-                                        '\n'
-                                        )
-        elif added_atom_data not in [None, 'None', 'none']:
-            poscar_dict['header'][0] = (poscar_dict['header'][0].strip('\n').rstrip() +
-                                        ' added_atom_property=' + str(added_atom_property_str).strip('=').strip(':').strip('\n') + ': ' +
-                                        added_atom_property_columns_str +
-                                        '\n'
-                                        )
-        for i_line in range(0,len(poscar_dict['header'])):
-            f1.write(poscar_dict['header'][i_line])
-    with open(output_poscar_file_path,'a') as f1:
-        added_atom_data_str = ''
-        coord_str = ''
-        fix_str = ''
-        for i_atom in range(n_atoms):
-            if added_atom_data not in [None, 'None', 'none']:
-                temp_arr = added_atom_data[i_atom,:]
-                added_atom_data_str = added_atom_data_str + ' '.join([str(temp_arr[indx]) + (' '*(max([len(str(x)) for x in added_atom_data[:, indx]]) - len(str(temp_arr[indx])))) for indx in range(0, len(temp_arr))] + '\n')
-            coord_str = coord_str + ('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,0]) + ' ' + (' '*(formatted_len1-len('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,0])))) + ' ' + 
-                '{:.6f}'.format(poscar_dict['coord_arr'][i_atom,1]) + ' ' + (' '*(formatted_len1-len('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,1])))) + ' ' + 
-                '{:.6f}'.format(poscar_dict['coord_arr'][i_atom,2]) + ' ' + (' '*(formatted_len1-len('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,2])))) + ' ' + '\n')
+    temp_str = ''
+    added_atom_data_str = ''
+    coord_str = ''
+    fix_str = ''
 
-            fix_str = fix_str + (poscar_dict['fix_arr'][i_atom,0] + ' ' +
-                poscar_dict['fix_arr'][i_atom,1] + ' ' +
-                poscar_dict['fix_arr'][i_atom,2] + ' ' + '\n')
+    if coord_system == 'Cartesian':
+        column_span = slice(3,6)
+    elif coord_system == 'Direct':
+        column_span = slice(0,3)
+    float_format1 = '{:17.9f}'
 
-        if added_atom_data in [None, 'None', 'none']:
-            if poscar_dict['slet_dyn_on'] == True:
-                f1.write(coord_str +
-                         fix_str +
-                         '\n')
-            elif poscar_dict['slet_dyn_on'] == False:
-                f1.write(coord_str +
-                         '\n')
-        elif added_atom_data not in [None, 'None', 'none']:
-            if poscar_dict['slet_dyn_on'] == True:
-                f1.write(coord_str +
-                         fix_str +
-                         added_atom_data_str +
-                         '\n')
-            elif poscar_dict['slet_dyn_on'] == False:
-                f1.write(coord_str +
-                         added_atom_data_str +
-                         '\n')
+    temp_str = ''
+    if added_atom_data in [None, 'None', 'none']:
+        temp_str = temp_str + (poscar_dict['comment'] +
+                                    '\n'
+                                    )
+    elif added_atom_data not in [None, 'None', 'none']:
+        temp_str = temp_str + (poscar_dict['comment'] +
+                                    ' added_atom_property=' + str(added_atom_property_str).strip('=').strip(':').strip('\n') + ': ' +
+                                    added_atom_property_columns_str +
+                                    '\n'
+                                    )
+    temp_str = temp_str + (
+        str(poscar_dict['uni_scale_fac']) + '\n' + 
+        str(' '.join(float_format1.format(x) for x in poscar_dict['box_len_arr'][0,:])) + '\n' + 
+        str(' '.join(float_format1.format(x) for x in poscar_dict['box_len_arr'][1,:])) + '\n' + 
+        str(' '.join(float_format1.format(x) for x in poscar_dict['box_len_arr'][2,:])) + '\n' + 
+        str(' '.join(poscar_dict['elmt_species_arr'])) + '\n' + 
+        str(' '.join(str(x) for x in poscar_dict['elmt_num_arr'])) + '\n' 
+        )
+    if poscar_dict['slet_dyn_on'] == True:
+        temp_str = temp_str + ('Selective Dynamics\n' + 
+            coord_system + '\n'
+            )
+    elif poscar_dict['slet_dyn_on'] == False:
+        temp_str = temp_str + (
+            coord_system + '\n'
+            )
+    for i_atom in range(n_atoms):
+        if added_atom_data not in [None, 'None', 'none']:
+            temp_arr = added_atom_data[i_atom,:]
+            added_atom_data_str = added_atom_data_str + ' '.join([str(temp_arr[indx]) + (' '*(max([len(str(x)) for x in added_atom_data[:, indx]]) - len(str(temp_arr[indx])))) for indx in range(0, len(temp_arr))] + '\n')
+        coord_str = coord_str + ' '.join(float_format1.format(x) for x in poscar_dict['pos_arr'][i_atom, column_span]) + '\n'
+        ##coord_str = coord_str + ('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,0]) + ' ' + (' '*(formatted_len1-len('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,0])))) + ' ' + 
+        ##    '{:.6f}'.format(poscar_dict['coord_arr'][i_atom,1]) + ' ' + (' '*(formatted_len1-len('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,1])))) + ' ' + 
+        ##    '{:.6f}'.format(poscar_dict['coord_arr'][i_atom,2]) + ' ' + (' '*(formatted_len1-len('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,2])))) + ' ' + '\n')
+
+        fix_str = fix_str + (poscar_dict['fix_arr'][i_atom,0] + ' ' +
+            poscar_dict['fix_arr'][i_atom,1] + ' ' +
+            poscar_dict['fix_arr'][i_atom,2] + ' ' + '\n')
+
+    if added_atom_data in [None, 'None', 'none']:
+        if poscar_dict['slet_dyn_on'] == True:
+            temp_str = temp_str + (coord_str +
+                     fix_str +
+                     '\n')
+        elif poscar_dict['slet_dyn_on'] == False:
+            temp_str = temp_str + (coord_str +
+                     '\n')
+    elif added_atom_data not in [None, 'None', 'none']:
+        if poscar_dict['slet_dyn_on'] == True:
+            temp_str = temp_str + (coord_str +
+                     fix_str +
+                     added_atom_data_str +
+                     '\n')
+        elif poscar_dict['slet_dyn_on'] == False:
+            temp_str = temp_str + (coord_str +
+                     added_atom_data_str +
+                     '\n')
+    with open(output_poscar_file_path,'w') as f:
+        f.write(temp_str)
     output_poscar_dict = {}
     output_poscar_dict['output_poscar_file_path'] = output_poscar_file_path
     if added_atom_data not in [None, 'None', 'none']:
@@ -126,13 +150,13 @@ def write_poscar_with_force(outcar_file_path, ionic_step = 'last', output_poscar
         output_poscar_file_path = os.path.join(workdir, 'POSCAR_with_force_step_' + str(i_ionic_step + 1) + '.vasp')
     else:
         output_poscar_file_path = os.path.join(workdir, str(output_poscar_file_name) + '_step_' + str(i_ionic_step + 1) + '.vasp')
-    write_poscar_with_atom_property(
+    write_poscar(
         output_poscar_file_path = output_poscar_file_path,
         poscar_dict = poscar_dict,
         added_atom_data = outcar_params_dict['force'][i_ionic_step,:,3:],
         added_atom_property_str = added_atom_property_str1,
         added_atom_property_columns_str = added_atom_property_columns_str1)
-    write_poscar_with_atom_property(
+    write_poscar(
         output_poscar_file_path = output_poscar_file_path[0:-5] + '_absforce.vasp',
         poscar_dict = poscar_dict,
         added_atom_data = np.abs(outcar_params_dict['force'][i_ionic_step,:,3:]),
@@ -164,10 +188,12 @@ def write_potcar(poscar_path, elmt_potcar_dir):
     from . import vasp_read
     from .. import funcs
     from .. import default_params
+    from .. import periodic_table
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
     output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
+    periodic_table_dict = periodic_table.periodic_tab()
 
     # atom position file and element potential file
     poscar_path = os.path.abspath(poscar_path)
@@ -187,29 +213,44 @@ def write_potcar(poscar_path, elmt_potcar_dir):
     use_gunzip = False
     use_python = False
     for i_elmt_name in elmt_species_arr:
-        i_elmt_potcar_dir = os.path.join(elmt_potcar_dir, i_elmt_name)
+        # use recommended setting of POTCAR of in the VASP manual (PAW)
+        #i_elmt_potcar_dir = os.path.join(elmt_potcar_dir, i_elmt_name)
+        recommended_potcar_str = i_elmt_name + periodic_table_dict['vasppot_paw'][i_elmt_name]
+        i_elmt_potcar_dir = os.path.join(elmt_potcar_dir, recommended_potcar_str)
+        #print(recommended_potcar_str)
+        # if the recommended POTCAR directory does not exist, try other POTCAR settings
         if not os.path.exists(i_elmt_potcar_dir) and not os.path.isfile(i_elmt_potcar_dir):
-            i_elmt_potcar_dir_temp = i_elmt_potcar_dir + '_sv'
+            i_elmt_potcar_dir_temp = os.path.join(elmt_potcar_dir, i_elmt_name + '')
             if os.path.exists(i_elmt_potcar_dir_temp):
-                print('# _sv is used' + ' for element ' + i_elmt_name)
+                print('# Recommended POTCAR ' + recommended_potcar_str + ' is not found. ' + i_elmt_name + ' is used for element ' + i_elmt_name)
                 i_elmt_potcar_dir = i_elmt_potcar_dir_temp
             else:
-                i_elmt_potcar_dir_temp = i_elmt_potcar_dir + '_pv'
+                i_elmt_potcar_dir_temp = os.path.join(elmt_potcar_dir, i_elmt_name + '_sv')
                 if os.path.exists(i_elmt_potcar_dir_temp):
-                    print('# _pv is used' + ' for element ' + i_elmt_name)
+                    print('# Recommended POTCAR ' + recommended_potcar_str + ' is not found. _sv is used for element ' + i_elmt_name)
                     i_elmt_potcar_dir = i_elmt_potcar_dir_temp
                 else:
-                    i_elmt_potcar_dir_temp = i_elmt_potcar_dir + '_s'
+                    i_elmt_potcar_dir_temp = os.path.join(elmt_potcar_dir, i_elmt_name + '_pv')
                     if os.path.exists(i_elmt_potcar_dir_temp):
-                        print('# _s is used' + ' for element ' + i_elmt_name)
+                        print('# Recommended POTCAR ' + recommended_potcar_str + ' is not found. _pv is used for element ' + i_elmt_name)
                         i_elmt_potcar_dir = i_elmt_potcar_dir_temp
                     else:
-                        i_elmt_potcar_dir_temp = i_elmt_potcar_dir + '_h'
+                        i_elmt_potcar_dir_temp = os.path.join(elmt_potcar_dir, i_elmt_name + '_s')
                         if os.path.exists(i_elmt_potcar_dir_temp):
-                            print('# _h is used' + ' for element ' + i_elmt_name)
+                            print('# Recommended POTCAR ' + recommended_potcar_str + ' is not found. _s is used for element ' + i_elmt_name)
                             i_elmt_potcar_dir = i_elmt_potcar_dir_temp
+                        else:
+                            i_elmt_potcar_dir_temp = os.path.join(elmt_potcar_dir, i_elmt_name + '_h')
+                            if os.path.exists(i_elmt_potcar_dir_temp):
+                                print('# Recommended POTCAR ' + recommended_potcar_str + ' is not found. _h is used for element ' + i_elmt_name)
+                                i_elmt_potcar_dir = i_elmt_potcar_dir_temp
+                            else:
+                                i_elmt_potcar_dir_temp = os.path.join(elmt_potcar_dir, i_elmt_name + '_d')
+                                if os.path.exists(i_elmt_potcar_dir_temp):
+                                    print('# Recommended POTCAR' + recommended_potcar_str + ' is not found. _d is used for element ' + i_elmt_name)
+                                    i_elmt_potcar_dir = i_elmt_potcar_dir_temp
         if not os.path.exists(i_elmt_potcar_dir) and not os.path.isfile(i_elmt_potcar_dir):
-            print('ERROR (from vasp_write): Please check POTCAR')
+            print('ERROR #2012271559 (from vasp_write): Please check POTCAR')
             exit() 
         elmt_potcar_file = 'POTCAR.Z'
         elmt_potcar_file_path = os.path.join(i_elmt_potcar_dir, elmt_potcar_file)
@@ -376,4 +417,33 @@ def write_kpoints(kpoints_file_path, kpoints_dict = None, poscar_file_path = Non
                 exit()
         with open(kpoints_file_path, 'w') as f:
             f.writelines(line)
+    return 0
+
+def write_band_data(eigenval_or_procar_dict, e_fermi = 0):
+    '''
+    write band data into a file
+    eigenval_or_procar_dict: the dictionary of EIGENVAL or PROCAR
+    e_fermi: the value of E-fermi in OUTCAR
+    '''
+    import os
+    file_path, filename = os.path.split(eigenval_or_procar_dict['file_path'])
+    #band_eigs_XXX.txt is the file containing information of the band structure
+    if eigenval_or_procar_dict['ispin'] == 1:
+        band_data_txt = ''
+        for i_kpt in range(0, eigenval_or_procar_dict['num_kpoints']):
+            band_data_txt = band_data_txt + str(i_kpt + 1) + ' ' + ' '.join([str(x) for x in (eigenval_or_procar_dict['eigs'] - e_fermi)[i_kpt,:]]) + '\n'
+        band_data_file = os.path.join(file_path, 'band_eigs.txt')
+        with open(band_data_file, 'w') as f:
+            f.write(band_data_txt)
+    elif eigenval_or_procar_dict['ispin'] == 2:
+        band_data_txt_up = ''
+        band_data_txt_dw = ''
+        for i_kpt in range(0, eigenval_or_procar_dict['num_kpoints']):
+            band_data_txt_up = band_data_txt_up + str(i_kpt + 1) + ' ' + ' '.join([str(x) for x in (eigenval_or_procar_dict['eigs_up'] - e_fermi)[i_kpt,:]]) + '\n'
+            band_data_txt_dw = band_data_txt_up + str(i_kpt + 1) + ' ' + ' '.join([str(x) for x in (eigenval_or_procar_dict['eigs_dw'] - e_fermi)[i_kpt,:]]) + '\n'
+        band_data_file_up = os.path.join(file_path, 'band_eigs_up.txt')
+        band_data_file_dw = os.path.join(file_path, 'band_eigs_dw.txt')
+        with open(band_data_file_up, 'w') as f1, open(band_data_file_dw, 'w') as f2:
+            f1.write(band_data_txt_up)
+            f2.write(band_data_txt_dw)
     return 0

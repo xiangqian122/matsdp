@@ -1,7 +1,8 @@
 def periodic_tab_gen():
     '''
-    The information is taken from PerioDict Table from Paul A Freshney 2010
+    Part of the information is taken from PerioDict Table from Paul A Freshney 2010
     http://perioDicttableexplorer.com/pc_pte.htm
+    The covalent radius is taken from the literature: [Beatriz Cordero et al. Covalent radii revisited. Dalton Transactions, 2008 2832--2838.]
     This is only a module for the developers!
     This module generates periodic_table.py which contains the periodic_table_dict (dictionary of the periodic table)
     This module relies on the periodic_table.csv data file located in the same directory.
@@ -43,7 +44,21 @@ def periodic_tab_gen():
                 periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = str(funcs.split_line(lines[i + 1],',')[col_indx])
             else:
                 periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = None
-        ###########################
+        # recommended POTCAR setting for VASP: PAW
+        col_indx = property_list.index('vasppot_paw')
+        for i in range(0,line_num - 1):
+            if funcs.split_line(lines[i + 1],',')[col_indx] != 'None':
+                periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = '_' + str(funcs.split_line(lines[i + 1],',')[col_indx])
+            else:
+                periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = ''
+        # recommended POTCAR setting for VASP: GW
+        col_indx = property_list.index('vasppot_gw')
+        for i in range(0,line_num - 1):
+            if funcs.split_line(lines[i + 1],',')[col_indx] != 'GW':
+                periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = '_' + str(funcs.split_line(lines[i + 1],',')[col_indx])
+            else:
+                periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = '_GW'
+        ##########################
         # for all float type data
         ###########################
         # atomic_radius, unit: pm
@@ -55,6 +70,13 @@ def periodic_tab_gen():
                 periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = None
         # metallic_radius, unit: pm
         col_indx = property_list.index('metallic_radius')
+        for i in range(0,line_num - 1):
+            if funcs.split_line(lines[i + 1],',')[col_indx] != 'None':
+                periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = float(funcs.split_line(lines[i + 1],',')[col_indx])
+            else:
+                periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = None
+        # csd_covalent_radius, unit: pm
+        col_indx = property_list.index('csd_covalent_radius')
         for i in range(0,line_num - 1):
             if funcs.split_line(lines[i + 1],',')[col_indx] != 'None':
                 periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = float(funcs.split_line(lines[i + 1],',')[col_indx])
@@ -87,6 +109,9 @@ def periodic_tab_gen():
                 '  periodic_table_dict[\'elmt_color\']=' + str(periodic_table_dict['elmt_color']) + '\n' +
                 '  periodic_table_dict[\'atomic_radius\']=' + str(periodic_table_dict['atomic_radius']) + '\n' +
                 '  periodic_table_dict[\'metallic_radius\']=' + str(periodic_table_dict['metallic_radius']) + '\n' +
+                '  periodic_table_dict[\'csd_covalent_radius\']=' + str(periodic_table_dict['csd_covalent_radius']) + '\n' + 
+                '  periodic_table_dict[\'vasppot_paw\']=' + str(periodic_table_dict['vasppot_paw']) + '\n' + 
+                '  periodic_table_dict[\'vasppot_gw\']=' + str(periodic_table_dict['vasppot_gw']) + '\n' + 
                 '  periodic_table_dict[\'dos_mode\']=' + str(periodic_table_dict['dos_mode']) + '\n' +
                 '  return periodic_table_dict'
                 )

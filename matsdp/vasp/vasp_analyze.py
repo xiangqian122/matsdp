@@ -389,7 +389,7 @@ def nn_map(poscar_file_path, a0, n_shell = 1, elmt_selector_list = None, atom_la
         f6.write(nn_map_str)
     with open(nn_map_file_without_shift_label,'w') as f16:
         f16.write(nn_map_without_shift_label_str)
-    vasp_write.write_poscar_with_atom_property(output_poscar_file_path = nn_count_1nn_poscar_file,
+    vasp_write.write_poscar(output_poscar_file_path = nn_count_1nn_poscar_file,
                                                poscar_dict = poscar_dict,
                                                added_atom_data = nn_map_dict['nn_count_1NN'],
                                                added_atom_property_str = 'nn_count_1nn',
@@ -624,7 +624,7 @@ def simple_cna(poscar_file_path, a0, common_neighbor_elmt_list = [], atom_label 
     simple_cna_pair_count_poscar_file_path = os.path.join(workdir, 'POSCAR_simple_common_neighbor_pair_count_' + elmt_pair_list_str + '.vasp')
     added_atom_property_str = 'simple_cna'
     added_atom_property_columns_str = str(' '.join([item for item in common_neighbor_dict['pair_name']]))
-    vasp_write.write_poscar_with_atom_property(output_poscar_file_path = simple_cna_pair_count_poscar_file_path,
+    vasp_write.write_poscar(output_poscar_file_path = simple_cna_pair_count_poscar_file_path,
                                                poscar_dict = poscar_dict,
                                                added_atom_data = common_neighbor_dict['pair_count'],
                                                added_atom_property_str = added_atom_property_str,
@@ -789,7 +789,7 @@ def estruct(doscar_file_path, sysname = ''):
     estruct_poscar_file_path = os.path.join(workdir, 'POSCAR_estruct_' + str(sysname) + '_Ef' + str('{:.4f}'.format(e_fermi_mod)) + '.vasp')
     added_atom_property_str = 'estruct'
     added_atom_property_columns_str = 'estruct'
-    vasp_write.write_poscar_with_atom_property(output_poscar_file_path = estruct_poscar_file_path,
+    vasp_write.write_poscar(output_poscar_file_path = estruct_poscar_file_path,
                                                poscar_dict = poscar_dict,
                                                added_atom_data = estrut_arr,
                                                added_atom_property_str = added_atom_property_str,
@@ -1379,7 +1379,8 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
 
     #get E_fermi
     e_fermi = outcar_params_dict['e_fermi']
-    e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
+    if e_fermi not in [None, 'None', 'none']:
+        e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
     #get KPOINTS 
     kpoints_scheme = kpoints_dict['scheme']
     if kpoints_scheme not in ['L', 'l']:
@@ -1495,6 +1496,9 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                     kpoints_slice_arr = kpoints_arr[start_indx:end_indx]
                     eigs_slice_arr = band_arr[start_indx:end_indx]
                     kpoints_dense_arr = np.linspace(min(kpoints_slice_arr),max(kpoints_slice_arr),num = num_kpoints * 5,endpoint = True)
+                    if len(kpoints_slice_arr) != len(eigs_slice_arr):
+                        print('ERROR #2012131929 (from vasp_analyze.get_band_gap): length of kpoints_slice_arr and eigs_slice_arr do not conform. Please check EIGENVAL or PROCAR file.')
+                        exit()
                     interp = interp1d(kpoints_slice_arr, eigs_slice_arr, kind='cubic')
 
                     max_val = np.max(interp(kpoints_dense_arr))
@@ -1562,6 +1566,9 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                     eigs_slice_arr_up = band_arr_up[start_indx:end_indx]
                     eigs_slice_arr_dw = band_arr_dw[start_indx:end_indx]
                     kpoints_dense_arr = np.linspace(min(kpoints_slice_arr),max(kpoints_slice_arr),num = num_kpoints * 5,endpoint = True)
+                    if len(kpoints_slice_arr) != len(eigs_slice_arr_up):
+                        print('ERROR #2012131927 (from vasp_analyze.get_band_gap): length of kpoints_slice_arr and eigs_slice_arr_up do not conform. Please check EIGENVAL or PROCAR file.')
+                        exit()
                     interp_up = interp1d(kpoints_slice_arr, eigs_slice_arr_up, kind='cubic')
                     interp_dw = interp1d(kpoints_slice_arr, eigs_slice_arr_dw, kind='cubic')
 

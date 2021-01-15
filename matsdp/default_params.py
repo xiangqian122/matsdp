@@ -9,6 +9,7 @@ def default_params():
         defaults_dict
     '''
     defaults_dict = {}
+    defaults_dict['program_name'] = 'MATSDP'
     defaults_dict['version'] = '0.2.1'
     defaults_dict['logfile'] = 'matsdp.log'
     defaults_dict['output_dir_name'] = 'outputs'

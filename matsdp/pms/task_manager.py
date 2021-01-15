@@ -28,7 +28,7 @@ def write_task_summary(task_dir, task_type = 'VASP', band_gap_label = True, plot
     funcs.mkdir(output_dir)
     #funcs.mkdir(projects_summary_dir)
     funcs.mkdir(task_summary_dir)
-    
+        
     default_palette_list = ['black','red','cyan','darkviolet','magenta','gray','darkorange','darkcyan','palegreen',
                    'goldenrod','lightpink','tan','mediumpurple','steelblue','tomato','mediumturquoise',
                    'mediumslateblue','brown','darkseagreen','wheat','seagreen','maroon','deeppink','chocolate',
@@ -42,6 +42,8 @@ def write_task_summary(task_dir, task_type = 'VASP', band_gap_label = True, plot
     #task_summary_dir = os.path.join(project_summary_dir, task_dir_name)
     #funcs.mkdir(project_summary_dir)
     funcs.mkdir(task_summary_dir)
+
+    font_size = 24
 
     opt_dir = os.path.join(task_dir, 'opt/')
     scf_dir = os.path.join(task_dir, 'scf/') 
@@ -82,7 +84,7 @@ r'\rfoot{}                                                      ' + '\n' +
 r'\fancyhead[CE,CO]{\zihao{-5}\nouppercase{\leftmark}}          ' + '\n' +         
 r'\fancyfoot[CE,CO]{\zihao{-5}\thepage}                         ' + '\n')      
 
-    task_summary_ctex_str = task_summary_ctex_str + r'\graphicspath{{' + r'./' + defaults_dict['output_dir_name'] + r'/}{' +  r'../../../' + r'}{./}}' + '\n'
+    task_summary_ctex_str = task_summary_ctex_str + r'\graphicspath{{' + r'./' + defaults_dict['output_dir_name'] + r'/}{' +  r'../../' + r'}{./}}' + '\n'
 
     task_summary_ctex_str = task_summary_ctex_str + r'\renewcommand{\figurename}{Figure}' + '\n'
     task_summary_ctex_str = task_summary_ctex_str + r'\renewcommand{\tablename}{Table}' + '\n'
@@ -379,35 +381,35 @@ r'\setcounter{page}{1}    ' + '\n')
             task_summary_ctex_str = task_summary_ctex_str + ('E-fermi (corrected) & ' + str(e_fermi_mod) + '\\\\\n')
 
             task_summary_ctex_str = task_summary_ctex_str + (r'\hline' + '\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec_{a}|$ ($\mathring{A}$) (POSCAR)& ' + str(poscar_len_vec_a) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec_{b}|$ ($\mathring{A}$) (POSCAR)& ' + str(poscar_len_vec_b) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec_{c}|$ ($\mathring{A}$) (POSCAR)& ' + str(poscar_len_vec_c) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{a}|$ ($\mathring{A}$) (POSCAR)& ' + str(poscar_len_vec_a) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{b}|$ ($\mathring{A}$) (POSCAR)& ' + str(poscar_len_vec_b) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{c}|$ ($\mathring{A}$) (POSCAR)& ' + str(poscar_len_vec_c) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('$\\alpha$ (degree) (POSCAR)& ' + str(poscar_angle_alpha_degree) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('$\\beta$ (degree) (POSCAR)& ' + str(poscar_angle_beta_degree) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('$\\gamma$ (degree) (POSCAR)& ' + str(poscar_angle_gamma_degree) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('Volume ($\mathring{A}^{3}$) (POSCAR)& ' + str(poscar_box_volume) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec_{a}|$ ($\mathring{A}$) (CONTCAR)& ' + str(contcar_len_vec_a) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec_{b}|$ ($\mathring{A}$) (CONTCAR)& ' + str(contcar_len_vec_b) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec_{c}|$ ($\mathring{A}$) (CONTCAR)& ' + str(contcar_len_vec_c) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{a}|$ ($\mathring{A}$) (CONTCAR)& ' + str(contcar_len_vec_a) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{b}|$ ($\mathring{A}$) (CONTCAR)& ' + str(contcar_len_vec_b) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{c}|$ ($\mathring{A}$) (CONTCAR)& ' + str(contcar_len_vec_c) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('$\\alpha$ (degree) (CONTCAR)& ' + str(contcar_angle_alpha_degree) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('$\\beta$ (degree) (CONTCAR)& ' + str(contcar_angle_beta_degree) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('$\\gamma$ (degree) (CONTCAR)& ' + str(contcar_angle_gamma_degree) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('Volume ($\mathring{A}^{3}$) (CONTCAR)& ' + str(contcar_box_volume) + '\\\\\n')
 
             task_summary_ctex_str = task_summary_ctex_str + (r'\hline' + '\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('E_{gap} (eV) & ' + str(band_gap) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('$E_{gap}$ (eV) & ' + str(band_gap) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('Gap Type & ' + str(gap_type) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('CBM (eV) & ' + str(cbm) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('VBM (eV) & ' + str(vbm) + '\\\\\n')
 
             task_summary_ctex_str = task_summary_ctex_str + (r'\hline' + '\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('E_{gap}(up) (eV) & ' + str(band_gap_up) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('$E_{gap}$(up) (eV) & ' + str(band_gap_up) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('Gap Type(up) & ' + str(gap_type_up) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('CBM(up) (eV) & ' + str(cbm_up) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('VBM(up) (eV) & ' + str(vbm_up) + '\\\\\n')
 
             task_summary_ctex_str = task_summary_ctex_str + (r'\hline' + '\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('Egap(down) (eV) & ' + str(band_gap_dw) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('$E_{gap}$(down) (eV) & ' + str(band_gap_dw) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('Gap Type(down) & ' + str(gap_type_dw) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('CBM(down) (eV) & ' + str(cbm_dw) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + ('VBM(down) (eV) & ' + str(vbm_dw) + '\\\\\n')
@@ -454,7 +456,7 @@ r'\setcounter{page}{1}    ' + '\n')
                     theta = euler_angle_type_phi_theta_psi_list_dict[viewing_direction][2], 
                     psi = euler_angle_type_phi_theta_psi_list_dict[viewing_direction][3], 
                     elmt_color = None, draw_mirror_atom = True, box_on = True, axis_indicator = True,
-                    plot_cell_basis_vector_label = False, plot_atom_label = 'atom_name', label_size = 16, fig_format = 'png', fig_dpi = 150,
+                    plot_cell_basis_vector_label = False, plot_atom_label = 'atom_name', label_size = 16, fig_format = 'pdf', fig_dpi = 150,
                     draw_colormap = False, colormap_column_indx = 1, colormap_vmin = None, colormap_vmax = None, vmin_color = 'blue', vmax_color = 'red', colorbar_alignment = 'vertical')
                 #i_fig_poscar = fig_poscar_list[i_fig_poscar_indx]
                 if i_fig_poscar in [None, 'None', 'none']:
@@ -566,7 +568,7 @@ r'\setcounter{page}{1}    ' + '\n')
                         spd_and_site_projections_file_path_list = None, projections_point_size_factor = 1,
                         legend_on = True, plot_fermi_level = True,
                         xtick_direction = 'out', ytick_direction = 'out',
-                        line_width = 2.0, font_size = 18, fig_format = 'png', fig_size = [15,10], fig_dpi = 150)
+                        line_width = 2.0, font_size = font_size, fig_format = 'pdf', fig_size = [15,10], fig_dpi = 150)
                     ##fig_bs1 = vasp_plot.plot_bs(infile_path_list = [eigenval_file_path], xlim = None, ylim = band_struct_ylim, fermi_shift_zero = True, band_list = None,
                     ##    interp_on = True, show_band_data_point = False,
                     ##    band_gap_label = band_gap_label,
@@ -668,7 +670,7 @@ spin_label + r"  , tot, " + r"['" + i_elmt_species + r"']     , tot      , " + d
                         spd_and_site_projections_file_path_list = [projections_file_path], projections_point_size_factor = 1,
                         legend_on = True, plot_fermi_level = True,
                         xtick_direction = 'out', ytick_direction = 'out',
-                        line_width = 2.0, font_size = 18, fig_format = 'png', fig_size = [15,10], fig_dpi = 150)
+                        line_width = 2.0, font_size = font_size, fig_format = 'pdf', fig_size = [15,10], fig_dpi = 150)
                     ##fig_bs_fatband1 = vasp_plot.plot_bs(infile_path_list = [procar_file_path], xlim = None, ylim = band_struct_ylim, fermi_shift_zero = True, band_list = None,
                     ##    interp_on = False, show_band_data_point = False,
                     ##    band_gap_label = band_gap_label,
@@ -738,17 +740,17 @@ spin_label + r"  , tot, " + r"['" + i_elmt_species + r"']     , tot      , " + d
             os.system('xelatex' + debug_str + ' -aux-directory=' + task_summary_dir + ' -output-directory=' + task_summary_dir + ' ' + task_summary_ctex_file_path)
             os.system('xelatex' + debug_str + ' -aux-directory=' + task_summary_dir + ' -output-directory=' + task_summary_dir + ' ' + task_summary_ctex_file_path)
     except:
-        print('WARNING: .tex file ' + task_summary_ctex_file_path + ' compilation failed.')
-
+        print('WARNING #2012271610: .tex file ' + task_summary_ctex_file_path + ' compilation failed.')
     return task_summary_ctex_file_path
 
-def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VASP', elmt_potcar_dir = None,
-               apply_to_existed_task = True,
+def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', elmt_potcar_dir = None,
+               apply_to_existed_task = True, use_primitive_cell = True,
               ):
     '''
     generate inputs for a specified structure. The generated inputs are used for further structural optimization.
-    the POSCAR file should be provided beforehand.
+    project_name: user-defined name of the project. If None is given, the project_name will be same as poscar_file_dir
     For a given structure, to keep the uniqueness of the task, this module should only run once.
+    use_primitive_cell: If True, then the structure will be reduced to primitive cell. Now the "phonopy --symmetry" is used to fulfill this function.
     '''
     import time
     import math
@@ -760,6 +762,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
     from ..vasp import vasp_write
     from ..vasp import vasp_read
     from ..vasp import vasp_analyze
+    from ..vasp import vasp_tools
     #if params_test == True:
     #get params from params_test_output
     #modify the params according to the params test results
@@ -774,14 +777,31 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
     elmt_potcar_dir = os.path.abspath(elmt_potcar_dir)    
 
     # build project
+    ##temp_dir, dir_name = os.path.split(poscar_file_dir)
+    ##if project_name in [None, 'None', 'none']:
+    ##    project_name = dir_name
+    if project_name in [None, 'None', 'none']:
+        project_name = 'Untitled'
     project_dir = os.path.join(projects_dir, project_name)
     funcs.mkdir(project_dir)
     project_dir_name = os.path.split(project_dir)[-1]   
 
     job_id_file_name = 'job_id.txt'
+
+    ### get poscar_file_path_list from poscar_file_dir
+    ##poscar_file_path_list = []
+    ##items_list = os.listdir(poscar_file_dir)
+    ##for i_name in items_list:
+    ##    i_file = os.path.join(poscar_file_dir, i_name)
+    ##    # Should add a functions to check if the file is POSCAR or not
+    ##    if os.path.isfile(i_file):
+    ##        poscar_file_path_list.append(i_file)
+        
     # loop over each task 
     for poscar_file_path in poscar_file_path_list:
         poscar_file_path = os.path.abspath(poscar_file_path)
+        temp_dir, file_name = os.path.split(poscar_file_path)
+        middle_dir_name = os.path.split(temp_dir)[-1]
         poscar_dict = vasp_read.read_poscar(poscar_file_path)
         chem_formula_str = ''
         for i_elmt_indx in range(0, len(poscar_dict['elmt_species_arr'])):
@@ -794,14 +814,20 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
         ##task_id = formatte_time[2:] + str(int1) + str(int2)
         ##task_dir_name = task_id + '_' + chem_formula_str
         ##task_dir = os.path.join(project_dir, task_dir_name)
-        task_dir_name = chem_formula_str
+        ##task_dir_name = chem_formula_str
+
+        task_dir_name = file_name
+        # to conform with the project_manager flow, if the POSCAR file is ***/opt/POSCAR, change the file_name
+        # It is better for the user to name the input structure (POSCAR file) with a specific name, not to directly name it to 'POSCAR'.
+        if task_dir_name == 'POSCAR' and middle_dir_name in ['opt']:
+            task_dir_name = os.path.split(os.path.split(os.path.split(poscar_file_path)[0])[0])[-1]
         task_dir = os.path.join(project_dir, task_dir_name)
         existed_task_dir_list = [os.path.join(project_dir, x) for x in os.listdir(project_dir) if os.path.isdir(os.path.join(project_dir, x))]
         if task_dir in existed_task_dir_list:
             if apply_to_existed_task == True:
                 pass
             elif apply_to_existed_task == False:
-                print('WARNING (from task_manager.gen_inputs): Duplicate chemical composition warning: the task for ' + poscar_file_path + ' is omitted.')
+                print('WARNING #2012271603 (from task_manager.gen_inputs): Duplicate chemical composition warning: the task for ' + poscar_file_path + ' is omitted.')
                 continue
             ##continue
             #task_dir_name = task_dir_name + '_d1'
@@ -829,7 +855,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             if os.path.exists(i_task_dir) and not os.path.isfile(i_task_dir):
                 pass
             else:
-                print('WARNING (from task_manager.gen_inputs): ' + i_task_dir + ' does not exist! Cannot be created.')
+                print('WARNING #2012271604 (from task_manager.gen_inputs): ' + i_task_dir + ' does not exist! Cannot be created.')
         ############################
         # opt
         ############################
@@ -855,6 +881,22 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             opt_poscar_file_path = os.path.join(opt_dir, 'POSCAR')
             if not os.path.exists(opt_poscar_file_path) and not os.path.isfile(opt_poscar_file_path):
                 funcs.cp(poscar_file_path, opt_poscar_file_path)
+                # reduce the structure to primitive cell using "phonopy --symmetry"
+                if use_primitive_cell == True:
+                    try:
+                        pwd_dir = os.getcwd()
+                        fpath, fname = os.path.split(opt_poscar_file_path)
+                        phonopy_sh_file_path = os.path.join(output_dir, 'run_phonopy.sh')
+                        funcs.touch(phonopy_sh_file_path)
+                        with open(phonopy_sh_file_path, 'w') as f:
+                            f.write('#!/bin/bash\n')
+                            f.write('cd ' + fpath + '\n')
+                            f.write('phonopy --symmetry > phonopy_symmetry.log' + '\n')
+                            f.write('cp PPOSCAR POSCAR' + '\n')
+                            f.write('cd ' + pwd_dir + '\n')
+                        os.system('sh ' + phonopy_sh_file_path)
+                    except:
+                        print('# phonopy --symmetry did not work for the file: ' + opt_poscar_file_path)
             # prepare INCAR
             incar_dict = {}
             incar_dict['SYSTEM']    = 'opt'
@@ -877,15 +919,18 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             incar_dict['LWAVE']     = '.FALSE.'
             incar_dict['LCHARG']    = '.FALSE.'
             incar_dict['NPAR']      = 4
+            incar_dict['AMIX']      = 0.1
             incar_file_path = os.path.join(opt_dir, 'INCAR')
             vasp_write.write_incar(incar_file_path, incar_dict = incar_dict, mode = 'w')
             # prepare KPOINTS
             vec1_len = np.linalg.norm(poscar_dict['l_arr'][0,:])
             vec2_len = np.linalg.norm(poscar_dict['l_arr'][1,:])
             vec3_len = np.linalg.norm(poscar_dict['l_arr'][2,:])
-            num_k1 = int(math.ceil(60 / vec1_len))
-            num_k2 = int(math.ceil(60 / vec2_len))
-            num_k3 = int(math.ceil(60 / vec3_len))
+            # k_times_x can affect the number of KPOINTS
+            k_times_x = 60
+            num_k1 = int(math.ceil(k_times_x / vec1_len))
+            num_k2 = int(math.ceil(k_times_x / vec2_len))
+            num_k3 = int(math.ceil(k_times_x / vec3_len))
             # odd number of kpoints
             if (num_k1 % 2) == 0:
                 num_k1 = num_k1 + 1
@@ -905,7 +950,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             try:
                 vasp_write.write_potcar(opt_poscar_file_path, elmt_potcar_dir)
             except:
-                print('Cannot write POTCAR file')
+                print('WARNING #2101102026 from gen_inputs: Cannot write POTCAR file')
 
             # set default ENCUT according to 1.3 * ENMAX (Value of ENMAX can be found in POTCAR)
             opt_potcar_file_path = os.path.join(task_dir, 'opt', 'POTCAR')
@@ -920,7 +965,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
                     recommended_encut_val = math.ceil(enmax_val * 1.3 / 10) * 10
                     encut_val = recommended_encut_val
                 elif funcs.file_status(opt_potcar_file_path, suppress_warning = True) == 2:
-                    print('WARNING (from task_manager.gen_inputs): ' + opt_potcar_file_path + ' is empty. Please check your POTCAR file. This problem may caused by the absense of the elemental POTCAR file (e.g. POTCAR.Z), i.e. the designation of the elemental POTCAR directory is not correct or it actually does not exist. Due to this problem, we set ENCUT = 350 (an arbitrary value) for the INCAR of the job directory ' + opt_dir)
+                    print('WARNING #2012271605 (from task_manager.gen_inputs): ' + opt_potcar_file_path + ' is empty. Please check your POTCAR file. This problem may caused by the absense of the elemental POTCAR file (e.g. POTCAR.Z), i.e. the designation of the elemental POTCAR directory is not correct or it actually does not exist. Due to this problem, we set ENCUT = 350 (an arbitrary value) for the INCAR of the job directory ' + opt_dir)
                     recommended_encut_val = 350   # an arbitrary ENCUT value
                     encut_val = recommended_encut_val
                 elif funcs.file_status(opt_potcar_file_path, suppress_warning = True) == 0:
@@ -934,6 +979,24 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             elif incar_dict['LREAL'] in ['.TRUE.', '.T.', 'On', 'O', 'Auto', 'A'] and poscar_dict['n_atoms'] < 8:
                 recommended_lreal_val = '.FALSE.'
                 vasp_write.write_incar(incar_file_path, incar_dict = {'LREAL': recommended_lreal_val}, mode = 's')
+            # modify MAGMOM
+            incar_dict_temp = {}
+            magmom = ''
+            transition_metal_list = ['Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 
+                                     'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
+                                     'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',]
+            if os.path.exists(opt_poscar_file_path) and os.path.isfile(opt_poscar_file_path):
+                poscar_dict_opt = vasp_read.read_poscar(opt_poscar_file_path)
+                magmom = ''
+                for i_indx in range(0, len(poscar_dict_opt['elmt_species_arr'])): 
+                    i_elmt = poscar_dict_opt['elmt_species_arr'][i_indx]
+                    i_elmt_num = poscar_dict_opt['elmt_num_arr'][i_indx]
+                    if i_elmt in transition_metal_list:
+                        magmom = magmom + str(i_elmt_num) + '*5.0 '
+                    else:
+                        magmom = magmom + str(i_elmt_num) + '*0.6 '
+                incar_dict_temp['MAGMOM'] = magmom
+                vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
 
             # set ENCUT and KPOINTS according to the ENCUT and KPOINT test results (if the tests has been done)
             if os.path.exists(test_encut_dir) and not os.path.isfile(test_encut_dir):
@@ -1110,6 +1173,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
         # scf
         ############################
         outcar_path = os.path.join(scf_dir, 'OUTCAR')
+        scf_poscar_file_path = os.path.join(scf_dir, 'POSCAR')
         # when the job is running, or it has been finished, it will be skipped
         job_id_file_path = os.path.join(scf_dir, job_id_file_name)
         if os.path.exists(job_id_file_path):
@@ -1163,6 +1227,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             incar_dict['LWAVE']     = '.FALSE.'
             incar_dict['LCHARG']    = '.TRUE.'
             incar_dict['NPAR']      = 4
+            incar_dict['AMIX']      = 0.1
             incar_file_path = os.path.join(scf_dir, 'INCAR')
             vasp_write.write_incar(incar_file_path, incar_dict = incar_dict, mode = 'w')
        
@@ -1178,6 +1243,24 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             elif incar_dict['LREAL'] in ['.TRUE.', '.T.', 'On', 'O', 'Auto', 'A'] and poscar_dict['n_atoms'] < 8:
                 recommended_lreal_val = '.FALSE.'
                 vasp_write.write_incar(incar_file_path, incar_dict = {'LREAL': recommended_lreal_val}, mode = 's')
+            # modify MAGMOM
+            incar_dict_temp = {}
+            magmom = ''
+            transition_metal_list = ['Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 
+                                     'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
+                                     'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',]
+            if os.path.exists(scf_poscar_file_path) and os.path.isfile(scf_poscar_file_path):
+                poscar_dict = vasp_read.read_poscar(scf_poscar_file_path)
+                magmom = ''
+                for i_indx in range(0, len(poscar_dict['elmt_species_arr'])): 
+                    i_elmt = poscar_dict['elmt_species_arr'][i_indx]
+                    i_elmt_num = poscar_dict['elmt_num_arr'][i_indx]
+                    if i_elmt in transition_metal_list:
+                        magmom = magmom + str(i_elmt_num) + '*5.0 '
+                    else:
+                        magmom = magmom + str(i_elmt_num) + '*0.6 '
+                incar_dict_temp['MAGMOM'] = magmom
+                vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
             
             # modify the KPOINTS
             kpoints_dict = vasp_read.read_kpoints(os.path.join(opt_dir, 'KPOINTS'))
@@ -1190,6 +1273,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
         # bs
         ############################
         outcar_path = os.path.join(bs_dir, 'OUTCAR')
+        bs_poscar_file_path = os.path.join(bs_dir, 'POSCAR')
         # when the job is running, or it has been finished, it will be skipped
         job_id_file_path = os.path.join(bs_dir, job_id_file_name)
         if os.path.exists(job_id_file_path):
@@ -1245,6 +1329,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             incar_dict['NPAR']      = 4
             incar_dict['LORBIT']    = 11
             incar_dict['NBANDS']    = 16
+            incar_dict['AMIX']      = 0.1
             incar_file_path = os.path.join(bs_dir, 'INCAR')
             vasp_write.write_incar(incar_file_path, incar_dict = incar_dict, mode = 'w')
 
@@ -1260,6 +1345,24 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             elif incar_dict['LREAL'] in ['.TRUE.', '.T.', 'On', 'O', 'Auto', 'A'] and poscar_dict['n_atoms'] < 8:
                 recommended_lreal_val = '.FALSE.'
                 vasp_write.write_incar(incar_file_path, incar_dict = {'LREAL': recommended_lreal_val}, mode = 's')
+            # modify MAGMOM
+            incar_dict_temp = {}
+            magmom = ''
+            transition_metal_list = ['Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 
+                                     'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
+                                     'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',]
+            if os.path.exists(bs_poscar_file_path) and os.path.isfile(bs_poscar_file_path):
+                poscar_dict = vasp_read.read_poscar(bs_poscar_file_path)
+                magmom = ''
+                for i_indx in range(0, len(poscar_dict['elmt_species_arr'])): 
+                    i_elmt = poscar_dict['elmt_species_arr'][i_indx]
+                    i_elmt_num = poscar_dict['elmt_num_arr'][i_indx]
+                    if i_elmt in transition_metal_list:
+                        magmom = magmom + str(i_elmt_num) + '*5.0 '
+                    else:
+                        magmom = magmom + str(i_elmt_num) + '*0.6 '
+                incar_dict_temp['MAGMOM'] = magmom
+                vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
             # modify NBANDS
             outcar_path_scf = os.path.join(scf_dir, 'OUTCAR')
             nbands_scf = None
@@ -1312,6 +1415,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
         # bs_soc
         ############################
         outcar_path = os.path.join(bs_soc_dir, 'OUTCAR')
+        bs_soc_poscar_file_path = os.path.join(bs_soc_dir, 'POSCAR')
         # when the job is running, or it has been finished, it will be skipped
         job_id_file_path = os.path.join(bs_soc_dir, job_id_file_name)
         if os.path.exists(job_id_file_path):
@@ -1365,6 +1469,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             incar_dict['LWAVE']      = '.FALSE.'
             incar_dict['LCHARG']     = '.TRUE.'
             incar_dict['NPAR']       = 4
+            incar_dict['AMIX']      = 0.1
             incar_dict['LORBIT']     = 11
             incar_dict['LSORBIT']    = '.TRUE.'
             incar_dict['LMAXMIX']    = 2
@@ -1386,6 +1491,24 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             elif incar_dict['LREAL'] in ['.TRUE.', '.T.', 'On', 'O', 'Auto', 'A'] and poscar_dict['n_atoms'] < 8:
                 recommended_lreal_val = '.FALSE.'
                 vasp_write.write_incar(incar_file_path, incar_dict = {'LREAL': recommended_lreal_val}, mode = 's')
+            # modify MAGMOM
+            incar_dict_temp = {}
+            magmom = ''
+            transition_metal_list = ['Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 
+                                     'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
+                                     'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',]
+            if os.path.exists(bs_soc_poscar_file_path) and os.path.isfile(bs_soc_poscar_file_path):
+                poscar_dict = vasp_read.read_poscar(bs_soc_poscar_file_path)
+                magmom = ''
+                for i_indx in range(0, len(poscar_dict['elmt_species_arr'])): 
+                    i_elmt = poscar_dict['elmt_species_arr'][i_indx]
+                    i_elmt_num = poscar_dict['elmt_num_arr'][i_indx]
+                    if i_elmt in transition_metal_list:
+                        magmom = magmom + str(i_elmt_num) + '*5.0 '
+                    else:
+                        magmom = magmom + str(i_elmt_num) + '*0.6 '
+                incar_dict_temp['MAGMOM'] = magmom
+                vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
             # modify NBANDS
             outcar_path_bs = os.path.join(bs_dir, 'OUTCAR')
             nbands_bs = None
@@ -1402,6 +1525,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
         # dos
         ############################
         outcar_path = os.path.join(dos_dir, 'OUTCAR')
+        dos_poscar_file_path = os.path.join(dos_dir, 'POSCAR')
         # when the job is running, or it has been finished, it will be skipped
         job_id_file_path = os.path.join(dos_dir, job_id_file_name)
         if os.path.exists(job_id_file_path):
@@ -1455,6 +1579,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             incar_dict['LWAVE']     = '.FALSE.'
             incar_dict['LCHARG']    = '.FALSE.'
             incar_dict['NPAR']      = 4
+            incar_dict['AMIX']      = 0.1
             incar_dict['LORBIT']    = 11
             incar_dict['NEDOS']     = 501
             incar_file_path = os.path.join(dos_dir, 'INCAR')
@@ -1472,6 +1597,24 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             elif incar_dict['LREAL'] in ['.TRUE.', '.T.', 'On', 'O', 'Auto', 'A'] and poscar_dict['n_atoms'] < 8:
                 recommended_lreal_val = '.FALSE.'
                 vasp_write.write_incar(incar_file_path, incar_dict = {'LREAL': recommended_lreal_val}, mode = 's')
+            # modify MAGMOM
+            incar_dict_temp = {}
+            magmom = ''
+            transition_metal_list = ['Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 
+                                     'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
+                                     'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',]
+            if os.path.exists(dos_poscar_file_path) and os.path.isfile(dos_poscar_file_path):
+                poscar_dict = vasp_read.read_poscar(dos_poscar_file_path)
+                magmom = ''
+                for i_indx in range(0, len(poscar_dict['elmt_species_arr'])): 
+                    i_elmt = poscar_dict['elmt_species_arr'][i_indx]
+                    i_elmt_num = poscar_dict['elmt_num_arr'][i_indx]
+                    if i_elmt in transition_metal_list:
+                        magmom = magmom + str(i_elmt_num) + '*5.0 '
+                    else:
+                        magmom = magmom + str(i_elmt_num) + '*0.6 '
+                incar_dict_temp['MAGMOM'] = magmom
+                vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
 
             # modify the KPOINTS
             kpoints_dict = vasp_read.read_kpoints(os.path.join(opt_dir, 'KPOINTS'))
@@ -1485,6 +1628,7 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
         # nscf
         ############################
         outcar_path = os.path.join(nscf_dir, 'OUTCAR')
+        nscf_poscar_file_path = os.path.join(nscf_dir, 'POSCAR')
         # when the job is running, or it has been finished, it will be skipped
         job_id_file_path = os.path.join(nscf_dir, job_id_file_name)
         if os.path.exists(job_id_file_path):
@@ -1538,7 +1682,8 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             incar_dict['LWAVE']     = '.FALSE.'
             incar_dict['LCHARG']    = '.TRUE.'
             incar_dict['NPAR']      = 4
-            incar_file_path = os.path.join(dos_dir, 'INCAR')
+            incar_dict['AMIX']      = 0.1
+            incar_file_path = os.path.join(nscf_dir, 'INCAR')
             vasp_write.write_incar(incar_file_path, incar_dict = incar_dict, mode = 'w')
 
             # modify ENCUT 
@@ -1553,6 +1698,24 @@ def gen_inputs(poscar_file_path_list, project_name = 'Untitled', task_type = 'VA
             elif incar_dict['LREAL'] in ['.TRUE.', '.T.', 'On', 'O', 'Auto', 'A'] and poscar_dict['n_atoms'] < 8:
                 recommended_lreal_val = '.FALSE.'
                 vasp_write.write_incar(incar_file_path, incar_dict = {'LREAL': recommended_lreal_val}, mode = 's')
+            # modify MAGMOM
+            incar_dict_temp = {}
+            magmom = ''
+            transition_metal_list = ['Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 
+                                     'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
+                                     'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',]
+            if os.path.exists(nscf_poscar_file_path) and os.path.isfile(nscf_poscar_file_path):
+                poscar_dict = vasp_read.read_poscar(nscf_poscar_file_path)
+                magmom = ''
+                for i_indx in range(0, len(poscar_dict['elmt_species_arr'])): 
+                    i_elmt = poscar_dict['elmt_species_arr'][i_indx]
+                    i_elmt_num = poscar_dict['elmt_num_arr'][i_indx]
+                    if i_elmt in transition_metal_list:
+                        magmom = magmom + str(i_elmt_num) + '*5.0 '
+                    else:
+                        magmom = magmom + str(i_elmt_num) + '*0.6 '
+                incar_dict_temp['MAGMOM'] = magmom
+                vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
     return 0
 
 def params_test(job_dir, variant_name = '$i', variant_value_list = None):
@@ -1654,7 +1817,7 @@ def get_recommended_test_param(test_dir, fit_order = 6, plot_fitted_curve = True
             params_list.append(dir_name_list[i])
         else:
             if suppress_warning == False:
-                print('WARNING (from get_recommended_test_param): ' + outcar_path + ' dose not exist or is empty or the VASP job has not been finished!')
+                print('WARNING #2012271608 (from get_recommended_test_param): ' + outcar_path + ' dose not exist or is empty or the VASP job has not been finished!')
 
     energy_arr = np.array(energy_list, dtype = float)
     params_arr = np.array(params_list, dtype = float)
@@ -1721,7 +1884,7 @@ def get_recommended_test_param(test_dir, fit_order = 6, plot_fitted_curve = True
         sorted_r_crit = sorted(r_crit)
         num_r_crit = len(sorted_r_crit)
         if num_r_crit == 0:
-            print('WARNING (from get_recommended_test_param): No optimum parameter is found.')
+            print('WARNING #2012271609 (from get_recommended_test_param): No optimum parameter is found.')
             recommended_param_val = params_arr[-1]
         elif num_r_crit == 1:
             recommended_param_val = sorted_r_crit[0]
@@ -1833,7 +1996,7 @@ def latt_const_test(job_dir, model_dimension = 2, increment = 0.005, num_points 
                 try:
                     funcs.cp(files_list[j], dest_file)
                     #funcs.replace_file_content(dest_file, variant_name, str(variant_value_list[i]))
-                    vasp_write.write_poscar_with_atom_property(output_poscar_file_path = new_poscar_file_path, poscar_dict = poscar_dict)
+                    vasp_write.write_poscar(output_poscar_file_path = new_poscar_file_path, poscar_dict = poscar_dict)
                     vasp_write.write_incar(incar_file_path = new_incar_file_path, incar_dict = incar_dict, mode = 's')
                 except:
                     pass
@@ -1866,6 +2029,10 @@ def gen_submit_script(task_dir, submit_script_path_dict = None, queue_system = '
     '''
     generate submit script for the specified task
     submit_script_path_dict: the keyword 'universal' must exist in submit_script_path_dict, if no submit files are provided for other calculations, the submit file in submit_script_path_dict['universal'] will be used. 
+    For example:
+    submit_script_path_dict = {}
+    submit_script_path_dict['universal'] = './submit_opt.sh'
+    submit_script_path_dict['bs_soc'] = './submit_bs_soc.sh'
     '''
     import os
     from .. import funcs
@@ -1942,7 +2109,7 @@ def gen_submit_script(task_dir, submit_script_path_dict = None, queue_system = '
 
 def job_id_exists(job_id, queue_system = 'PBS'):
     import os
-    import funcs
+    from .. import funcs
     from .. import default_params
 
     defaults_dict = default_params.default_params()

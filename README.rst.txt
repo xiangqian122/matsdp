@@ -18,14 +18,12 @@ Functions
 
 - Vienna ab-initio simulation package (VASP) analyzing and postprocessing tools 
  
- * Build model by atom substitution or atom selection based on a POSCAR file
- * Read VASP inputs and outputs
- * Plot model in the POSCAR/CONTCAR (also support color mapping of atom properties).
- * Plot DOS (PDOS, LDOS, TDOS), band structure (including fat band).
- * Calculate the nearest neighbor information.
- * Perform simple common neighbor analysis
- * Calculate structural energy.
- * Write atom force information into the POSCAR file.
+ * Build model by the following methods: atom substitution, atom selection, exfoliation (2D), make supercell, transformation (rotation + translation), reorientation, adding vacuum layer etc.
+ * Read and write VASP inputs/outputs.
+ * Visualization of model and results: Plot model based on the POSCAR/CONTCAR file, also support color mapping of atom properties); Plot DOS (PDOS, LDOS, TDOS); Plot band structure (including fat band).
+ * Analyzing tools: Calculate the nearest neighbor information, perform simple common neighbor analysis, calculate structural energy, overlap peak analyzer of DOS, get band gap.
+ * VASP tools: Check VASP errors/warnings and give solutions; Check the job status of multiple jobs; Check lattice parameters of multiple VASP jobs; Conversion of coordinate systems (Fractional/Cartesian);
+ * Job management: Processing of multiple VASP jobs automatically; Write task summary/report of multiple VASP jobs.
 
 - Three-dimensional atom probe tomography (APT) postprocessing tools
 
@@ -41,8 +39,9 @@ Functions
 
 - PMS tools
 
+ * Job management: Processing of multiple VASP jobs automatically
  * Write task summary (of VASP jobs)
- 
+
 - Others tools
 
  * file format conversion
@@ -56,9 +55,9 @@ pip install matsdp
 Release note
 ------------
 
-- version 0.2.1
+- version 0.2.2
 
- * Date: 20201209
+ * Date: 20210116
 
 ======
 Usage

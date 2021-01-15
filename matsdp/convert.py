@@ -203,15 +203,15 @@ def img2pdf(img_path_list, img_rotate_list = None, pdf_path = './img2pdf.pdf', q
         merger.close()
     return 0
 
-def time_converter(hour, min, sec, unit = 'hour'):
+def time_converter(hour, minute, second, unit = 'hour'):
     '''
     convert time to seconds
     unit: unit of the reuturn value if unit='sec', then the return value is in unit of seconds
     '''
     if unit in ['sec', 's', 'second', 'seconds', 'Second', 'Seconds', 'SECOND', 'SECONDS']:
-        return hour * 3600 + min * 60 + sec
+        return hour * 3600 + minute * 60 + second
     elif unit in ['min', 'm', 'minute', 'minutes', 'Minute', 'Minutes', 'MINUTE', 'MINUTES']:
-        return hour * 60 + min + sec / 60
+        return hour * 60 + minute + second / 60
     elif unit in ['hour', 'h', 'hours', 'Hour', 'Hours', 'HOUR', 'HOURS']:
-        return hour + min / 60 + sec /3600
+        return hour + minute / 60 + second /3600
 

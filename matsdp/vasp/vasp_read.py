@@ -33,12 +33,14 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
 
     file_status = funcs.file_status(poscar_file_path)
     poscar_dict['file_status'] = file_status
+    poscar_dict['file_path'] = poscar_file_path
 
     if file_status != 1:
-        print('WARNING #20120304 (from read_poscar): The file ' + poscar_file_path + ' does not exist or is empty, please check this file.')
+        print('#WARNING #20120304 (from read_poscar): The file ' + poscar_file_path + ' does not exist or is empty, please check this file.')
     else:
         with open(poscar_file_path) as f:
             lines = f.readlines()
+            poscar_dict['comment'] = lines[0].strip('\n').rstrip()
             poscar_dict['uni_scale_fac'] = float(funcs.split_line(lines[1])[0])
             box_len_arr = np.array([0.0] * 3 * 3,dtype = np.float)
             box_len_arr.shape = 3, 3
@@ -53,64 +55,41 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
             vec_a = l_arr[0,:]
             vec_b = l_arr[1,:]
             vec_c = l_arr[2,:]
-            len_vec_a = np.linalg.norm(l_arr[0,:])
-            len_vec_b = np.linalg.norm(l_arr[1,:])
-            len_vec_c = np.linalg.norm(l_arr[2,:])
-            ##lx=np.sqrt(x.dot(x))
-            ##ly=np.sqrt(y.dot(y))
-            #x.dot(y) =  y=\sum{a_{i}\timesb_{i}}
-            cos_angle_alpha = vec_b.dot(vec_c)/(len_vec_b * len_vec_c) 
-            cos_angle_beta = vec_c.dot(vec_a)/(len_vec_a * len_vec_c) 
-            cos_angle_gamma = vec_a.dot(vec_b)/(len_vec_a * len_vec_b) 
-            angle_alpha_radian = np.arccos(cos_angle_alpha)
-            angle_beta_radian  = np.arccos(cos_angle_beta)
-            angle_gamma_radian = np.arccos(cos_angle_gamma)
-            angle_alpha_degree = angle_alpha_radian * 360/2/np.pi   
-            angle_beta_degree  = angle_beta_radian  * 360/2/np.pi
-            angle_gamma_degree = angle_gamma_radian * 360/2/np.pi
-            # volume of l_arr
-            box_volume = np.linalg.det(l_arr)
-            vec_1 = np.cross(vec_b, vec_c)
-            vec_2 = np.cross(vec_c, vec_a)
-            vec_3 = np.cross(vec_a, vec_b)
-            cte = np.power((2 * np.pi),3) / box_volume
-            b_1 = cte * vec_1
-            b_2 = cte * vec_2
-            b_3 = cte * vec_3
-            # build b matrix
-            b_arr = np.vstack ([b_1, b_2, b_3])
-            # volume of b matrix
-            volume_b = np.linalg.det(b_arr)
-
             poscar_dict['vec_a'] = vec_a
             poscar_dict['vec_b'] = vec_b
             poscar_dict['vec_c'] = vec_c
-            poscar_dict['len_vec_a'] = len_vec_a
-            poscar_dict['len_vec_b'] = len_vec_b
-            poscar_dict['len_vec_c'] = len_vec_c
-            poscar_dict['angle_alpha_radian'] = angle_alpha_radian
-            poscar_dict['angle_beta_radian'] = angle_beta_radian
-            poscar_dict['angle_gamma_radian'] = angle_gamma_radian
-            poscar_dict['angle_alpha_degree'] = angle_alpha_degree 
-            poscar_dict['angle_beta_degree'] = angle_beta_degree
-            poscar_dict['angle_gamma_degree'] = angle_gamma_degree
-            poscar_dict['box_volume'] = box_volume
-            ####################################################################
-            #-Define the reciprocal array
-            # b1=2\pi()\frac{a_{2}\times{}a_{3}}{a_{1}\cdot(a_{2}\times{}a_{3}}
-            # b2=2\pi()\frac{a_{3}\times{}a_{1}}{a_{2}\cdot(a_{3}\times{}a_{1}}
-            # b3=2\pi()\frac{a_{1}\times{}a_{2}}{a_{3}\cdot(a_{1}\times{}a_{2}}
-            ####################################################################
-            reciprocal_arr = np.array([0.0] * 3 * 3,dtype = np.float)
-            reciprocal_arr.shape = 3, 3
-            reciprocal_arr[0,:] = 2 * np.pi * np.cross(l_arr[1,:], l_arr[2,:])/np.dot(l_arr[0,:], np.cross(l_arr[1,:], l_arr[2,:]))
-            reciprocal_arr[1,:] = 2 * np.pi * np.cross(l_arr[2,:], l_arr[0,:])/np.dot(l_arr[1,:], np.cross(l_arr[2,:], l_arr[0,:]))
-            reciprocal_arr[2,:] = 2 * np.pi * np.cross(l_arr[0,:], l_arr[1,:])/np.dot(l_arr[2,:], np.cross(l_arr[0,:], l_arr[1,:]))
-            #-First POS_ParamsDic['num_header']  lines are header of the POSCAR file
-            first_char = lines[7][0:1]
+            basis_vector_dict = funcs.basis_vector_info(vec_a, vec_b, vec_c)
+            poscar_dict['len_vec_a'] = basis_vector_dict['len_vec_a']
+            poscar_dict['len_vec_b'] = basis_vector_dict['len_vec_b']
+            poscar_dict['len_vec_c'] = basis_vector_dict['len_vec_c']
+            poscar_dict['angle_alpha_radian'] = basis_vector_dict['angle_alpha_radian']
+            poscar_dict['angle_beta_radian'] = basis_vector_dict['angle_beta_radian']
+            poscar_dict['angle_gamma_radian'] = basis_vector_dict['angle_gamma_radian']
+            poscar_dict['angle_alpha_degree'] = basis_vector_dict['angle_alpha_degree']
+            poscar_dict['angle_beta_degree'] = basis_vector_dict['angle_beta_degree']
+            poscar_dict['angle_gamma_degree'] = basis_vector_dict['angle_gamma_degree']
+            poscar_dict['box_volume'] = basis_vector_dict['box_volume']
+            poscar_dict['reciprocal_arr'] = basis_vector_dict['reciprocal_arr']
+            poscar_dict['car2fra_matrix_arr'] = basis_vector_dict['car2fra_matrix_arr']
+            poscar_dict['fra2car_matrix_arr'] = basis_vector_dict['fra2car_matrix_arr']
+            poscar_dict['reciprocal_arr'] = basis_vector_dict['reciprocal_arr']
+
+            elmt_species_info = False
+            # extract string from the 6th line
+            sixth_line_alpha_str_list = funcs.extract_alpha_str(lines[5])
+            sixth_line_num_list = funcs.extract_num(lines[5])
+            if len(sixth_line_alpha_str_list) == 0 and len(sixth_line_num_list) != 0:
+                elmt_species_info = False
+                temp_line_indx = 6
+            elif len(sixth_line_alpha_str_list) != 0 and len(sixth_line_num_list) == 0:
+                elmt_species_info = True
+                temp_line_indx = 7
+            ##print(sixth_line_alpha_str_list)
+            ##print(sixth_line_num_list)
+            first_char = lines[temp_line_indx][0:1]
             if first_char == "S" or first_char == "s":
                 poscar_dict['slet_dyn_on'] = True 
-                poscar_dict['num_header']  = 9  #This is the real Header line number in the POSCAR, which means that the header has POS_ParamsDic['num_header']  lines.
+                poscar_dict['num_header']  = temp_line_indx + 2
                 first_char = lines[poscar_dict['num_header'] -1][0:1]
                 if first_char == "D" or first_char == "d":
                     poscar_dict['coord_system'] = "Direct"
@@ -118,7 +97,7 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
                     poscar_dict['coord_system'] = "Cartesian"
             elif first_char == "D" or first_char == "d" or first_char == "C" or first_char == "c":
                 poscar_dict['slet_dyn_on'] = False
-                poscar_dict['num_header'] =8
+                poscar_dict['num_header'] = temp_line_indx + 1
                 if first_char == "D" or first_char == "d":
                     poscar_dict['coord_system'] = "Direct"
                 elif first_char == "C" or first_char == "c":
@@ -133,8 +112,12 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
             poscar_dict['elmt_num_arr'] = np.array([0]*n_species,dtype = np.int)
             for i in range(0,n_species):
                 poscar_dict['elmtindx_arr'][i] = i
-                poscar_dict['elmt_species_arr'][i] = funcs.split_line(lines[5])[i]
-                poscar_dict['elmt_num_arr'][i] = funcs.split_line(lines[6])[i]
+                if elmt_species_info == True:
+                    poscar_dict['elmt_species_arr'][i] = funcs.split_line(lines[5])[i]
+                    poscar_dict['elmt_num_arr'][i] = funcs.split_line(lines[6])[i]
+                elif elmt_species_info == False:
+                    #poscar_dict['elmt_species_arr'][i] = funcs.split_line(lines[5])[i]
+                    poscar_dict['elmt_num_arr'][i] = funcs.split_line(lines[5])[i]
             n_atoms = sum(poscar_dict['elmt_num_arr'][:])
             #Element start index
             poscar_dict['elmt_start_indx_arr'] = np.array([0]*n_species,dtype=np.int)
@@ -165,8 +148,8 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
                 num_added_atom_data_column = num_atom_data_column - 6
             elif poscar_dict['slet_dyn_on'] == False:
                 num_added_atom_data_column = num_atom_data_column - 3
-            added_atom_data_arr = np.array([None]*n_atoms*num_added_atom_data_column)
-            added_atom_data_arr.shape = n_atoms,num_added_atom_data_column        
+            added_atom_data_arr = np.array([None] * n_atoms * num_added_atom_data_column)
+            added_atom_data_arr.shape = n_atoms, num_added_atom_data_column        
             #Atom coordinates
             #pos_arr is the coordinates of all the atoms, first three columns are in Direct coordinate, last columns are in Cartesian coordinate
             #coord_arr is the x, y, z coordinate in POSCAR, without the influence of lattice vector or scale factor
@@ -176,7 +159,7 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
             fix_arr.shape = n_atoms,3
             pos_arr = np.array([0.0]*n_atoms*6,dtype = np.float)
             pos_arr.shape = n_atoms,6
-            L_Inv_Arr = np.linalg.inv(l_arr)
+            l_inv_arr = np.linalg.inv(l_arr)
             for i in range(0,n_atoms):
                 temp = funcs.split_line(lines[poscar_dict['num_header'] +i])
                 coord_arr[i,0] = float(temp[0])
@@ -199,14 +182,15 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
                     pos_arr[i,4] = np.dot(coord_arr[i,:], l_arr[:,[1]])
                     pos_arr[i,5] = np.dot(coord_arr[i,:], l_arr[:,[2]])
                 elif poscar_dict['coord_system'] == "Cartesian":
-                    # fractional coordinate
-                    pos_arr[i,0] = np.dot(L_Inv_Arr[0,:], coord_arr[i,:])
-                    pos_arr[i,1] = np.dot(L_Inv_Arr[1,:], coord_arr[i,:])
-                    pos_arr[i,2] = np.dot(L_Inv_Arr[2,:], coord_arr[i,:])
                     #cartesian coordinate
                     pos_arr[i,3] = coord_arr[i,0] * poscar_dict['uni_scale_fac']
                     pos_arr[i,4] = coord_arr[i,1] * poscar_dict['uni_scale_fac']
                     pos_arr[i,5] = coord_arr[i,2] * poscar_dict['uni_scale_fac']
+                    # fractional coordinate
+                    pos_arr[i,0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(pos_arr[i,3:6])
+                    ##pos_arr[i,0] = np.dot(l_inv_arr[0,:], coord_arr[i,:])
+                    ##pos_arr[i,1] = np.dot(l_inv_arr[1,:], coord_arr[i,:])
+                    ##pos_arr[i,2] = np.dot(l_inv_arr[2,:], coord_arr[i,:])
 
             poscar_dict['n_atoms'] = int(np.sum(poscar_dict['elmt_num_arr']))
             poscar_dict['num_elmts'] = len(atom_species_arr)
@@ -220,7 +204,7 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
             poscar_dict['coord_arr'] = coord_arr
             poscar_dict['fix_arr'] = fix_arr
             poscar_dict['l_arr'] = l_arr
-            poscar_dict['reciprocal_arr'] = reciprocal_arr
+            poscar_dict['l_inv_arr'] = l_inv_arr
             poscar_dict['xlo'] = np.min([poscar_dict['l_arr'][0,0], poscar_dict['l_arr'][1,0], poscar_dict['l_arr'][2,0], 0])
             poscar_dict['xhi'] = np.max([poscar_dict['l_arr'][0,0], poscar_dict['l_arr'][1,0], poscar_dict['l_arr'][2,0], 0])
             poscar_dict['ylo'] = np.min([poscar_dict['l_arr'][0,1], poscar_dict['l_arr'][1,1], poscar_dict['l_arr'][2,1], 0])
@@ -264,6 +248,7 @@ def read_outcar(outcar_file_path):
 
     outcar_file_path = os.path.abspath(outcar_file_path)
     outcar_params_dict = {}
+    outcar_params_dict['file_path'] = outcar_file_path
     outcar_params_dict['file_status'] = None
     outcar_params_dict['num_atoms'] = 0
     outcar_params_dict['num_elmt_type'] = None
@@ -279,6 +264,8 @@ def read_outcar(outcar_file_path):
     outcar_params_dict['force'] = None
     outcar_params_dict['NBANDS'] = None
     outcar_params_dict['elapsed_time'] = None
+    outcar_params_dict['NELM'] = None
+    outcar_params_dict['NSW'] = None
 
     file_status = funcs.file_status(outcar_file_path)
     outcar_params_dict['file_status'] = file_status
@@ -311,6 +298,10 @@ def read_outcar(outcar_file_path):
                     
                 if 'LORBIT' in line[i]:
                     outcar_params_dict['LORBIT'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
+                if 'NELM' in line[i]:
+                    outcar_params_dict['NELM'] = int(funcs.split_line(line = line[i],separator = ';')[0].split()[-1]) 
+                if 'NSW' in line[i]:
+                    outcar_params_dict['NSW'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
                 if 'ISPIN' in line[i]:
                     outcar_params_dict['ISPIN'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
                 if 'E-fermi' in line[i] and len(funcs.split_line(line = line[i],separator = ':')) > 1:
@@ -553,8 +544,11 @@ def read_oszicar(oszicar_file_path, dpi = 100):
     '''Read OSZICAR'''
     import os
     import numpy as np
-    import matplotlib.pyplot as plt
     from .. import funcs
+    try:
+        import matplotlib.pyplot as plt
+    except:
+        pass
 
     oszicar_file_path = os.path.abspath(oszicar_file_path)
     oszicar_dict = {}
@@ -564,28 +558,57 @@ def read_oszicar(oszicar_file_path, dpi = 100):
     if file_status != 1:
         print('WARNING #20120307 (from read_oszicar): File ' + oszicar_file_path + ' does not exist or is empty. Please check this file.')
     else:
+        oszicar_dict['ionic_step_line_indx_list'] = []
+        oszicar_dict['num_electronic_steps_list'] = []
+        oszicar_dict['F_list'] = []
+        oszicar_dict['E0_list'] = []
+        oszicar_dict['d E_list'] = []
+        oszicar_dict['mag_list'] = []
         with open(oszicar_file_path,'r') as f:
             line = f.readlines()
 
-        ionic_step_num = 0
+        # get the number of ionic steps
+        num_ionic_steps = 0
         for i_line in range(len(line)):
             if funcs.split_line(line[i_line])[1] == 'F=':
-                ionic_step_num += 1
-        etot_arr = np.array([None] * ionic_step_num)
+                num_ionic_steps += 1
+                oszicar_dict['ionic_step_line_indx_list'].append(i_line)
+                oszicar_dict['mag_list'].append(float(funcs.split_line(line = line[i_line], separator = '=')[-1]))
+        oszicar_dict['num_ionic_steps'] = num_ionic_steps
+        # get data
+        etot_arr = np.array([None] * num_ionic_steps)
         ionic_step = 0
         for i_line in range(len(line)):
-            if split_line(line[i_line])[1] == 'F=':
+            if funcs.split_line(line[i_line])[1] == 'F=':
+                #print('------------ionic = ',ionic_step) 
                 etot_arr[ionic_step] = float(funcs.split_line(line[i_line])[2])
-                ionic_step += 1
+                # get information about electronic steps
+                last_electronic_step_found = True
+                if ionic_step == 0:
+                    temp_line = 0
+                else:
+                    temp_line = oszicar_dict['ionic_step_line_indx_list'][ionic_step - 1]
+                #print('INI, FIN=', i_line, temp_line)
+                for j_line in range(i_line, temp_line, -1):
+                    #print('ionic=', ionic_step, 'j_line=',j_line)
+                    if line[j_line][0:5] in ['CG : ', 'DIA: ', 'NONE ', 'RMM: ', 'DAV: ']:
+                        if last_electronic_step_found == True:
+                            oszicar_dict['num_electronic_steps_list'].append(int(line[j_line][5:8]))
+                            last_electronic_step_found = False
+                ionic_step = ionic_step + 1
+
         oszicar_dict['etot_arr'] = etot_arr
-        fig = plt.figure('n_etot')
-        ax = fig.add_subplot(111)
-        plt.plot(range(len(etot_arr)), etot_arr, marker = '.')
-        ax.set(xlabel = 'Ionic steps')
-        ax.set(ylabel = '$E_{tot}(eV)$')
-        etot_oszicar_figfile = 'etot_oszicar.pdf'
-        plt.savefig(etot_oszicar_figfile,dpi = dpi)
-        plt.close
+        try:
+            fig = plt.figure('n_etot')
+            ax = fig.add_subplot(111)
+            plt.plot(range(len(etot_arr)), etot_arr, marker = '.')
+            ax.set(xlabel = 'Ionic steps')
+            ax.set(ylabel = '$E_{tot}(eV)$')
+            etot_oszicar_figfile = 'etot_oszicar.pdf'
+            plt.savefig(etot_oszicar_figfile,dpi = dpi)
+            plt.close
+        except:
+            pass
     return oszicar_dict
 
 def read_kpoints(kpoints_file_path):
@@ -636,18 +659,21 @@ def read_kpoints(kpoints_file_path):
                 subdivisions_arr_0 = funcs.split_line(line[3])[0]
                 subdivisions_arr_1 = funcs.split_line(line[3])[1]
                 subdivisions_arr_2 = funcs.split_line(line[3])[2]
-                if isinstance(subdivisions_arr_0, str):
-                    subdivisions_arr[0] = 0
-                else:
-                    subdivisions_arr[0] = int(float(subdivisions_arr_0))
-                if isinstance(subdivisions_arr_1, str):
-                    subdivisions_arr[1] = 0
-                else:
-                    subdivisions_arr[1] = int(float(subdivisions_arr_1))
-                if isinstance(subdivisions_arr_2, str):
-                    subdivisions_arr[2] = 0
-                else:
-                    subdivisions_arr[2] = int(float(subdivisions_arr_2))
+                ##if isinstance(subdivisions_arr_0, str):
+                ##    subdivisions_arr[0] = 0
+                ##else:
+                ##    subdivisions_arr[0] = int(float(subdivisions_arr_0))
+                ##if isinstance(subdivisions_arr_1, str):
+                ##    subdivisions_arr[1] = 0
+                ##else:
+                ##    subdivisions_arr[1] = int(float(subdivisions_arr_1))
+                ##if isinstance(subdivisions_arr_2, str):
+                ##    subdivisions_arr[2] = 0
+                ##else:
+                ##    subdivisions_arr[2] = int(float(subdivisions_arr_2))
+                subdivisions_arr[0] = int(float(subdivisions_arr_0))
+                subdivisions_arr[1] = int(float(subdivisions_arr_1))
+                subdivisions_arr[2] = int(float(subdivisions_arr_2))
                 kpoints_dict['subdivisions_arr'] = subdivisions_arr
 
                 origin_shift_arr_0 = funcs.split_line(line[4])[0]
@@ -847,7 +873,9 @@ def read_eigenval(eigenval_file_path):
     from . import vasp_tools
 
     eigenval_file_path = os.path.abspath(eigenval_file_path)
+    file_path, filename = os.path.split(eigenval_file_path)
     eigenval_dict = {}
+    eigenval_dict['file_path'] = eigenval_file_path
     eigenval_dict['dict_type'] = 'eigenval'
 
     file_status = funcs.file_status(eigenval_file_path)
@@ -937,15 +965,18 @@ def read_eigenval(eigenval_file_path):
             eigenval_dict['num_bands'] = num_bands
             eigenval_dict['kpt_coord_arr'] = kpt_coord_arr
             eigenval_dict['weights'] = weights 
+            band_data_txt = ''
+            band_data_txt_up = ''
+            band_data_txt_dw = ''
+            #band_eigs_XXX.txt is the file containing information of the band structure
             if ispin == 1:
                 eigenval_dict['eigs'] = eigs
                 ##eigenval_dict['occupancy'] = occupancy
             elif ispin == 2:
                 eigenval_dict['eigs_up'] = eigs_up
                 eigenval_dict['eigs_dw'] = eigs_dw
-                eigenval_dict['occupancy_up'] = occupancy_up
-                eigenval_dict['occupancy_dw'] = occupancy_dw
-            #eigenval_dict['phase_factors'] = phase_factors
+                #eigenval_dict['occupancy_up'] = occupancy_up
+                #eigenval_dict['occupancy_dw'] = occupancy_dw
     return eigenval_dict
 
 def read_procar(procar_file_path):
@@ -958,6 +989,7 @@ def read_procar(procar_file_path):
 
     procar_file_path = os.path.abspath(procar_file_path)
     procar_dict = {}
+    procar_dict['file_path'] = procar_file_path
     procar_dict['dict_type'] = 'procar'
 
     file_status = funcs.file_status(procar_file_path)
@@ -1145,7 +1177,7 @@ def read_incar(incar_file_path):
         with open(incar_file_path) as f:
             line = f.readlines()
             for i_line_indx in range(0, len(line)):
-                if line[i_line_indx][0] == '#':
+                if line[i_line_indx][0] == '#' or len(line[i_line_indx].strip()) == 0:
                     continue
                 else:
                     incar_key = funcs.split_line(line = line[i_line_indx], separator = '=')[0]
@@ -1160,3 +1192,66 @@ def read_incar(incar_file_path):
                         pass
                     incar_dict[incar_key] = incar_val
     return incar_dict
+
+##def read_vasprun(vasprun_file_path, screen_list = None):
+##    '''
+##    Read vasprun.xml file.
+##    screen_list = ['incar', 'kpoints', 'parameters', 'structure', 'atominfo', 'calculation']
+##    '''
+##    import os
+##    import xml.etree.ElementTree as ET
+##
+##    vasprun_dict = {}
+##    vasprun_file_path = os.path.abspath(vasprun_file_path)
+##    tree = ET.parse('vasprun.xml')
+##    root = tree.getroot()
+##
+##    ##for child in root.iter():
+##    ##    print(child.tag, child.attrib)
+##    ##    #print(child.tag)
+##
+##    if screen_list in [None, 'None', 'none']:
+##        screen_list = ['incar']
+##        pass
+##
+##    for i_screen_item in screen_list:    
+##        for child in root.find('.//' + i_screen_item):
+##            print(child.tag, child.attrib)
+##
+####    for child in root.find('.//incar'):
+####        print(child.tag, child.attrib)
+####
+####    for child in root.find('.//kpoints'):
+####        print(child.tag, child.attrib)
+####
+####    for child in root.find('.//parameters'):
+####        print(child.tag, child.attrib)
+####
+####    for child in root.find('.//atominfo'):
+####        print(child.tag, child.attrib)
+####
+####    # name = initialpos
+####    for child in root.find('.//structure'):
+####        print(child.tag, child.attrib)
+####
+####    for child in root.find('.//calculation'):
+####        print(child.tag, child.attrib)
+####
+####    # name = finalpos
+####    for child in root.find('.//structure'):
+####        print(child.tag, child.attrib)
+##
+##    print('--------------------------')
+##    print('**************************')
+##
+##
+##
+##    ##for item in root:
+##    ##    d = {}
+##    ##    for elmt in item:
+##    ##        print(elmt.tag)
+##    ##        for k, v in elmt.items():
+##    ##            print('    ', k,v) 
+##
+##
+##    return vasprun_dict

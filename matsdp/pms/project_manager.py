@@ -305,7 +305,7 @@ def get_num_running_jobs(queue_system, job_kwd):
     Note that the queuing jobs is also counted
     '''
     import os
-    import funcs
+    from .. import funcs
     from .. import default_params
 
     defaults_dict = default_params.default_params()
@@ -361,12 +361,12 @@ def job_monitor(project_dir, max_num_running_jobs = 3,
     import os
     import time
     from .. import convert
-    from ..vasp import vasp_analyze
+    from ..vasp import vasp_tools
     ##import threading
 
     max_monitor_time_temp = max_monitor_time
-    job_check_frequency = convert.time_converter(0, job_check_frequency, 0)
-    max_monitor_time = convert.time_converter(0, max_monitor_time, 0)
+    job_check_frequency = convert.time_converter(hour = 0, minute = job_check_frequency, second = 0, unit = 'seconds')
+    max_monitor_time = convert.time_converter(hour = 0, minute = max_monitor_time, second = 0, unit = 'seconds')
 
     start = time.time()
     ##formatted_time = time.strftime('## %Y%m%d %H:%M:%S',time.localtime(current_time))
@@ -408,7 +408,7 @@ def job_monitor(project_dir, max_num_running_jobs = 3,
             duration, submitted_job_dir_list, last_submitted_job_dir_list = monitor_timer(submitted_job_dir_list, last_submitted_job_dir_list)
             if duration > max_monitor_time:
                 print('Maximum time (' + str(max_monitor_time_temp) + ' min) reached. Exiting...')
-                vasp_analyze.job_status(project_dir)
+                vasp_tools.job_status(project_dir)
                 exit()
             else:
                 pass 

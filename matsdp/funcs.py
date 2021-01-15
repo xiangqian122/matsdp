@@ -952,6 +952,196 @@ def atom_number_ortho(atom_key_arr, pos_arr_cartesian, delta = 0.05, number_orde
                     running_number += 1
     return atom_number_ortho_arr
 
+def unit_vec(vector):
+    '''get the unit vector of a vector.'''
+    import numpy as np
+    return vector / np.linalg.norm(vector)
+
+def basis_vector_info(vec_a, vec_b, vec_c):
+    '''
+    return basis vector information: angle, reciprocal lattices etc.
+    vec_a, vec_b, vec_c must be numpy arrays
+    '''
+    import numpy as np
+    basis_vector_dict = {}
+    vec_matrix_arr = np.vstack((vec_a, vec_b, vec_c))
+    len_vec_a = np.linalg.norm(vec_a)
+    len_vec_b = np.linalg.norm(vec_b)
+    len_vec_c = np.linalg.norm(vec_c)
+    cos_angle_alpha = vec_b.dot(vec_c) / (len_vec_b * len_vec_c) 
+    cos_angle_beta = vec_c.dot(vec_a) / (len_vec_a * len_vec_c) 
+    cos_angle_gamma = vec_a.dot(vec_b) / (len_vec_a * len_vec_b) 
+    sin_angle_alpha = np.linalg.norm(np.cross(vec_b, vec_c)) / (len_vec_b * len_vec_c) 
+    sin_angle_beta = np.linalg.norm(np.cross(vec_c, vec_a)) / (len_vec_a * len_vec_c) 
+    sin_angle_gamma = np.linalg.norm(np.cross(vec_a, vec_b)) / (len_vec_a * len_vec_b) 
+    angle_alpha_radian = np.arccos(cos_angle_alpha)
+    angle_beta_radian  = np.arccos(cos_angle_beta)
+    angle_gamma_radian = np.arccos(cos_angle_gamma)
+    angle_alpha_degree = angle_alpha_radian * 360 / 2 / np.pi   
+    angle_beta_degree  = angle_beta_radian  * 360 / 2 / np.pi
+    angle_gamma_degree = angle_gamma_radian * 360 / 2 / np.pi
+    # volume of l_arr
+    box_volume = np.linalg.det(vec_matrix_arr)
+    if box_volume == 0:
+        print('WARNING #2012291343 (from funcs): The box volume is zero, please check the inputs.')
+    vec_1 = np.cross(vec_b, vec_c)
+    vec_2 = np.cross(vec_c, vec_a)
+    vec_3 = np.cross(vec_a, vec_b)
+    cte = np.power((2 * np.pi),3) / box_volume
+    b_1 = cte * vec_1
+    b_2 = cte * vec_2
+    b_3 = cte * vec_3
+    # build b matrix
+    b_arr = np.vstack ([b_1, b_2, b_3])
+    # volume of b matrix
+    volume_b = np.linalg.det(b_arr)
+
+    basis_vector_dict['vec_a'] = vec_a
+    basis_vector_dict['vec_b'] = vec_b
+    basis_vector_dict['vec_c'] = vec_c
+    basis_vector_dict['len_vec_a'] = len_vec_a
+    basis_vector_dict['len_vec_b'] = len_vec_b
+    basis_vector_dict['len_vec_c'] = len_vec_c
+    basis_vector_dict['angle_alpha_radian'] = angle_alpha_radian
+    basis_vector_dict['angle_beta_radian'] = angle_beta_radian
+    basis_vector_dict['angle_gamma_radian'] = angle_gamma_radian
+    basis_vector_dict['angle_alpha_degree'] = angle_alpha_degree 
+    basis_vector_dict['angle_beta_degree'] = angle_beta_degree
+    basis_vector_dict['angle_gamma_degree'] = angle_gamma_degree
+    basis_vector_dict['box_volume'] = box_volume
+
+    # Cartesian and Fractional coordinate conversion matrix
+    # https://en.wikipedia.org/wiki/Fractional_coordinates
+    # WARNING: The conversion is only suited for the 'a along x, b in xy' orientation situation: For simplicity, it is chosen so that edge vector a {\displaystyle \mathbf {a} } \mathbf {a} in the positive x {\displaystyle x} x-axis direction, edge vector b {\displaystyle \mathbf {b} } \mathbf b in the x − y {\displaystyle x-y} x-y plane with positive y {\displaystyle y} y-axis component, edge vector c {\displaystyle \mathbf {c} } \mathbf {c} with positive z {\displaystyle z} z-axis component in the Cartesian-system. Once the coordinate is reoriented, please use this function carefully..
+    a11 = 1 / len_vec_a
+    a12 = -cos_angle_gamma / len_vec_a / sin_angle_gamma
+    a13 = len_vec_b * len_vec_c * (cos_angle_alpha * cos_angle_gamma - cos_angle_beta) / sin_angle_gamma / box_volume
+    a21 = 0
+    a22 = 1 / len_vec_b / sin_angle_gamma
+    a23 = len_vec_a * len_vec_c * (cos_angle_beta * cos_angle_gamma - cos_angle_alpha) / sin_angle_gamma / box_volume
+    a31 = 0
+    a32 = 0
+    a33 = len_vec_a * len_vec_b * sin_angle_gamma / box_volume
+    car2fra_matrix_arr = np.array(
+        [
+        [a11, a12, a13],
+        [a21, a22, a23],
+        [a31, a32, a33],
+        ]
+        )
+    
+    a11 = len_vec_a
+    a12 = len_vec_b * cos_angle_gamma
+    a13 = len_vec_c * cos_angle_beta
+    a21 = 0
+    a22 = len_vec_b * sin_angle_gamma
+    a23 = len_vec_c * (cos_angle_alpha - cos_angle_beta * cos_angle_gamma) / sin_angle_gamma
+    a31 = 0
+    a32 = 0
+    a33 = box_volume / len_vec_a / len_vec_b / sin_angle_gamma
+    fra2car_matrix_arr = np.array(
+        [
+        [a11, a12, a13],
+        [a21, a22, a23],
+        [a31, a32, a33],
+        ]
+        )
+    basis_vector_dict['car2fra_matrix_arr'] = car2fra_matrix_arr
+    basis_vector_dict['fra2car_matrix_arr'] = fra2car_matrix_arr
+    ####################################################################
+    #-Define the reciprocal array
+    # b1=2\pi()\frac{a_{2}\times{}a_{3}}{a_{1}\cdot(a_{2}\times{}a_{3}}
+    # b2=2\pi()\frac{a_{3}\times{}a_{1}}{a_{2}\cdot(a_{3}\times{}a_{1}}
+    # b3=2\pi()\frac{a_{1}\times{}a_{2}}{a_{3}\cdot(a_{1}\times{}a_{2}}
+    ####################################################################
+    reciprocal_arr = np.array([0.0] * 3 * 3,dtype = np.float)
+    reciprocal_arr.shape = 3, 3
+    l_arr = vec_matrix_arr
+    reciprocal_arr[0,:] = 2 * np.pi * np.cross(l_arr[1,:], l_arr[2,:])/np.dot(l_arr[0,:], np.cross(l_arr[1,:], l_arr[2,:]))
+    reciprocal_arr[1,:] = 2 * np.pi * np.cross(l_arr[2,:], l_arr[0,:])/np.dot(l_arr[1,:], np.cross(l_arr[2,:], l_arr[0,:]))
+    reciprocal_arr[2,:] = 2 * np.pi * np.cross(l_arr[0,:], l_arr[1,:])/np.dot(l_arr[2,:], np.cross(l_arr[0,:], l_arr[1,:]))
+    basis_vector_dict['reciprocal_arr'] = reciprocal_arr
+    return basis_vector_dict
+
+def form_bond(elmt1, elmt2, pos_arr_1, pos_arr_2, mode = 'csd', factor = 1.15):
+    '''
+    Whether atom1(with position pos_arr_1) and atom2(with position pos_arr_2) forms bond.
+    CSD mode:
+        If the sum of the CSD covalent radii of atom1 and atom2 times a factor (factor = 1.15 by default) < dist(atom1, atom2), then they forms bond.
+    '''
+    import numpy as np
+    import math
+    from . import periodic_table
+
+    periodic_table_dict = periodic_table.periodic_tab()
+    bonding = False
+    dist = np.linalg.norm(pos_arr_2 - pos_arr_1)
+    pm2angstrom = 0.01
+    if mode in ['csd', 'CSD']:
+        radius1 = periodic_table_dict['csd_covalent_radius'][elmt1]
+        radius2 = periodic_table_dict['csd_covalent_radius'][elmt2]
+        if radius1 not in [None, 'None', 'none'] and radius2 not in [None, 'None', 'none']:
+            dist_threshold = (radius1 + radius2) * factor * pm2angstrom
+        else:
+            dist_threshold = 0
+        if dist < dist_threshold:
+            bonding = True
+        else:
+            bonding = False
+    return bonding
+
+def area_triangle_from_points(point1_arr, point2_arr, point3_arr):
+    '''
+    Area of triangle from three points
+    '''
+    x1 = point1_arr[0]
+    y1 = point1_arr[1]
+    x2 = point2_arr[0]
+    y2 = point2_arr[1]
+    x3 = point3_arr[0]
+    y3 = point3_arr[1]
+    area = 1 / 2 * abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2))
+    return area
+
+def volume_tetrahedron_from_points(point1_arr, point2_arr, point3_arr, point4_arr):
+    '''
+    Area of tetrahedron from four vertice points
+    '''
+    import numpy as np
+    volume = 1 / 6 * abs((point1_arr - point4_arr).dot(np.cross((point2_arr - point4_arr), (point3_arr - point4_arr))))
+    return volume
+
+def volume_pentahedron_from_points(point1_arr, point2_arr, point3_arr, point4_arr, point5_arr):
+    '''
+    Area of pantahedron from five points
+    point1_arr, point2_arr, point3_arr, and point4_arr must be in the same plane
+    '''
+    import numpy as np
+    volume_tetrahedron_0 = volume_tetrahedron_from_points(point1_arr, point2_arr, point4_arr, point5_arr)
+    volume_tetrahedron_1 = volume_tetrahedron_from_points(point2_arr, point3_arr, point4_arr, point5_arr)
+    volume = volume_tetrahedron_0 + volume_tetrahedron_1
+    return volume
+
+def rotation_matrix_from_vectors(vec1, vec2):
+    """ 
+    https://stackoverflow.com/questions/45142959/calculate-rotation-matrix-to-align-two-vectors-in-3d-space
+    Find the rotation matrix that aligns vec1 to vec2
+    :param vec1: A 3d "source" vector
+    :param vec2: A 3d "destination" vector
+    :return mat: A transform matrix (3x3) which when applied to vec1, aligns it with vec2.
+    """
+    import numpy as np
+    a, b = (vec1 / np.linalg.norm(vec1)).reshape(3), (vec2 / np.linalg.norm(vec2)).reshape(3)
+    v = np.cross(a, b)
+    c = np.dot(a, b)
+    s = np.linalg.norm(v)
+    if s == 0:
+        rotation_matrix = np.identity(3)
+    else:
+        kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+        rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
+    return rotation_matrix
+
 ######################
 #Notes
 ######################

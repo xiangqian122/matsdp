@@ -49,8 +49,8 @@
 %\small dianwuwang@163.com \\
 \vspace{0.8cm}
 
-\small version 0.2.1\\
-\small Dec. 9, 2020
+\small version 0.2.2\\
+\small Jan. 16, 2021
 
 \end{center}
 \end{titlepage}
@@ -64,14 +64,12 @@ MATSDP is a materials simulation and data processing toolkit. The Vienna ab-init
 
 VASP analyzing and data processing tools:
 \begin{itemize}
-\item Build model by atom substitution or atom selection based on a POSCAR file
-\item Read VASP inputs and outputs
-\item Plot model in the POSCAR/CONTCAR (also support color mapping of atom properties).
-\item Plot DOS (PDOS, LDOS, TDOS), band structure (including fat band).
-\item Calculate the nearest neighbor information.
-\item Perform simple common neighbor analysis
-\item Calculate structural energy.
-\item Write atom force information into the POSCAR file.
+\item Build model by the following methods: atom substitution, atom selection, exfoliation (2D), make supercell, transformation (rotation + translation), reorientation, adding vacuum layer etc.
+\item Read and write VASP inputs/outputs.
+\item Visualization of model and results: Plot model based on the POSCAR/CONTCAR file, also support color mapping of atom properties); Plot DOS (PDOS, LDOS, TDOS); Plot band structure (including fat band).
+\item Analyzing tools: Calculate the nearest neighbor information, perform simple common neighbor analysis, calculate structural energy, overlap peak analyzer of DOS, get band gap.
+\item VASP tools: Check VASP errors/warnings and give solutions; Check the job status of multiple jobs; Check lattice parameters of multiple VASP jobs; Conversion of coordinate systems (Fractional/Cartesian);
+\item Job management: Processing of multiple VASP jobs automatically; Write task summary/report of multiple VASP jobs.
 \end{itemize}
 
 APT postprocessing tools:
@@ -88,10 +86,16 @@ DVM tools:
 \item The *.incar file can also be prepared by atom selection from the vasp\_build function in the vasp module 
 \end{itemize}
 
+PMS tools:
+\begin{itemize}
+\item Job management: Processing of multiple VASP jobs automatically
+\item Write task summary (of VASP jobs)
+\end{itemize}
+
 Others tools:
 \begin{itemize}
 \item file format conversion
-\item project manager
+\item fig2pdf (converting multiple images to a single .pdf file)
 \end{itemize}
 
 %\begin{tikzpicture}[line width=3pt, node distance=4cm]
@@ -140,12 +144,12 @@ The matsdp package contains the vasp module, the apt module and the dvm module a
 
 \begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[line width=3pt, node distance=4.3cm]
+\begin{tikzpicture}[line width=2pt, node distance=4.9cm]
 %\tikzstyle{every node}=[font=\small,scale=0.9]
-\tikzstyle{every node}=[scale=0.65]
+\tikzstyle{every node}=[scale=0.55]
 \def \smbwd{2cm}
 \node (vasp) [startstop] {vasp module};
-\node (vasp_read) [process1, right of=vasp,yshift=12.90cm] {vasp\_read};
+\node (vasp_read) [process1, right of=vasp,yshift=16.90cm] {vasp\_read};
 \node (vasp_build) [process1, below of=vasp_read] {vasp\_build};
 \node (vasp_plot) [process1, below of=vasp_build] {vasp\_plot};
 \node (vasp_analyze) [process1, below of=vasp_plot] {vasp\_analyze};
@@ -155,11 +159,11 @@ The matsdp package contains the vasp module, the apt module and the dvm module a
 \node (vasp_help) [process1, below of=vasp_default] {vasp\_help};
 
 \node (vasp_read_sub) [process2, right of=vasp_read] {read\_incar\\read\_poscar\\read\_outcar\\read\_doscar\\read\_oszicar\\read\_kpoints\\read\_eigenval\\read\_procar};
-\node (vasp_build_sub) [process2, right of=vasp_build] {substitution\\rep\_elmt\\selection\_sphere};
+\node (vasp_build_sub) [process2, right of=vasp_build] {substitution\\rep\_elmt\\selection\_sphere\\orientation\\align\\transform\\create\_supercell\\build\_vacuum\_layer\\exfoliation};
 \node (vasp_plot_sub) [process2, right of=vasp_plot] {plot\_dos\\plot\_poscar\\plot\_poscar\_for\_workdir\\plot\_bs};
 \node (vasp_analyze_sub) [process2, right of=vasp_analyze] {nn\_map\\simple\_cna\\estruct\\overlap\_peak\_analyzer\\get\_band\_gap};
-\node (vasp_write_sub) [process2, right of=vasp_write] {write\_poscar\\ \_with\_atom\_property\\write\_poscar\\ \_with\_force\\write\_potcar\\write\_incar\\write\_kpoints};
-\node (vasp_tools_sub) [process2, right of=vasp_tools] {ordered\_incar\_dict\\check\_warning\\check\_error\\error\_handler\\vasp\_job\_finished\\job\_status\\check\_file\_type};
+\node (vasp_write_sub) [process2, right of=vasp_write] {write\_poscar\\ \_with\_atom\_property\\write\_poscar\\ \_with\_force\\write\_potcar\\write\_incar\\write\_kpoints\\write\_band\_data};
+\node (vasp_tools_sub) [process2, right of=vasp_tools] {ordered\_incar\_dict\\check\_warning\\check\_error\\error\_handler\\vasp\_job\_finished\\job\_status\\check\_file\_type\\get\_latt\_param\\convert\_coord\_system};
 \node (vasp_default_sub) [process2, right of=vasp_default] {vasp\_default};
 \node (vasp_help_sub) [process2, right of=vasp_help] {vasp\_help};
 
@@ -485,6 +489,118 @@ vasp_build.selection_sphere(
 
 \subsubsection{Outputs}
 Outputs: *.vasp, *.xyz, and *.incar files. The *.incar file can be used as the input file for the DVM program.
+
+
+\subsection{vasp\_build.transform}
+\subsubsection{Descriptions}
+ Transform by rotation and transformation operations.
+\subsubsection{Syntax}
+\begin{lstlisting}
+from matsdp.vasp import vasp_build
+vasp_build.transform(
+    poscar_file_path = './tests/vasp/POSCAR', 
+    r_matrix_arr = None, 
+    t_matrix_arr = None, 
+    apply_to = 'atom', 
+    output_poscar_file_path = None
+    )
+\end{lstlisting}
+
+\subsubsection{Arguments}
+\begin{itemize}
+\item r\_matrix\_arr: Rotation matrix
+\item t\_matrix\_arr: translation matrix
+\item apply\_to: 'box' or 'atom'
+\end{itemize}
+
+\subsubsection{Outputs}
+Outputs: POSCAR file after transformation.
+
+
+
+
+
+\subsection{vasp\_build.create\_supercell}
+\subsubsection{Descriptions}
+Create supercell by expanding the cell in the direction of a, b, and c basis vectors.
+\subsubsection{Syntax}
+\begin{lstlisting}
+from matsdp.vasp import vasp_build
+vasp_build.create\_supercell(
+    poscar_file_path = './tests/vasp/POSCAR', 
+    num_xyz_list = [1,1,1], 
+    output_poscar_file_path = None,
+    )
+\end{lstlisting}
+
+\subsubsection{Arguments}
+\begin{itemize}
+\item num\_xyz\_list = [n\_x, n\_y, n\_z], nx>=1, ny>=1, nz>=1
+\end{itemize}
+
+\subsubsection{Outputs}
+Outputs: POSCAR file after creating the supercell.
+
+
+\subsection{vasp\_build.build\_vacuum\_layer}
+\subsubsection{Descriptions}
+Build vacuum layer. The vacuum\_layer\_width is defined as the difference between the maximum and minimum porjected(onto x, y, or z axis) atom coordinates.
+
+\subsubsection{Syntax}
+\begin{lstlisting}
+from matsdp.vasp import vasp_build
+vasp_build.build\_vacuum\_layer(
+    poscar_file_path = './tests/vasp/POSCAR', 
+    vacuum_layer_direction = 'z', 
+    vacuum_layer_width = 20, 
+    threshold_vacuum_layer_width = 5.98, 
+    output_poscar_file_path = None
+    )
+\end{lstlisting}
+
+\subsubsection{Arguments}
+\begin{itemize}
+\item vacuum\_layer\_direction: Designate the direction to add the vacuum layer
+\item threshold\_vacuum\_layer\_width: This is the threshold distance for the vacuum layer separation, if layer separation is larger than this value, then it is denoted as vacuum layer. Otherwise, it is not a vacuum layer. Default value of threshold\_vacuum\_layer\_width is (1.15 * 2 * (CSD\_covalent\_radius of Fr)) = 1.15 * 2 * 2.60 = 5.98 Angstrom
+\end{itemize}
+
+\subsubsection{Outputs}
+Outputs: POSCAR file after specifying the vacuum layer.
+
+
+\subsection{vasp\_build.exfoliation}
+\subsubsection{Descriptions}
+Exfoliate 2d material
+\subsubsection{Syntax}
+\begin{lstlisting}
+from matsdp.vasp import vasp_build
+vasp_build.exfoliation(
+    poscar_file_path = './tests/vasp/POSCAR', 
+    num_layers = 1, 
+    vacuum_layer_width = 20, 
+    exfoliation_direction = 'z', 
+    layer_dist_tolerance = 0.664, 
+    criteria_list = ['bonding', 'periodicity'], 
+    align_center = False, 
+    align_upright = True, 
+    output_poscar_file_path = None
+    )
+\end{lstlisting}
+\subsubsection{Arguments}
+\begin{itemize}
+\item num\_layers: the number of layers left after exfoliation.
+\item ayer\_dist\_tolerance: This is the spacial resolution for the layer distance, for example z=0.24 and z=0.25 are considered to be in the same position if layer\_dist\_tolerance=0.01. Default value of layer\_dist\_tolerance is (1.15 * 2 * (CSD\_covalent\_radius of He)) + arbitrary\_delta = 1.15 * 2 * 0.28 + 0.02 = 0.664 Angstrom
+\item align\_center: Align the atoms to the center of the model along the exfoliation direction
+\item align\_upright: Align the exfoliation direction axis as an upright one (i.e. not a tilted one)
+\item criteria\_list: ['bonding'], ['periodicity'], or ['bonding', 'periodicity'], the criteria in the list will be adopted. For ['bonding', 'periodicity'], this means a combination of bonding and periodicity (first check bonding, then check periodicity) will be adopted. If bonding criterion worked, then periodicity criterion will be skipped; If bonding criterion failed, then periodicity criterion will be adopted.
+%    If the following error occurs, please turn the value of delta smaller.
+%            poscar_dict['fix_arr'][i_atom,2] + ' ' + '\n')
+%            IndexError: index 60 is out of bounds for axis 0 with size 60
+\end{itemize}
+
+\subsubsection{Outputs}
+Outputs: exfoliated POSCAR file.
+
 
 %%%%%%%%%%%%%
 %vasp\_plot
@@ -1721,7 +1837,7 @@ The named colors which can be used by the program is listed in Figure \ref{fig:n
 
 
 \chapter*{Acknowledgements}
-Thanks to Dr. Yuancheng Lin for the helpful discussions of the dvm module.
+Thanks to Yuancheng Lin for the helpful discussions of the dvm module.
 
 \begin{thebibliography}{99}
 \bibitem{Goldstein2001CM3} Herbert Goldstein, Charles P. Poole Jr. and John L. Safko, Classical Mechanics (3rd Edition). Goldstein Poole \& Safko, 2001.

@@ -1,119 +1,119 @@
-atomic_number, symbol    , name          , atomic_radius, metallic_radius, elmt_color
-1            , H         , Hydrogen      , 25           , None           , gray   
-2            , He        , Helium        , 31           , None           , gray   
-3            , Li        , Lithium       , 145          , 152            , gray   
-4            , Be        , Beryllium     , 105          , 112            , gray   
-5            , B         , Boron         , 85           , None           , gray   
-6            , C         , Carbon        , 70           , 197            , gray   
-7            , N         , Nitrogen      , 65           , None           , gray   
-8            , O         , Oxygen        , 60           , None           , gray   
-9            , F         , Fluorine      , 50           , None           , gray   
-10           , Ne        , Neon          , 51           , None           , gray   
-11           , Na        , Sodium        , 180          , 186            , gray   
-12           , Mg        , Magnesium     , 150          , 160            , gray   
-13           , Al        , Aluminum      , 125          , 143            , black
-14           , Si        , Silicon       , 110          , None           , gray   
-15           , P         , Phosphorus    , 100          , None           , gray   
-16           , S         , Sulfur        , 100          , None           , gray   
-17           , Cl        , Chlorine      , 100          , None           , gray   
-18           , Ar        , Argon         , 71           , None           , gray   
-19           , K         , Potassium     , 220          , 227            , gray   
-20           , Ca        , Calcium       , 180          , 197            , gray   
-21           , Sc        , Scandium      , 160          , 162            , lemonchiffon
-22           , Ti        , Titanium      , 140          , 147            , rosybrown
-23           , V         , Vanadium      , 135          , 134            , wheat
-24           , Cr        , Chromium      , 140          , 128            , lightgreen
-25           , Mn        , Manganese     , 140          , 127            , chocolate
-26           , Fe        , Iron          , 140          , 126            , lightgray
-27           , Co        , Cobalt        , 135          , 125            , purple
-28           , Ni        , Nickel        , 135          , 124            , gray
-29           , Cu        , Copper        , 135          , 128            , peru
-30           , Zn        , Zinc          , 135          , 134            , turquoise
-31           , Ga        , Gallium       , 130          , 135            , gray   
-32           , Ge        , Germanium     , 125          , None           , gray   
-33           , As        , Arsenic       , 115          , None           , gray   
-34           , Se        , Selenium      , 115          , None           , gray   
-35           , Br        , Bromine       , 115          , None           , gray   
-36           , Kr        , Krypton       , 103          , None           , gray   
-37           , Rb        , Rubidium      , 235          , 248            , gray   
-38           , Sr        , Strontium     , 200          , 215            , gray   
-39           , Y         , Yttrium       , 180          , 180            , springgreen
-40           , Zr        , Zirconium     , 155          , 160            , sienna
-41           , Nb        , Niobium       , 145          , 146            , firebrick
-42           , Mo        , Molybdenum    , 145          , 139            , lightskyblue
-43           , Tc        , Technetium    , 135          , 136            , lawngreen
-44           , Ru        , Ruthenium     , 130          , 134            , cyan
-45           , Rh        , Rhodium       , 135          , 134            , darkslateblue
-46           , Pd        , Palladium     , 140          , 137            , orchid
-47           , Ag        , Silver        , 160          , 144            , silver
-48           , Cd        , Cadmium       , 155          , 151            , olive
-49           , In        , Indium        , 155          , 167            , gray  
-50           , Sn        , Tin           , 145          , None           , gray  
-51           , Sb        , Antimony      , 145          , None           , gray  
-52           , Te        , Tellurium     , 140          , None           , gray  
-53           , I         , Iodine        , 140          , None           , gray  
-54           , Xe        , Xenon         , 124          , None           , gray  
-55           , Cs        , Cesium        , 260          , 265            , gray  
-56           , Ba        , Barium        , 215          , 222            , gray  
-57           , La        , Lanthanum     , 195          , 187            , gray  
-58           , Ce        , Cerium        , 185          , 181.8          , gray  
-59           , Pr        , Praseodymium  , 185          , 182.4          , gray  
-60           , Nd        , Neodymium     , 185          , 181.4          , gray  
-61           , Pm        , Promethium    , 185          , 183.4          , gray  
-62           , Sm        , Samarium      , 185          , 180.4          , gray  
-63           , Eu        , Europium      , 185          , 208.4          , gray  
-64           , Gd        , Gadolinium    , 180          , 180.4          , gray  
-65           , Tb        , Terbium       , 175          , 177.3          , gray  
-66           , Dy        , Dysprosium    , 175          , 178.1          , gray  
-67           , Ho        , Holmium       , 175          , 176.2          , gray  
-68           , Er        , Erbium        , 175          , 176.1          , gray  
-69           , Tm        , Thulium       , 175          , 175.9          , gray  
-70           , Yb        , Ytterbium     , 175          , 193.3          , gray  
-71           , Lu        , Lutetium      , 175          , 173.8          , gray  
-72           , Hf        , Hafnium       , 155          , 159            , yellow
-73           , Ta        , Tantalum      , 145          , 146            , magenta
-74           , W         , Tungsten      , 135          , 139            , blue
-75           , Re        , Rhenium       , 135          , 137            , red
-76           , Os        , Osmium        , 130          , 135            , brown
-77           , Ir        , Iridium       , 135          , 135            , plum
-78           , Pt        , Platinum      , 135          , 138.5          , aqua
-79           , Au        , Gold          , 135          , 144            , gold
-80           , Hg        , Mercury       , 150          , 151            , mediumblue
-81           , Tl        , Thallium      , 190          , 170            , gray   
-82           , Pb        , Lead          , 180          , None           , gray   
-83           , Bi        , Bismuth       , 160          , None           , gray   
-84           , Po        , Polonium      , 190          , None           , gray   
-85           , At        , Astatine      , None         , None           , gray   
-86           , Rn        , Radon         , 134          , None           , gray   
-87           , Fr        , Francium      , 260          , None           , gray   
-88           , Ra        , Radium        , 215          , None           , gray   
-89           , Ac        , Actinium      , 195          , None           , gray   
-90           , Th        , Thorium       , 180          , 179            , gray   
-91           , Pa        , Protactinium  , 180          , 263            , gray   
-92           , U         , Uranium       , 175          , 165            , gray   
-93           , Np        , Neptunium     , 175          , 155            , gray   
-94           , Pu        , Plutonium     , 175          , 159            , gray   
-95           , Am        , Americium     , 175          , 173            , gray   
-96           , Cm        , Curium        , 135          , 174            , gray   
-97           , Bk        , Berkelium     , None         , 170            , gray   
-98           , Cf        , Californium   , None         , 186            , gray   
-99           , Es        , Einsteinium   , None         , 186            , gray   
-100          , Fm        , Fermium       , None         , None           , gray   
-101          , Md        , Mendelevium   , None         , None           , gray   
-102          , No        , Nobelium      , None         , None           , gray   
-103          , Lr        , Lawrencium    , None         , None           , gray   
-104          , Rf        , Rutherfordium , None         , None           , gray   
-105          , Db        , Dubnium       , None         , None           , gray   
-106          , Sg        , Seaborgium    , None         , None           , gray   
-107          , Bh        , Bohrium       , None         , None           , gray   
-108          , Hs        , Hassium       , None         , 118            , gray   
-109          , Mt        , Meitnerium    , None         , None           , gray   
-110          , Ds        , Darmstadtium  , None         , None           , gray   
-111          , Rg        , Roentgenium   , None         , None           , gray   
-112          , Cn        , Copernicium   , None         , None           , gray   
-113          , Nh        , Nihonium      , None         , None           , gray   
-114          , Fl        , Flerovium     , None         , None           , gray   
-115          , Mc        , Moscovium     , None         , None           , gray   
-116          , Lv        , Livermorium   , None         , None           , gray   
-117          , Ts        , Tennessine    , None         , None           , gray   
-118          , Og        , Oganesson     , None         , None           , gray   
+atomic_number, symbol    , name          , atomic_radius, metallic_radius, csd_covalent_radius, vasppot_paw, vasppot_gw , elmt_color
+1            , H         , Hydrogen      , 25           , None           , 31                 , None       , GW         , gray   
+2            , He        , Helium        , 31           , None           , 28                 , None       , GW         , gray   
+3            , Li        , Lithium       , 145          , 152            , 128                , sv         , sv_GW      , gray   
+4            , Be        , Beryllium     , 105          , 112            , 96                 , None       , sv_GW      , gray   
+5            , B         , Boron         , 85           , None           , 84                 , None       , GW         , gray   
+6            , C         , Carbon        , 70           , 197            , 76                 , None       , GW         , gray   
+7            , N         , Nitrogen      , 65           , None           , 71                 , None       , GW         , gray   
+8            , O         , Oxygen        , 60           , None           , 66                 , None       , GW         , gray   
+9            , F         , Fluorine      , 50           , None           , 57                 , None       , GW         , gray   
+10           , Ne        , Neon          , 51           , None           , 58                 , None       , GW         , gray   
+11           , Na        , Sodium        , 180          , 186            , 66                 , pv         , sv_GW      , gray   
+12           , Mg        , Magnesium     , 150          , 160            , 141                , None       , sv_GW      , gray   
+13           , Al        , Aluminum      , 125          , 143            , 121                , None       , GW         , black
+14           , Si        , Silicon       , 110          , None           , 111                , None       , GW         , gray   
+15           , P         , Phosphorus    , 100          , None           , 107                , None       , GW         , gray   
+16           , S         , Sulfur        , 100          , None           , 105                , None       , GW         , gray   
+17           , Cl        , Chlorine      , 100          , None           , 102                , None       , GW         , gray   
+18           , Ar        , Argon         , 71           , None           , 106                , None       , GW         , gray   
+19           , K         , Potassium     , 220          , 227            , 203                , sv         , sv_GW      , gray   
+20           , Ca        , Calcium       , 180          , 197            , 176                , sv         , sv_GW      , gray   
+21           , Sc        , Scandium      , 160          , 162            , 170                , sv         , sv_GW      , lemonchiffon
+22           , Ti        , Titanium      , 140          , 147            , 160                , sv         , sv_GW      , rosybrown
+23           , V         , Vanadium      , 135          , 134            , 153                , None       , sv_GW      , wheat
+24           , Cr        , Chromium      , 140          , 128            , 139                , pv         , sv_GW      , lightgreen
+25           , Mn        , Manganese     , 140          , 127            , 139                , pv         , sv_GW      , chocolate
+26           , Fe        , Iron          , 140          , 126            , 132                , None       , sv_GW      , lightgray
+27           , Co        , Cobalt        , 135          , 125            , 126                , None       , sv_GW      , purple
+28           , Ni        , Nickel        , 135          , 124            , 124                , None       , sv_GW      , gray
+29           , Cu        , Copper        , 135          , 128            , 132                , None       , sv_GW      , peru
+30           , Zn        , Zinc          , 135          , 134            , 122                , None       , sv_GW      , turquoise
+31           , Ga        , Gallium       , 130          , 135            , 122                , d          , d_GW       , gray   
+32           , Ge        , Germanium     , 125          , None           , 120                , None       , d_GW       , gray   
+33           , As        , Arsenic       , 115          , None           , 119                , d          , GW         , gray   
+34           , Se        , Selenium      , 115          , None           , 120                , None       , GW         , gray   
+35           , Br        , Bromine       , 115          , None           , 120                , None       , GW         , gray   
+36           , Kr        , Krypton       , 103          , None           , 116                , None       , GW         , gray   
+37           , Rb        , Rubidium      , 235          , 248            , 220                , sv         , sv_GW      , gray   
+38           , Sr        , Strontium     , 200          , 215            , 195                , sv         , sv_GW      , gray   
+39           , Y         , Yttrium       , 180          , 180            , 190                , sv         , sv_GW      , springgreen
+40           , Zr        , Zirconium     , 155          , 160            , 175                , sv         , sv_GW      , sienna
+41           , Nb        , Niobium       , 145          , 146            , 164                , sv         , sv_GW      , firebrick
+42           , Mo        , Molybdenum    , 145          , 139            , 154                , sv         , sv_GW      , lightskyblue
+43           , Tc        , Technetium    , 135          , 136            , 147                , sv         , sv_GW      , lawngreen
+44           , Ru        , Ruthenium     , 130          , 134            , 146                , pv         , sv_GW      , cyan
+45           , Rh        , Rhodium       , 135          , 134            , 142                , pv         , sv_GW      , darkslateblue
+46           , Pd        , Palladium     , 140          , 137            , 139                , None       , sv_GW      , orchid
+47           , Ag        , Silver        , 160          , 144            , 145                , None       , sv_GW      , silver
+48           , Cd        , Cadmium       , 155          , 151            , 144                , None       , sv_GW      , olive
+49           , In        , Indium        , 155          , 167            , 142                , d          , d_GW       , gray  
+50           , Sn        , Tin           , 145          , None           , 139                , d          , d_GW       , gray  
+51           , Sb        , Antimony      , 145          , None           , 139                , None       , d_GW       , gray  
+52           , Te        , Tellurium     , 140          , None           , 138                , None       , GW         , gray  
+53           , I         , Iodine        , 140          , None           , 139                , None       , GW         , gray  
+54           , Xe        , Xenon         , 124          , None           , 140                , None       , GW         , gray  
+55           , Cs        , Cesium        , 260          , 265            , 244                , sv         , sv_GW      , gray  
+56           , Ba        , Barium        , 215          , 222            , 215                , sv         , sv_GW      , gray  
+57           , La        , Lanthanum     , 195          , 187            , 207                , None       , GW         , gray  
+58           , Ce        , Cerium        , 185          , 181.8          , 204                , None       , GW         , gray  
+59           , Pr        , Praseodymium  , 185          , 182.4          , 203                , None       , GW         , gray  
+60           , Nd        , Neodymium     , 185          , 181.4          , 201                , None       , GW         , gray  
+61           , Pm        , Promethium    , 185          , 183.4          , 199                , None       , GW         , gray  
+62           , Sm        , Samarium      , 185          , 180.4          , 198                , None       , GW         , gray  
+63           , Eu        , Europium      , 185          , 208.4          , 198                , None       , GW         , gray  
+64           , Gd        , Gadolinium    , 180          , 180.4          , 196                , None       , GW         , gray  
+65           , Tb        , Terbium       , 175          , 177.3          , 194                , None       , GW         , gray  
+66           , Dy        , Dysprosium    , 175          , 178.1          , 192                , None       , GW         , gray  
+67           , Ho        , Holmium       , 175          , 176.2          , 192                , None       , GW         , gray  
+68           , Er        , Erbium        , 175          , 176.1          , 189                , None       , GW         , gray  
+69           , Tm        , Thulium       , 175          , 175.9          , 190                , None       , GW         , gray  
+70           , Yb        , Ytterbium     , 175          , 193.3          , 187                , None       , GW         , gray  
+71           , Lu        , Lutetium      , 175          , 173.8          , 187                , None       , GW         , gray  
+72           , Hf        , Hafnium       , 155          , 159            , 175                , pv         , sv_GW      , yellow
+73           , Ta        , Tantalum      , 145          , 146            , 170                , pv         , sv_GW      , magenta
+74           , W         , Tungsten      , 135          , 139            , 162                , pv         , sv_GW      , blue
+75           , Re        , Rhenium       , 135          , 137            , 151                , None       , sv_GW      , red
+76           , Os        , Osmium        , 130          , 135            , 144                , None       , sv_GW      , brown
+77           , Ir        , Iridium       , 135          , 135            , 141                , None       , sv_GW      , plum
+78           , Pt        , Platinum      , 135          , 138.5          , 136                , None       , sv_GW      , aqua
+79           , Au        , Gold          , 135          , 144            , 136                , None       , sv_GW      , gold
+80           , Hg        , Mercury       , 150          , 151            , 132                , None       , sv_GW      , mediumblue
+81           , Tl        , Thallium      , 190          , 170            , 145                , d          , d_GW       , gray   
+82           , Pb        , Lead          , 180          , None           , 146                , d          , d_GW       , gray   
+83           , Bi        , Bismuth       , 160          , None           , 148                , d          , d_GW       , gray   
+84           , Po        , Polonium      , 190          , None           , 140                , d          , d_GW       , gray   
+85           , At        , Astatine      , None         , None           , 150                , d          , d_GW       , gray   
+86           , Rn        , Radon         , 134          , None           , 150                , None       , d_GW       , gray   
+87           , Fr        , Francium      , 260          , None           , 260                , sv         , GW         , gray   
+88           , Ra        , Radium        , 215          , None           , 221                , sv         , GW         , gray   
+89           , Ac        , Actinium      , 195          , None           , 215                , None       , GW         , gray   
+90           , Th        , Thorium       , 180          , 179            , 206                , None       , GW         , gray   
+91           , Pa        , Protactinium  , 180          , 263            , 200                , None       , GW         , gray   
+92           , U         , Uranium       , 175          , 165            , 196                , None       , GW         , gray   
+93           , Np        , Neptunium     , 175          , 155            , 190                , None       , GW         , gray   
+94           , Pu        , Plutonium     , 175          , 159            , 187                , None       , GW         , gray   
+95           , Am        , Americium     , 175          , 173            , 180                , None       , GW         , gray   
+96           , Cm        , Curium        , 135          , 174            , 169                , None       , GW         , gray   
+97           , Bk        , Berkelium     , None         , 170            , None               , None       , GW         , gray   
+98           , Cf        , Californium   , None         , 186            , None               , None       , GW         , gray   
+99           , Es        , Einsteinium   , None         , 186            , None               , None       , GW         , gray   
+100          , Fm        , Fermium       , None         , None           , None               , None       , GW         , gray   
+101          , Md        , Mendelevium   , None         , None           , None               , None       , GW         , gray   
+102          , No        , Nobelium      , None         , None           , None               , None       , GW         , gray   
+103          , Lr        , Lawrencium    , None         , None           , None               , None       , GW         , gray   
+104          , Rf        , Rutherfordium , None         , None           , None               , None       , GW         , gray   
+105          , Db        , Dubnium       , None         , None           , None               , None       , GW         , gray   
+106          , Sg        , Seaborgium    , None         , None           , None               , None       , GW         , gray   
+107          , Bh        , Bohrium       , None         , None           , None               , None       , GW         , gray   
+108          , Hs        , Hassium       , None         , 118            , None               , None       , GW         , gray   
+109          , Mt        , Meitnerium    , None         , None           , None               , None       , GW         , gray   
+110          , Ds        , Darmstadtium  , None         , None           , None               , None       , GW         , gray   
+111          , Rg        , Roentgenium   , None         , None           , None               , None       , GW         , gray   
+112          , Cn        , Copernicium   , None         , None           , None               , None       , GW         , gray   
+113          , Nh        , Nihonium      , None         , None           , None               , None       , GW         , gray   
+114          , Fl        , Flerovium     , None         , None           , None               , None       , GW         , gray   
+115          , Mc        , Moscovium     , None         , None           , None               , None       , GW         , gray   
+116          , Lv        , Livermorium   , None         , None           , None               , None       , GW         , gray   
+117          , Ts        , Tennessine    , None         , None           , None               , None       , GW         , gray   
+118          , Og        , Oganesson     , None         , None           , None               , None       , GW         , gray   

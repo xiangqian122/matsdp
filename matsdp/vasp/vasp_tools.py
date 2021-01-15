@@ -126,6 +126,27 @@ def check_error(job_dir):
     ## -----------------------------------------------------------------------------
     error_kwds_list_dict['linear tetrahedron strings k-points'] = ['linear tetrahedron method', 'can not', 'strings of k-points']
 
+    ## -----------------------------------------------------------------------------
+    ##|                                                                             |
+    ##|     EEEEEEE  RRRRRR   RRRRRR   OOOOOOO  RRRRRR      ###     ###     ###     |
+    ##|     E        R     R  R     R  O     O  R     R     ###     ###     ###     |
+    ##|     E        R     R  R     R  O     O  R     R     ###     ###     ###     |
+    ##|     EEEEE    RRRRRR   RRRRRR   O     O  RRRRRR       #       #       #      |
+    ##|     E        R   R    R   R    O     O  R   R                               |
+    ##|     E        R    R   R    R   O     O  R    R      ###     ###     ###     |
+    ##|     EEEEEEE  R     R  R     R  OOOOOOO  R     R     ###     ###     ###     |
+    ##|                                                                             |
+    ##|      The linear tetrahedron method can not  be used with the KPOINTS file   |
+    ##|      (generation of strings of k-points)                                    |
+    ##|                                                                             |
+    ## -----------------------------------------------------------------------------
+    error_kwds_list_dict['The linear tetrahedron method can not  be used with the KPOINTS file'] = ['The linear tetrahedron method can not  be used with the KPOINTS file']
+
+    ###############################################################################
+    # ERROR: charge density could not be read from file CHGCAR for ICHARG>10
+    ###############################################################################
+    error_kwds_list_dict['charge density could not be read from file CHGCAR for ICHARG>10'] = ['charge density could not be read from file CHGCAR for ICHARG>10']
+
     ###############################################################################
     #internal error in GENERATE_KPOINTS_TRANS: number of G-vector changed in star
     ###############################################################################
@@ -135,6 +156,12 @@ def check_error(job_dir):
     #internal error in GENERATE_KPOINTS_TRANS: G vector not found   232    0    0    1    0    0   -1    1 mkpoints_change.F
     ###############################################################################
     error_kwds_list_dict['error GENERATE_KPOINTS_TRANS vector not found'] = ['error', 'GENERATE_KPOINTS_TRANS', 'vector not found']
+
+    ###############################################################################
+    # VERY BAD NEWS! internal error in subroutine IBZKPT:
+    # Volume of generating cell for k-mesh is zero!       3
+    ###############################################################################
+    error_kwds_list_dict['Volume of generating cell for k-mesh is zero'] = ['Volume of generating cell for k-mesh is zero']
 
     # Below are the errors from WANNIER90
 
@@ -241,6 +268,13 @@ def error_handler(task_dir):
                   'SOLUTION: increase SYMPREC (e.g. SYMPREC = 1E-04) and continue.\n')
             incar_dict = {}
             incar_dict['SYMPREC'] = 1E-04
+            incar_file_path = os.path.join(i_dir_path, 'INCAR')
+            vasp_write.write_incar(incar_file_path, incar_dict = incar_dict, mode = 's')
+        if error_type == 'The linear tetrahedron method can not  be used with the KPOINTS file':
+            print('Error type ' + error_type + ' is detected for the directory: ' + i_dir_path + '\n' + 
+                  'SOLUTION: set ISMEAR to ISMEAR = 0 and continue.\n')
+            incar_dict = {}
+            incar_dict['ISMEAR'] = 0
             incar_file_path = os.path.join(i_dir_path, 'INCAR')
             vasp_write.write_incar(incar_file_path, incar_dict = incar_dict, mode = 's')
     return 0
@@ -360,7 +394,7 @@ def job_status(job_parent_dir = './'):
                     energy_without_entropy = outcar_params_dict['energy_without_entropy']
                     toten = outcar_params_dict['TOTEN']
                     energy_sigma_0 = outcar_params_dict['energy(sigma->0)']
-                    elapsed_time_hour = convert.time_converter(hour = 0, min = 0, sec = outcar_params_dict['elapsed_time'], unit = 'hour')
+                    elapsed_time_hour = convert.time_converter(hour = 0, minute = 0, second = outcar_params_dict['elapsed_time'], unit = 'hour')
                     e_fermi = outcar_params_dict['e_fermi']
                     kpoints_dict = vasp_read.read_kpoints(kpoints_file_path)
                     eigenval_dict = vasp_read.read_eigenval(eigenval_file_path)
@@ -399,7 +433,7 @@ def job_status(job_parent_dir = './'):
     with open(job_status_file_path, 'w') as f:
         f.write(temp_str)
     funcs.write_log(logfile,
-        'vasp_analyze.job_status(\n' +
+        'vasp_tools.job_status(\n' +
         '    job_parent_dir = ' + 'r\'' + job_parent_dir + '\'' + '\n'
         '    )\n' +
         '#############\n'
@@ -464,3 +498,188 @@ def check_file_type(file_path):
             elif temp_len != 0:
                 file_type = 'PROCAR_noncollinear'
     return file_type
+
+def get_latt_param(job_parent_dir = './'):
+    '''
+    Check the lattice properties (lattice size and angle) for multiple jobs
+    job_parent_dir: This is the parent directory which contains multiple VASP jobs
+    '''
+    import os
+    from .. import funcs
+    from .. import convert
+    from . import vasp_read
+    from . import vasp_analyze
+    from .. import default_params
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
+    funcs.mkdir(output_dir)
+
+    job_parent_dir = os.path.abspath(job_parent_dir)
+
+    if funcs.dir_status(job_parent_dir) == 0:
+        quit()
+
+    folder_level_list = []
+    folder_path_list = []
+    folder_path_str_list = []
+    for root, dirs, files in os.walk(job_parent_dir):
+        dirs.sort()
+        level = root.replace(job_parent_dir, '').count(os.sep)
+        indent = ' ' * 4 * (level)
+        folder_level_list.append(level)
+        folder_path_list.append(os.path.abspath(root))
+        folder_path_str_list.append('{}{}/'.format(indent, os.path.basename(root)))
+     
+    max_length_folder_path_str = max([len(x) for x in folder_path_str_list])
+
+    job_status_file_path = os.path.join(output_dir, 'latt_param_vasp_' + os.path.split(job_parent_dir)[-1] + '.txt')
+    
+    temp_str = ''
+    temp_str = temp_str + (
+        'job_dir' + ' ' * (max_length_folder_path_str - len('job_dir')) + 
+        'a(POS)' + ' ' * (13 - len('a(POS)')) + 
+        'b(POS)' + ' ' * (13 - len('b(POS)')) + 
+        'c(POS)' + ' ' * (13 - len('c(POS)')) + 
+        'a(CON)' + ' ' * (13 - len('a(CON)')) + 
+        'b(CON)' + ' ' * (13 - len('b(CON)')) + 
+        'c(CON)' + ' ' * (13 - len('c(CON)')) + 
+
+        'alpha(POS)' + ' ' * (11 - len('alpha(POS)')) + 
+        'beta(POS)' + ' ' * (11 - len('beta(POS)')) + 
+        'gamma(POS)' + ' ' * (11 - len('gamma(POS)')) + 
+        'alpha(CON)' + ' ' * (11 - len('alpha(CON)')) + 
+        'beta(CON)' + ' ' * (11 - len('beta(CON)')) + 
+        'gamma(CON)' + ' ' * (11 - len('gamma(CON)')) + 
+
+        'volume(POS)' + ' ' * (13 - len('volume(POS)')) + 
+        'volume(CON)' + ' ' * (13 - len('volume(CON)')) + '\n' +  
+
+        '-' * len('job_dir') + ' ' * (max_length_folder_path_str - len('job_dir')) + 
+        '-' * len('a(POS)') + ' ' * (13 - len('a(POS)')) + 
+        '-' * len('b(POS)') + ' ' * (13 - len('b(POS)')) + 
+        '-' * len('c(POS)') + ' ' * (13 - len('c(POS)')) + 
+        '-' * len('a(CON)') + ' ' * (13 - len('a(CON)')) + 
+        '-' * len('b(CON)') + ' ' * (13 - len('b(CON)')) + 
+        '-' * len('c(CON)') + ' ' * (13 - len('c(CON)')) + 
+
+        '-' * len('alpha(POS)') + ' ' * (11 - len('alpha(POS)')) + 
+        '-' * len('beta(POS)') + ' ' * (11 - len('beta(POS)')) + 
+        '-' * len('gamma(POS)') + ' ' * (11 - len('gamma(POS)')) + 
+        '-' * len('alpha(CON)') + ' ' * (11 - len('alpha(CON)')) + 
+        '-' * len('beta(CON)') + ' ' * (11 - len('beta(CON)')) + 
+        '-' * len('gamma(CON)') + ' ' * (11 - len('gamma(CON)')) + 
+
+        '-' * len('volume(POS)') + ' ' * (13 - len('volume(POS)')) + 
+        '-' * len('volume(CON)') + ' ' * (13 - len('volume(CON)')) + '\n' 
+
+        )
+    for i_folder_indx in range(0, len(folder_path_list)):
+        output_exist = False
+        # check job status
+        job_status = 'unfinished'
+        job_status_str = '--'
+        energy_without_entropy = None
+        for file0 in os.listdir(folder_path_list[i_folder_indx]):
+            if 'OUTCAR' == file0:
+                output_exist = True
+                output_file_path = os.path.join(folder_path_list[i_folder_indx], 'OUTCAR')
+                poscar_file_path = os.path.join(folder_path_list[i_folder_indx], 'POSCAR')
+                contcar_file_path = os.path.join(folder_path_list[i_folder_indx], 'CONTCAR')
+                if vasp_job_finished(output_file_path) == True:
+                    job_status = 'finished'
+                    job_status_str = 'finished'
+                    poscar_dict = vasp_read.read_poscar(poscar_file_path)
+                    contcar_dict = vasp_read.read_poscar(contcar_file_path)
+                    len_a_poscar = poscar_dict['len_vec_a']
+                    len_b_poscar = poscar_dict['len_vec_b']
+                    len_c_poscar = poscar_dict['len_vec_c']
+                    len_a_contcar = contcar_dict['len_vec_a']
+                    len_b_contcar = contcar_dict['len_vec_b']
+                    len_c_contcar = contcar_dict['len_vec_c']
+                    angle_alpha_degree_poscar = poscar_dict['angle_alpha_degree']
+                    angle_beta_degree_poscar = poscar_dict['angle_beta_degree']
+                    angle_gamma_degree_poscar = poscar_dict['angle_gamma_degree']
+
+                    angle_alpha_degree_contcar = contcar_dict['angle_alpha_degree']
+                    angle_beta_degree_contcar = contcar_dict['angle_beta_degree']
+                    angle_gamma_degree_contcar = contcar_dict['angle_gamma_degree']
+
+                    box_volume_poscar = poscar_dict['box_volume']
+                    box_volume_contcar = contcar_dict['box_volume']
+                continue
+        if job_status == 'finished':
+            temp_str = temp_str + (folder_path_str_list[i_folder_indx] + ' ' * (max_length_folder_path_str - len(folder_path_str_list[i_folder_indx])) + '   ' + 
+                '{:.4f}'.format(len_a_poscar) + ' ' * (13 - len('{:.4f}'.format(len_a_poscar))) + 
+                '{:.4f}'.format(len_b_poscar) + ' ' * (13 - len('{:.4f}'.format(len_b_poscar))) + 
+                '{:.4f}'.format(len_c_poscar) + ' ' * (13 - len('{:.4f}'.format(len_c_poscar))) + 
+                '{:.4f}'.format(len_a_contcar) + ' ' * (13 - len('{:.4f}'.format(len_a_contcar))) + 
+                '{:.4f}'.format(len_b_contcar) + ' ' * (13 - len('{:.4f}'.format(len_b_contcar))) + 
+                '{:.4f}'.format(len_c_contcar) + ' ' * (13 - len('{:.4f}'.format(len_c_contcar))) + 
+
+                '{:.2f}'.format(angle_alpha_degree_poscar) + ' ' * (11 - len('{:.2f}'.format(angle_alpha_degree_poscar))) + 
+                '{:.2f}'.format(angle_beta_degree_poscar) + ' ' * (11 - len('{:.2f}'.format(angle_beta_degree_poscar))) + 
+                '{:.2f}'.format(angle_gamma_degree_poscar) + ' ' * (11 - len('{:.2f}'.format(angle_gamma_degree_poscar))) + 
+                '{:.2f}'.format(angle_alpha_degree_contcar) + ' ' * (11 - len('{:.2f}'.format(angle_alpha_degree_contcar))) + 
+                '{:.2f}'.format(angle_beta_degree_contcar) + ' ' * (11 - len('{:.2f}'.format(angle_beta_degree_contcar))) + 
+                '{:.2f}'.format(angle_gamma_degree_contcar) + ' ' * (11 - len('{:.2f}'.format(angle_gamma_degree_contcar))) + 
+
+                '{:.4f}'.format(box_volume_poscar) + ' ' * (13 - len('{:.4f}'.format(box_volume_poscar))) + 
+                '{:.4f}'.format(box_volume_contcar) + ' ' * (13 - len('{:.4f}'.format(box_volume_contcar))) + 
+
+                ' \n')
+        else:
+            temp_str = temp_str + (folder_path_str_list[i_folder_indx] + ' ' * (max_length_folder_path_str - len(folder_path_str_list[i_folder_indx])) + '   ' + 
+                '--' + ' ' * (13 - len('--')) + 
+                '--' + ' ' * (13 - len('--')) + 
+                '--' + ' ' * (13 - len('--')) + 
+                '--' + ' ' * (13 - len('--')) + 
+                '--' + ' ' * (13 - len('--')) + 
+                '--' + ' ' * (13 - len('--')) + 
+
+                '--' + ' ' * (11 - len('--')) + 
+                '--' + ' ' * (11 - len('--')) + 
+                '--' + ' ' * (11 - len('--')) + 
+                '--' + ' ' * (11 - len('--')) + 
+                '--' + ' ' * (11 - len('--')) + 
+                '--' + ' ' * (11 - len('--')) + 
+
+                '--' + ' ' * (13 - len('--')) + 
+                '--' + ' ' * (13 - len('--')) + 
+                ' \n')
+    with open(job_status_file_path, 'w') as f:
+        f.write(temp_str)
+    funcs.write_log(logfile,
+        'vasp_tools.get_latt_param(\n' +
+        '    job_parent_dir = ' + 'r\'' + job_parent_dir + '\'' + '\n'
+        '    )\n' +
+        '#############\n'
+        )
+
+    return temp_str
+
+def convert_coord_system(poscar_file_path, mode = 'direct2cartesian'):
+    '''
+    Convert from Direct coordinate to Cartesian coordinate
+    mode: 'direct2cartesian' or 'cartesian2direct'
+    '''
+    import os
+    from . import vasp_read
+    from . import vasp_write
+    from .. import default_params
+
+    defaults_dict = default_params.default_params()
+    poscar_file_path = os.path.abspath(poscar_file_path)
+    poscar_dict = vasp_read.read_poscar(poscar_file_path) 
+    fpath, fname = os.path.split(poscar_file_path)
+
+    if mode == 'direct2cartesian':
+        coord_system = 'Cartesian'
+        poscar_suffix = '_car'
+    elif mode == 'cartesian2direct':
+        coord_system = 'Direct'
+        poscar_suffix = '_dir'
+    poscar_file_path_cartesian = os.path.join(fpath, fname + poscar_suffix)
+
+    vasp_write.write_poscar(output_poscar_file_path = poscar_file_path_cartesian, poscar_dict = poscar_dict, coord_system = coord_system)
+    return 0

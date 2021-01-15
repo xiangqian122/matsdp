@@ -1,3 +1,12 @@
+v0.2.2, 2021-01-16
+--------------------------------
+ 
+- Added new features in the vasp_build module (e.g. exfoliation (2D), make supercell, transformation (rotation + translation), reorientation, adding vacuum layer).
+- Automatically write POTCAR according to the recommended POTCAR from the VASP manual.
+- Conversion between VASP fractional and Cartesian coordinates.
+- Fixed some bugs of pms module.
+- Added function of "external_program" that can interact with external programs.
+
 v0.2.1, 2020-12-09 
 --------------------------------
  
