@@ -29,4 +29,4 @@ def test_vasp_plot_plot_poscar():
         vmax_color = 'red',
         colorbar_alignment = 'vertical'
         )
-    assert retn_val == 0
+    assert isinstance(retn_val,dict)

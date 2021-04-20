@@ -3,9 +3,14 @@ def periodic_tab_gen():
     Part of the information is taken from PerioDict Table from Paul A Freshney 2010
     http://perioDicttableexplorer.com/pc_pte.htm
     The covalent radius is taken from the literature: [Beatriz Cordero et al. Covalent radii revisited. Dalton Transactions, 2008 2832--2838.]
-    This is only a module for the developers!
+    
+    This is only a module for the developers!    
     This module generates periodic_table.py which contains the periodic_table_dict (dictionary of the periodic table)
+
     This module relies on the periodic_table.csv data file located in the same directory.
+
+    This module relies on the periodic_table_bond.csv data file located in the same directory.
+    The bond pair information is partially taken from the VESTA configuration file (style.ini)
     '''
     import os
     import numpy as np

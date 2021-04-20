@@ -55,9 +55,9 @@ pip install matsdp
 Release note
 ------------
 
-- version 0.2.2
+- version 0.2.3
 
- * Date: 20210116
+ * Date: 20210420
 
 ======
 Usage
@@ -65,7 +65,7 @@ Usage
 
 Graphical User Interface (GUI)
 ------------------------------
-- matsdp_gui.exe
+- matsdp_gui.exe (part of the functions are realized in the GUI version)
 
 Running with Python environment
 -------------------------------

@@ -228,5 +228,5 @@ def test_plot_dos():
         fig_size = [11.0, 9.5],
         fig_dpi = 600,
         )
-    assert isinstance(retn_val1,dict) == True and isinstance(retn_val2,dict) == True and isinstance(retn_val3,dict) == True and isinstance(retn_val4,dict) == True and isinstance(retn_val5,dict) == True and isinstance(retn_val6,dict) == True and isinstance(retn_val7,dict) == True
+    assert isinstance(retn_val1[1],dict) == True and isinstance(retn_val2[1],dict) == True and isinstance(retn_val3[1],dict) == True and isinstance(retn_val4[1],dict) == True and isinstance(retn_val5[1],dict) == True and isinstance(retn_val6[1],dict) == True and isinstance(retn_val7[1],dict) == True
 

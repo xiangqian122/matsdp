@@ -59,4 +59,4 @@ def test_simple_cna():
         colorbar_alignment = 'horizontal'
         )
 
-    assert isinstance(retn_val1,dict) == True and retn_val2 == 0 and retn_val3 == 0
+    assert isinstance(retn_val1,dict) == True

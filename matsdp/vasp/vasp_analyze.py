@@ -691,7 +691,8 @@ def estruct(doscar_file_path, sysname = ''):
     outcar_params_dict = vasp_read.read_outcar(outcar_file_path)
     LORBIT = outcar_params_dict['LORBIT']
     e_fermi = outcar_params_dict['e_fermi']
-    e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
+    if not outcar_params_dict['e_fermi'] is None:
+        e_fermi_mod = outcar_params_dict['e_fermi'] + outcar_params_dict['alpha+bet']
 
     atom_num = len(poscar_dict['atom_species_arr'])
 
@@ -1360,8 +1361,10 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
     logfile = defaults_dict['logfile']
     log_str = ''
     output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
+    #print(kpoints_dict)
 
     band_gap_dict = {}
+    band_gap_dict['file_path'] = None
     band_gap_dict['band_gap'] = None
     band_gap_dict['gap_type'] = None
     band_gap_dict['CBM'] = None
@@ -1377,18 +1380,28 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
     band_gap_dict['CBM_dw'] = None
     band_gap_dict['VBM_dw'] = None
 
+    band_gap_dict['file_path'] = eigenval_or_procar_dict['file_path'] 
     #get E_fermi
     e_fermi = outcar_params_dict['e_fermi']
-    if e_fermi not in [None, 'None', 'none']:
-        e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
+    e_fermi_mod = outcar_params_dict['e_fermi_mod']
+    ##if e_fermi not in [None, 'None', 'none'] and outcar_params_dict['alpha+bet'] not in [None, 'None', 'none']:
+    ##    e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
     #get KPOINTS 
     kpoints_scheme = kpoints_dict['scheme']
+    #Check OUTCAR parameters
+    valid_outcar_par = True
+    temp_outcar_par_list = ['file_path', 'e_fermi', 'alpha+bet']
+    for i_par in temp_outcar_par_list:
+        if funcs.variables_equal(outcar_params_dict[i_par], outcar_params_dict['initial_value_dict'][i_par]):
+            valid_outcar_par = False
+            print('WARNING #2103311558 (from vasp_analyze). outcar_params_dict[\'' + str(i_par) + '\'] has an invalid value, please check the OUTCAR file ' + outcar_params_dict['file_path'] + '\n')
+
     if kpoints_scheme not in ['L', 'l']:
         if suppress_warning == True:
             pass
         elif suppress_warning ==False:
             print('WARNING #20120302 (from get_band_gap): KPOINTS file is not in line mode, this may not be a band structure calculation. File directory is : ' + kpoints_dict['file_path'])
-    elif kpoints_scheme in ['L', 'l']:
+    elif kpoints_scheme in ['L', 'l'] and valid_outcar_par:
         kpoints_arr = kpoints_dict['kpoints_xaxis_arr']
         kpath_num_intersections_interval = kpoints_dict['num_intersections_interval']
         kpath_num_intersections = kpoints_dict['num_intersections']
@@ -1490,15 +1503,27 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                         max_eig = max_e
                         lo_band_indx = i_band
 
+                if len(kpoints_arr) != len(band_arr):
+                    print('WARNING #2103311540 (from vasp_analyze.get_band_gap): length of kpoints_arr and band_arr are not identical. Please check EIGENVAL or PROCAR file in the directory: ' + outcar_params_dict['work_dir'])
+                    break
                 for i_interval in range(0, kpath_num_intersections_interval):
+                    ##print('---------------------------')
+                    ##print('i_interval=',i_interval)
+                    ##print('kpath_num_intersections=', kpath_num_intersections)
                     start_indx = i_interval * kpath_num_intersections
                     end_indx = start_indx + kpath_num_intersections
                     kpoints_slice_arr = kpoints_arr[start_indx:end_indx]
                     eigs_slice_arr = band_arr[start_indx:end_indx]
+                    ##print('len_band_arr=',len(band_arr),'len_kpoints_arr=',len(kpoints_arr))
+                    ##print('start_indx,end_indx=',start_indx,end_indx)
+                    ##print('kpoints_arr=',kpoints_arr)
+                    ##print('band_arr=',band_arr)
+                    ##print('eigs_slice_arr=',eigs_slice_arr)
                     kpoints_dense_arr = np.linspace(min(kpoints_slice_arr),max(kpoints_slice_arr),num = num_kpoints * 5,endpoint = True)
                     if len(kpoints_slice_arr) != len(eigs_slice_arr):
-                        print('ERROR #2012131929 (from vasp_analyze.get_band_gap): length of kpoints_slice_arr and eigs_slice_arr do not conform. Please check EIGENVAL or PROCAR file.')
-                        exit()
+                        #print(kpoints_slice_arr, eigs_slice_arr)
+                        #print('WARNING #2012131929 (from vasp_analyze.get_band_gap): length of kpoints_slice_arr and eigs_slice_arr do not conform. Please check EIGENVAL or PROCAR file in the directory: ' + outcar_params_dict['work_dir'])
+                        break
                     interp = interp1d(kpoints_slice_arr, eigs_slice_arr, kind='cubic')
 
                     max_val = np.max(interp(kpoints_dense_arr))
@@ -1567,8 +1592,8 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                     eigs_slice_arr_dw = band_arr_dw[start_indx:end_indx]
                     kpoints_dense_arr = np.linspace(min(kpoints_slice_arr),max(kpoints_slice_arr),num = num_kpoints * 5,endpoint = True)
                     if len(kpoints_slice_arr) != len(eigs_slice_arr_up):
-                        print('ERROR #2012131927 (from vasp_analyze.get_band_gap): length of kpoints_slice_arr and eigs_slice_arr_up do not conform. Please check EIGENVAL or PROCAR file.')
-                        exit()
+                        #print('WARNING #2012131927 (from vasp_analyze.get_band_gap): length of kpoints_slice_arr and eigs_slice_arr_up do not conform. Please check EIGENVAL or PROCAR file.')
+                        break
                     interp_up = interp1d(kpoints_slice_arr, eigs_slice_arr_up, kind='cubic')
                     interp_dw = interp1d(kpoints_slice_arr, eigs_slice_arr_dw, kind='cubic')
 

@@ -168,9 +168,10 @@ def img2pdf(img_path_list, img_rotate_list = None, pdf_path = './img2pdf.pdf', q
     pdf_path = os.path.abspath(pdf_path)
     temp_pdf_dir = os.path.abspath('./img2pdf_separate/')
     funcs.mkdir(temp_pdf_dir)
-    if len(img_rotate_list) != num_img:
-        print('the dimension of img_path_list and rotate_list do not match')
-        quit()   
+    if img_rotate_list not in [None, 'None', 'none']:
+        if len(img_rotate_list) != num_img:
+            print('the dimension of img_path_list and rotate_list do not match')
+            quit()   
     for i in range(0, num_img):
         with Image.open(os.path.abspath(img_path_list[i])) as img:
             if img_rotate_list != None:

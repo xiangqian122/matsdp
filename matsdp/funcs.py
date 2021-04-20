@@ -142,6 +142,7 @@ def write_log(logfile,output_str):
                 'from matsdp import apt' + '\n' +
                 'from matsdp import dvm' + '\n' +
                 'from matsdp import pms' + '\n' +
+                'from matsdp import external_program' + '\n' +
                 'from matsdp.vasp import vasp_read' + '\n' +
                 'from matsdp.vasp import vasp_plot' + '\n' +
                 'from matsdp.vasp import vasp_analyze' + '\n' +
@@ -160,6 +161,8 @@ def write_log(logfile,output_str):
                 'from matsdp.dvm import dvm_help' + '\n' +
                 'from matsdp.pms import project_manager' + '\n' +
                 'from matsdp.pms import task_manager' + '\n' +
+                '# Hint: "if __name__ == \'__main__\':" is recommended to be added in the top-level script' + '\n' + 
+                '# to avoid errors, e.g. RuntimeError from running multiprocessing in a Windows environment.' + '\n' + 
                 '######################################\n')
         with open(logfile,'a') as logfile_object:
             logfile_object.write(
@@ -437,7 +440,7 @@ def find_kwd_line_indx(kwd, file_path):
         indx = [x for x in range(len(lines)) if kwd in lines[x]]
     return indx
 
-def str_format(input_str, max_len = 13):
+def str_format(input_str, max_len = 13, padding_str = ' '):
     '''
     get formatted string
     e.g. str_format('aaa', 6) would return 'aaa   '
@@ -448,10 +451,10 @@ def str_format(input_str, max_len = 13):
     input_str = str(input_str)
     if len(input_str) > max_len:
         max_len = len(input_str) + 1
-    formatted_str = input_str + ' ' * (max_len - len(input_str))
+    formatted_str = input_str + padding_str * (max_len - len(input_str))
     return formatted_str
     
-def float_format(input_float, max_len = 13, format_str = '{:.2f}'):
+def float_format(input_float, max_len = 13, format_str = '{:.2f}', padding_str = ' '):
     '''
     get formatted float
     e.g. float_format('3.1415926', 6, '{:.2f}') would return '3.14  '
@@ -463,9 +466,9 @@ def float_format(input_float, max_len = 13, format_str = '{:.2f}'):
         float(input_float)
     except ValueError :
         print('ERROR: funcs error. Not a float')
-    if len(str(input_float)) > max_len:
+    if len(str(format_str.format(float(input_float)))) > max_len:
         max_len = len(str(input_float)) + 1
-    formatted_float = format_str.format(float(input_float)) + ' ' * (max_len - len(format_str.format(float(input_float))))
+    formatted_float = format_str.format(float(input_float)) + padding_str * (max_len - len(format_str.format(float(input_float))))
     return formatted_float
 
 def str_strip(text):
@@ -894,34 +897,15 @@ def atom_number_ortho(atom_key_arr, pos_arr_cartesian, delta = 0.05, number_orde
     - delta: This is the spacial resolution, for example z=0.24 and z=0.25 are considered to be in the same position if delta=0.01.
     - number_order: choices are 'xyz', 'yzx', 'zxy', 'xzy', 'yxz', 'zyx'. Designate the atom number according to the order in each axis directions.
     for example, xyz denotes number starts from 0 in the origin, then the index first increases in x direction, then in y and z.
+    - atom_number_ortho_arr: atom number starts from 1
     '''
     import numpy as np
     n_atoms = len(atom_key_arr)
-    # sorted and grouped indices
-    indx_arr = np.array([0] * n_atoms * 3)
-    indx_arr.shape = n_atoms, 3
-    #max_indx_arr denotes the maximum index in each direction
-    max_indx_arr = np.array([None] * 3)
-    # three directions
-    for i in range(0,3):
-        running_indx = 0
-        sorted_pos_arr_cartesian = np.sort(pos_arr_cartesian[:,i])
-        sorted_pos_arr_cartesian_indx = np.argsort(pos_arr_cartesian[:,i])
-        temp_pos = np.min(sorted_pos_arr_cartesian)
-        for temp_indx in sorted_pos_arr_cartesian_indx:
-            if (pos_arr_cartesian[temp_indx, i] - temp_pos) <= delta:
-                pass
-            else:
-                running_indx += 1
-            temp_pos = pos_arr_cartesian[temp_indx, i]
-            indx_arr[temp_indx, i] = running_indx
-        max_indx_arr[i] = np.max(indx_arr[:,i])
-    #analyzing the numbering order
-    number_order_list = [0, 1, 2]
-    max_indx_arr_order = np.array([None] * 3)
-    for i in range(0,3):
-        axis_direction = number_order.strip()[i]
-        if axis_direction == 'x':
+    atom_number_ortho_arr = np.array([None] * n_atoms)
+
+    if len(number_order) == 1:
+        axis_direction = number_order.strip()[0]
+        if   axis_direction == 'x':
             axis_direction_indx = 0
         elif axis_direction == 'y':
             axis_direction_indx = 1
@@ -929,27 +913,66 @@ def atom_number_ortho(atom_key_arr, pos_arr_cartesian, delta = 0.05, number_orde
             axis_direction_indx = 2
         else:
             print('Error: error in reading the parameter number_order')
-        number_order_list[i] = axis_direction_indx
-        max_indx_arr_order[i] =  max_indx_arr[number_order_list[i]]
-    grid_arr = np.array([None] * n_atoms)
-    for temp_indx in range(0, n_atoms):
-        grid_arr[temp_indx] = str(indx_arr[temp_indx, number_order_list[0]]) + ',' + str(indx_arr[temp_indx, number_order_list[1]]) + ',' + str(indx_arr[temp_indx, number_order_list[2]])
-    #from collections import Counter
-    #b = dict(Counter(grid_arr))
-    #print ([key for key,value in b.items() if value > 1])
-    #print ({key:value for key,value in b.items()if value > 1})
-    atom_number_ortho_arr = np.array([None] * n_atoms)
-    running_number = 1
-    for k in range(0, max_indx_arr_order[2]+1):
-        for j in range(0, max_indx_arr_order[1]+1):
-            for i in range(0, max_indx_arr_order[0]+1):
-                temp_grid_str = str(i) + ',' + str(j) + ',' + str(k)
-                temp_indx = np.argwhere(grid_arr == temp_grid_str).squeeze()
-                #if np.isfinite(temp_indx):
-                if temp_indx.size > 0:
-                    atom_number_ortho_arr[int(temp_indx)] = running_number
-                    #print(pos_arr_cartesian[int(temp_indx),:])
-                    running_number += 1
+        #atom_number_ortho_arr = np.argsort(pos_arr_cartesian[:,axis_direction_indx]) + 1
+
+        sorted_pos_arr_cartesian_indx = np.argsort(pos_arr_cartesian[:,axis_direction_indx])
+        running_number = 1
+        for temp_indx in sorted_pos_arr_cartesian_indx:
+            atom_number_ortho_arr[temp_indx] = running_number 
+            running_number += 1
+    elif len(number_order) == 3:
+        # sorted and grouped indices
+        indx_arr = np.array([0] * n_atoms * 3)
+        indx_arr.shape = n_atoms, 3
+        #max_indx_arr denotes the maximum index in each direction
+        max_indx_arr = np.array([None] * 3)
+        # three directions
+        for i in range(0,3):
+            running_indx = 0
+            sorted_pos_arr_cartesian = np.sort(pos_arr_cartesian[:,i])
+            sorted_pos_arr_cartesian_indx = np.argsort(pos_arr_cartesian[:,i])
+            temp_pos = np.min(sorted_pos_arr_cartesian)
+            for temp_indx in sorted_pos_arr_cartesian_indx:
+                if (pos_arr_cartesian[temp_indx, i] - temp_pos) <= delta:
+                    pass
+                else:
+                    running_indx += 1
+                temp_pos = pos_arr_cartesian[temp_indx, i]
+                indx_arr[temp_indx, i] = running_indx
+            max_indx_arr[i] = np.max(indx_arr[:,i])
+        #analyzing the numbering order
+        number_order_list = [0, 1, 2]
+        max_indx_arr_order = np.array([None] * 3)
+        for i in range(0,3):
+            axis_direction = number_order.strip()[i]
+            if   axis_direction == 'x':
+                axis_direction_indx = 0
+            elif axis_direction == 'y':
+                axis_direction_indx = 1
+            elif axis_direction == 'z':
+                axis_direction_indx = 2
+            else:
+                print('Error: error in reading the parameter number_order')
+            number_order_list[i] = axis_direction_indx
+            max_indx_arr_order[i] =  max_indx_arr[number_order_list[i]]
+        grid_arr = np.array([None] * n_atoms)
+        for temp_indx in range(0, n_atoms):
+            grid_arr[temp_indx] = str(indx_arr[temp_indx, number_order_list[0]]) + ',' + str(indx_arr[temp_indx, number_order_list[1]]) + ',' + str(indx_arr[temp_indx, number_order_list[2]])
+        #from collections import Counter
+        #b = dict(Counter(grid_arr))
+        #print ([key for key,value in b.items() if value > 1])
+        #print ({key:value for key,value in b.items()if value > 1})
+        running_number = 1
+        for k in range(0, max_indx_arr_order[2]+1):
+            for j in range(0, max_indx_arr_order[1]+1):
+                for i in range(0, max_indx_arr_order[0]+1):
+                    temp_grid_str = str(i) + ',' + str(j) + ',' + str(k)
+                    temp_indx = np.argwhere(grid_arr == temp_grid_str).squeeze()
+                    #if np.isfinite(temp_indx):
+                    if temp_indx.size > 0:
+                        atom_number_ortho_arr[int(temp_indx)] = running_number
+                        #print(pos_arr_cartesian[int(temp_indx),:])
+                        running_number += 1
     return atom_number_ortho_arr
 
 def unit_vec(vector):
@@ -1124,6 +1147,7 @@ def volume_pentahedron_from_points(point1_arr, point2_arr, point3_arr, point4_ar
 
 def rotation_matrix_from_vectors(vec1, vec2):
     """ 
+    https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d/897677#897677
     https://stackoverflow.com/questions/45142959/calculate-rotation-matrix-to-align-two-vectors-in-3d-space
     Find the rotation matrix that aligns vec1 to vec2
     :param vec1: A 3d "source" vector
@@ -1141,6 +1165,54 @@ def rotation_matrix_from_vectors(vec1, vec2):
         kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
         rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
     return rotation_matrix
+
+def variables_equal(a, b):
+    import numpy as np
+    '''
+    comparing two variables
+    Not consider dictionary, pandas
+    '''
+    if type(a) != type(b):
+        return False
+    else:
+        #(list, pd.core.series.Series, np.ndarray)
+        if not isinstance(a, (list, np.ndarray)):
+            # if not list or numpy arrays (maybe strings):
+            if a != b:
+                return False
+        else:
+            # both a and b are lists
+            if isinstance(a, list) and isinstance(b, list):
+                if len(a) != len(b):
+                    return False
+                for ai, bi in zip(a, b):
+                    if ai != bi:
+                        return False
+            # both a and b are numpy.arrays
+            elif isinstance(a, np.ndarray) and isinstance(b, np.ndarray):
+                if a.shape != b.shape:
+                    return False
+                for ai, bi in zip(a.flat, b.flat):
+                    if ai != bi:
+                        return False
+    return True
+
+def check_job_type(job_dir):
+    '''
+    Check the job type: VASP, LAMMPS, ...
+    '''
+    import os
+
+    job_type_dict = {}
+    job_type_dict['VASP'] = False
+
+    vasp_file_list = ['INCAR', 'POSCAR', 'KPOINTS', 'POTCAR']
+    job_dir = os.path.abspath(job_dir)    
+    file_path_list, file_name_list = get_files(job_dir, extension = None)
+    if all(x in file_name_list for x in vasp_file_list):
+        job_type_dict['VASP'] = True
+    return job_type_dict
+     
 
 ######################
 #Notes

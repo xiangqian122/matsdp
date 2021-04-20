@@ -49,8 +49,8 @@
 %\small dianwuwang@163.com \\
 \vspace{0.8cm}
 
-\small version 0.2.2\\
-\small Jan. 16, 2021
+\small version 0.2.3\\
+\small Apr. 20, 2021
 
 \end{center}
 \end{titlepage}
@@ -159,7 +159,7 @@ The matsdp package contains the vasp module, the apt module and the dvm module a
 \node (vasp_help) [process1, below of=vasp_default] {vasp\_help};
 
 \node (vasp_read_sub) [process2, right of=vasp_read] {read\_incar\\read\_poscar\\read\_outcar\\read\_doscar\\read\_oszicar\\read\_kpoints\\read\_eigenval\\read\_procar};
-\node (vasp_build_sub) [process2, right of=vasp_build] {substitution\\rep\_elmt\\selection\_sphere\\orientation\\align\\transform\\create\_supercell\\build\_vacuum\_layer\\exfoliation};
+\node (vasp_build_sub) [process2, right of=vasp_build] {substitution\\rep\_elmt\\selection\_sphere\\orientation\\align\\transform\\create\_supercell\\build\_vacuum\_layer\\exfoliation\\conventional\_cell};
 \node (vasp_plot_sub) [process2, right of=vasp_plot] {plot\_dos\\plot\_poscar\\plot\_poscar\_for\_workdir\\plot\_bs};
 \node (vasp_analyze_sub) [process2, right of=vasp_analyze] {nn\_map\\simple\_cna\\estruct\\overlap\_peak\_analyzer\\get\_band\_gap};
 \node (vasp_write_sub) [process2, right of=vasp_write] {write\_poscar\\ \_with\_atom\_property\\write\_poscar\\ \_with\_force\\write\_potcar\\write\_incar\\write\_kpoints\\write\_band\_data};
@@ -348,7 +348,7 @@ For the Python users, the package can be retrieved by the following command.
 pip install matsdp
 \end{lstlisting}
 
-For the GUI users, please run the matsdp\_gui.exe directly.
+For the GUI users, please run the matsdp\_gui.exe directly (part of the functions are realized in the GUI version).
 
 \section{Usage}
 \subsection{Running with Python environment}
@@ -570,7 +570,7 @@ Outputs: POSCAR file after specifying the vacuum layer.
 
 \subsection{vasp\_build.exfoliation}
 \subsubsection{Descriptions}
-Exfoliate 2d material
+Exfoliate 2d material. Useful reference for determining the atom bonding status is the CSD covalent radius\cite{Cordero2008DTNone}.
 \subsubsection{Syntax}
 \begin{lstlisting}
 from matsdp.vasp import vasp_build
@@ -1110,7 +1110,7 @@ vasp_plot.plot_bs(infile_path_list = ['./bs/PROCAR'],
                   fig_size = [13, 9],
                   )
 \end{lstlisting}
-projections\_li.txt内容如下：
+projections\_li.txt:
 \begin{lstlisting}
 spin, mag, ions_list  , orbit    , color      , legend
 up  , tot, ['Li']     , tot      , black      , Auto
@@ -1837,9 +1837,10 @@ The named colors which can be used by the program is listed in Figure \ref{fig:n
 
 
 \chapter*{Acknowledgements}
-Thanks to Yuancheng Lin for the helpful discussions of the dvm module.
+Thanks to Yuancheng Lin, Jingyi Duan for helpful discussions and tests.
 
 \begin{thebibliography}{99}
+\bibitem{Cordero2008DTNone} Beatriz Cordero et al. Covalent radii revisited. Dalton Transactions, 2008: 2832--2838.
 \bibitem{Goldstein2001CM3} Herbert Goldstein, Charles P. Poole Jr. and John L. Safko, Classical Mechanics (3rd Edition). Goldstein Poole \& Safko, 2001.
 \bibitem{Chongyu1988PRB38} Chongyu Wang and Feng An and Binglin Gu and Liu Fusui and Ying Chen, Electronic structure of the light-impurity (boron){\textendash}vacancy complex in iron. Physical Review B, 1988: 3905--3912.
 \bibitem{Chong-yu1990PRB41} Chong-yu Wang, Sen-ying Liu and Lin-guang Han, Electronic structure of impurity (oxygen){\textendash}stacking-fault complex in nickel. Physical Review B, 1990: 1359--1367.

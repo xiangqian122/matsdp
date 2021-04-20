@@ -20,7 +20,7 @@ def write_poscar(output_poscar_file_path, poscar_dict, coord_system = 'Direct', 
 
     formatted_len1 = 13 #For example len('-54.0812')=8, len('-54.081283453')=13   
     poscar_dict_header_temp = poscar_dict['header']
-    if added_atom_data not in [None, 'None', 'none']:
+    if not added_atom_data is None:
         # after conversion, the added_atom_data turns to an np.array with the shape: n_atoms * n_col 
         added_atom_data = np.array(added_atom_data)
         if len(added_atom_data.shape) == 1:
@@ -48,11 +48,11 @@ def write_poscar(output_poscar_file_path, poscar_dict, coord_system = 'Direct', 
     float_format1 = '{:17.9f}'
 
     temp_str = ''
-    if added_atom_data in [None, 'None', 'none']:
+    if added_atom_data is None:
         temp_str = temp_str + (poscar_dict['comment'] +
                                     '\n'
                                     )
-    elif added_atom_data not in [None, 'None', 'none']:
+    elif not added_atom_data is None:
         temp_str = temp_str + (poscar_dict['comment'] +
                                     ' added_atom_property=' + str(added_atom_property_str).strip('=').strip(':').strip('\n') + ': ' +
                                     added_atom_property_columns_str +
@@ -75,9 +75,9 @@ def write_poscar(output_poscar_file_path, poscar_dict, coord_system = 'Direct', 
             coord_system + '\n'
             )
     for i_atom in range(n_atoms):
-        if added_atom_data not in [None, 'None', 'none']:
+        if not added_atom_data is None:
             temp_arr = added_atom_data[i_atom,:]
-            added_atom_data_str = added_atom_data_str + ' '.join([str(temp_arr[indx]) + (' '*(max([len(str(x)) for x in added_atom_data[:, indx]]) - len(str(temp_arr[indx])))) for indx in range(0, len(temp_arr))] + '\n')
+            added_atom_data_str = added_atom_data_str + ' '.join([str(temp_arr[indx]) + (' '*(max([len(str(x)) for x in added_atom_data[:, indx]]) - len(str(temp_arr[indx])))) for indx in range(0, len(temp_arr))]) + '\n'
         coord_str = coord_str + ' '.join(float_format1.format(x) for x in poscar_dict['pos_arr'][i_atom, column_span]) + '\n'
         ##coord_str = coord_str + ('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,0]) + ' ' + (' '*(formatted_len1-len('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,0])))) + ' ' + 
         ##    '{:.6f}'.format(poscar_dict['coord_arr'][i_atom,1]) + ' ' + (' '*(formatted_len1-len('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,1])))) + ' ' + 
@@ -87,7 +87,7 @@ def write_poscar(output_poscar_file_path, poscar_dict, coord_system = 'Direct', 
             poscar_dict['fix_arr'][i_atom,1] + ' ' +
             poscar_dict['fix_arr'][i_atom,2] + ' ' + '\n')
 
-    if added_atom_data in [None, 'None', 'none']:
+    if added_atom_data is None:
         if poscar_dict['slet_dyn_on'] == True:
             temp_str = temp_str + (coord_str +
                      fix_str +
@@ -95,7 +95,7 @@ def write_poscar(output_poscar_file_path, poscar_dict, coord_system = 'Direct', 
         elif poscar_dict['slet_dyn_on'] == False:
             temp_str = temp_str + (coord_str +
                      '\n')
-    elif added_atom_data not in [None, 'None', 'none']:
+    elif not added_atom_data is None:
         if poscar_dict['slet_dyn_on'] == True:
             temp_str = temp_str + (coord_str +
                      fix_str +
@@ -109,7 +109,7 @@ def write_poscar(output_poscar_file_path, poscar_dict, coord_system = 'Direct', 
         f.write(temp_str)
     output_poscar_dict = {}
     output_poscar_dict['output_poscar_file_path'] = output_poscar_file_path
-    if added_atom_data not in [None, 'None', 'none']:
+    if not added_atom_data is None:
         output_poscar_dict['added_atom_data_shape'] = added_atom_data.shape
     # recover the poscar_dict['header']
     poscar_dict['header'] = poscar_dict_header_temp

@@ -1,3 +1,12 @@
+v0.2.3, 2021-04-20
+--------------------------------
+ 
+- Added some new features in the vasp_build module. The conventional_cell function can be used to get conventional cells (In the future, this function will be more robust in converting conventional cells)
+- Added some new feature features in the external_program module. It is allowed to retrieve the original data of the band structures.
+- Added some new outputs in the task summary(e.g. whether the NELM or NSW has been reached and add a parallel version of this function). 
+- Fixed some bugs in the vasp_build module, making it more robust in exfoliating 2D materials.
+- Fixed some bugs in the task_manager module and the vasp_plot module (e.g plot_bs function)
+
 v0.2.2, 2021-01-16
 --------------------------------
  

@@ -91,10 +91,15 @@ def queue_management(project_dir, max_num_running_jobs = 2,
                      elmt_potcar_dir = None,
                      apply_to_existed_task = True,
                      submit_script_path_dict = None,
-                     num_atoms_testing = 4
+                     num_atoms_testing = 4,
+                     use_primitive_cell = True, 
+                     kpath_scheme = 'vaspkit', 
+                     kpath_params = '''echo 3 ; echo 303 | vaspkit''',
+                     debug_mode = False,
                     ):
     '''
     queuing system management tool
+    debug_mode: under the debug mode, the jobs won't be submitted, but the programmer can see the job submission command.
     '''
     import os
     import time
@@ -112,9 +117,6 @@ def queue_management(project_dir, max_num_running_jobs = 2,
 
     if elmt_potcar_dir not in [None, 'None', 'none']:
         elmt_potcar_dir = os.path.abspath(elmt_potcar_dir)
-
-    # under the debug mode, the jobs won't be submitted, but the programmer can see the job submission command.
-    debug_mode = False
 
     project_dir = os.path.abspath(project_dir)
     project_name = os.path.split(project_dir)[-1]
@@ -165,6 +167,12 @@ def queue_management(project_dir, max_num_running_jobs = 2,
                     else:
                         num_running_jobs = get_num_running_jobs(queue_system, job_kwd)
                         if num_running_jobs < max_num_running_jobs:
+                            # Check whether the job has been interrupted (unfinihsed OUTCAR exist and the job is not submitted), if interrupted, then the job will not be submitted again and the user must check the job and submit the job manually.
+                            i_outcar_file_path = os.path.join(i_subjob_dir, 'OUTCAR')
+                            if os.path.exists(i_outcar_file_path) and os.path.isfile(i_outcar_file_path):
+                            #if task_manager.job_submission_status(job_dir = i_subjob_dir, job_kwd = job_kwd, queue_system = queue_system) == False:
+                                print('WARNING #2102051224 (from project_manager): The job ' + i_subjob_dir + ' is unfinished or interrupted or running, pleased check it manually.')
+                                continue
                             #check whether the job exists in the queuing list
                             submit_script_file_path = os.path.join(i_subjob_dir, submit_script_name)
                             job_id_file_path = os.path.join(i_subjob_dir, job_id_file_name)
@@ -195,8 +203,8 @@ def queue_management(project_dir, max_num_running_jobs = 2,
                                         continue
                                     else:
                                         i_job_poscar_file_path_opt = os.path.join(opt_dir, 'POSCAR') 
-                                        task_manager.gen_inputs(poscar_file_path_list = [i_job_poscar_file_path_opt], project_name = project_name, task_type = 'VASP', elmt_potcar_dir = elmt_potcar_dir, apply_to_existed_task = apply_to_existed_task,)
-                                        task_manager.gen_submit_script(i_task_dir, submit_script_path_dict = submit_script_path_dict, queue_system = queue_system)
+                                        task_manager.gen_inputs(poscar_file_path_list = [i_job_poscar_file_path_opt], project_name = project_name, task_type = 'VASP', elmt_potcar_dir = elmt_potcar_dir, apply_to_existed_task = apply_to_existed_task, use_primitive_cell = use_primitive_cell, kpath_scheme = kpath_scheme, kpath_params = kpath_params)
+                                        task_manager.gen_submit_script(i_task_dir, submit_script_path_dict = submit_script_path_dict, task_flow_list = task_flow_list, queue_system = queue_system)
                                         # check errors
                                         error_type = vasp_tools.check_error(i_subjob_dir)
                                         # handle errors
@@ -236,6 +244,12 @@ def queue_management(project_dir, max_num_running_jobs = 2,
                 else:
                     num_running_jobs = get_num_running_jobs(queue_system, job_kwd) 
                     if num_running_jobs < max_num_running_jobs:
+                        # Check whether the job has been interrupted (unfinihsed OUTCAR exist and the job is not submitted), if interrupted, then the job will not be submitted again and the user must check the job and submit the job manually.
+                        i_outcar_file_path = os.path.join(i_job_dir, 'OUTCAR')
+                        if os.path.exists(i_outcar_file_path) and os.path.isfile(i_outcar_file_path):
+                        ##if task_manager.job_submission_status(job_dir = i_job_dir, job_kwd = job_kwd, queue_system = queue_system) == True:
+                            print('WARNING #2102051227 (from project_manager): The job ' + i_job_dir + ' is unfinished or interrupted or running, pleased check it manually.')
+                            continue
                         # submit job
                         submit_script_file_path = os.path.join(i_job_dir, submit_script_name)
                         run_submit_script_file_path = os.path.join(i_job_dir, run_submit_script_name)
@@ -268,8 +282,8 @@ def queue_management(project_dir, max_num_running_jobs = 2,
                                     continue  
                                 else:
                                     i_job_poscar_file_path_opt = os.path.join(opt_dir, 'POSCAR')
-                                    task_manager.gen_inputs(poscar_file_path_list = [i_job_poscar_file_path_opt], project_name = project_name, task_type = 'VASP', elmt_potcar_dir = elmt_potcar_dir, apply_to_existed_task = apply_to_existed_task,)
-                                    task_manager.gen_submit_script(i_task_dir, submit_script_path_dict = submit_script_path_dict, queue_system = queue_system)
+                                    task_manager.gen_inputs(poscar_file_path_list = [i_job_poscar_file_path_opt], project_name = project_name, task_type = 'VASP', elmt_potcar_dir = elmt_potcar_dir, apply_to_existed_task = apply_to_existed_task, use_primitive_cell = use_primitive_cell, kpath_scheme = kpath_scheme, kpath_params = kpath_params)
+                                    task_manager.gen_submit_script(i_task_dir, submit_script_path_dict = submit_script_path_dict, task_flow_list = task_flow_list, queue_system = queue_system)
                                     # check errors
                                     error_type = vasp_tools.check_error(i_job_dir)
                                     # handle errors
@@ -353,6 +367,10 @@ def job_monitor(project_dir, max_num_running_jobs = 3,
                 job_check_frequency = None, max_monitor_time = None,
                 submit_script_path_dict = None,
                 num_atoms_testing = 4, 
+                use_primitive_cell = True, 
+                kpath_scheme = 'vaspkit', 
+                kpath_params = '''echo 3 ; echo 303 | vaspkit''',
+                debug_mode = False,
                ):
     '''
     execute code repeately
@@ -387,6 +405,10 @@ def job_monitor(project_dir, max_num_running_jobs = 3,
             apply_to_existed_task = apply_to_existed_task,
             submit_script_path_dict = submit_script_path_dict,
             num_atoms_testing = num_atoms_testing, 
+            use_primitive_cell = use_primitive_cell, 
+            kpath_scheme = kpath_scheme, 
+            kpath_params = kpath_params,
+            debug_mode = debug_mode,
             )
         ##print('last_submitted: ',last_submitted_job_dir_list)
         ##print('newly_submitted: ',submitted_job_dir_list) 

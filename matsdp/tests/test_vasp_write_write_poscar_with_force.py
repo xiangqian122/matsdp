@@ -57,4 +57,4 @@ def test_write_poscar_with_force():
         vmax_color = 'red',
         colorbar_alignment = 'vertical'
         )
-    assert retn_val1 == 0 and retn_val2 == 0 and retn_val3 == 0
+    assert retn_val1 == 0 and isinstance(retn_val2,dict) and isinstance(retn_val3,dict)

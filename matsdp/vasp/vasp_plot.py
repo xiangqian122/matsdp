@@ -828,7 +828,7 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
 
 def plot_poscar(poscar_file_path, euler_angle_type = 'zyx', phi = -3, theta = 5, psi = 0, elmt_color = None, draw_mirror_atom = True, box_on = True, axis_indicator = True,
                 plot_cell_basis_vector_label = False, plot_atom_label = None, label_size = 16, fig_format = 'png', fig_dpi = 100,
-                draw_colormap = False, colormap_column_indx = 1, colormap_vmin = None, colormap_vmax = None, vmin_color = 'blue', vmax_color = 'red', colorbar_alignment = 'vertical'):
+                draw_colormap = False, colormap_column_indx = 1, colormap_vmin = None, colormap_vmax = None, vmin_color = 'blue', vmax_color = 'red', colorbar_alignment = 'vertical', output_fig_file_path = None):
     '''
     - Descriptions
      * Plot POSCAR model. Euler angles are used to rotate the view of the model.
@@ -868,6 +868,9 @@ def plot_poscar(poscar_file_path, euler_angle_type = 'zyx', phi = -3, theta = 5,
     from .. import periodic_table
     from . import vasp_read
     from .. import default_params
+    import multiprocessing
+    from multiprocessing import Pool
+    import math
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
@@ -901,7 +904,9 @@ def plot_poscar(poscar_file_path, euler_angle_type = 'zyx', phi = -3, theta = 5,
     #Developer maintained codes.
     #Please don't modify the following codes unless you know what you are doing
     ###########################################################################
-    fig_file = None
+    plot_poscar_dict = {}
+    plot_poscar_dict['fig_file'] = None
+
     view_axis = 'x' #view_axis: Decide viewing from which direction: 'x' or 'y' or 'z'. Default is view from x axis
     poscar_file_path = os.path.abspath(poscar_file_path)
     poscar_dict = vasp_read.read_poscar(poscar_file_path)    
@@ -1604,16 +1609,18 @@ def plot_poscar(poscar_file_path, euler_angle_type = 'zyx', phi = -3, theta = 5,
         (tikz_parent_path , tikz_full_filename) = os.path.split(tikz_texfile)
         (tikz_filename , tikz_file_extension) = os.path.splitext(tikz_full_filename)
         if poscar_dict['added_atom_property'] == None:
-            fig_file = os.path.join(output_dir, 'fig_' + tikz_filename.strip('tikz_')  + '.' + fig_format)
+            plot_poscar_dict['fig_file'] = os.path.join(output_dir, 'fig_' + tikz_filename.strip('tikz_')  + '.' + fig_format)
         elif poscar_dict['added_atom_property'] != None and draw_colormap == False:
-            fig_file = os.path.join(output_dir, 'fig_' + tikz_filename.strip('tikz_')  + '.' + fig_format)
+            plot_poscar_dict['fig_file'] = os.path.join(output_dir, 'fig_' + tikz_filename.strip('tikz_')  + '.' + fig_format)
         elif poscar_dict['added_atom_property'] != None and draw_colormap == True:
             added_atom_property_columns_str = funcs.split_line(line = poscar_dict['added_atom_property_columns'], separator = ' ')[colormap_column_indx - 1]
-            fig_file = os.path.join(output_dir, 'fig_' + tikz_filename.strip('tikz_')  + '_' + poscar_dict['added_atom_property'] + '_' + added_atom_property_columns_str + '.' + fig_format)
-        plt.savefig(fig_file,dpi = fig_dpi)
+            plot_poscar_dict['fig_file'] = os.path.join(output_dir, 'fig_' + tikz_filename.strip('tikz_')  + '_' + poscar_dict['added_atom_property'] + '_' + added_atom_property_columns_str + '.' + fig_format)
+        if output_fig_file_path not in [None, 'None', 'none']:
+            plot_poscar_dict['fig_file'] = output_fig_file_path
+        plt.savefig(plot_poscar_dict['fig_file'],dpi = fig_dpi)
         plt.close()
 
-        fig_log_file = os.path.splitext(fig_file)[0] + '.log'
+        fig_log_file = os.path.splitext(plot_poscar_dict['fig_file'])[0] + '.log'
         log_str = ''
         log_str = log_str + (
             'elmt_color = ' + str(elmt_color) + '\n' +
@@ -1639,14 +1646,14 @@ def plot_poscar(poscar_file_path, euler_angle_type = 'zyx', phi = -3, theta = 5,
             '    vmin_color = ' + '\'' + str(vmin_color) + '\'' + ',\n' +
             '    vmax_color = ' + '\'' + str(vmax_color) + '\'' + ',\n' +
             '    colorbar_alignment = ' + '\'' + str(colorbar_alignment) + '\'' + ')\n' +
-            'fig_file = ' + 'r\'' + fig_file + '\'' + '\n')
+            'fig_file = ' + 'r\'' + plot_poscar_dict['fig_file'] + '\'' + '\n')
         log_str = log_str + ( 
             'fig_fileTikZ = ' + 'r\'' + str(tikz_texfile) + '\'' + '\n' +
             '##################################\n')
         #funcs.write_log(fig_log_file, log_str)
         funcs.write_log(logfile, log_str)
 ##            os.system('pdflatex ' + tikz_texfile)
-    return fig_file
+    return plot_poscar_dict
 
 def plot_poscar_for_workdir(workdir, euler_angle_type, phi, theta, psi, elmt_color = None, draw_mirror_atom = True, box_on = True, axis_indicator = True,
                             plot_cell_basis_vector_label = False, plot_atom_label = None, poscar_or_contcar = 'POSCAR', fig_format = 'png', fig_dpi = 100,
@@ -1813,7 +1820,7 @@ def plot_poscar_for_sysname(sysname_file, euler_angle_type = 'zyx', phi = -3, th
     return 0
 
 def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True, band_list = None,
-            interp_on = True, show_band_data_point = False,
+            interp_on = True, plot_band_data_point = False, plot_line = True,
             band_gap_label = False,
             band_palette_dict = None, band_lty_dict = None, #for single system
             system_color_list = None, system_lty_list = None, #multiple systems
@@ -1822,6 +1829,7 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
             xtick_direction = 'out', ytick_direction = 'out',
             line_width = 2.0, font_size = 23, fig_format = 'png', fig_size = [15,10], fig_dpi = 600,
             write_band_data = True,
+            output_fig_file_path = None,
            ):
     '''
     Functions: Plot band structure
@@ -1831,7 +1839,7 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     - fermi_shift_zero: whether the energies are shifted to zero or not.
     - band_list: Defines which bands are to be plotted. Band number starts from 1 (numbered from 1).
     - interp_on: whether to interpolate the band data pionts or not.
-    - show_band_data_point: this is only valid when interp_on = True. if show_band_data_point = True, the raw data of the data points will be shown.
+    - plot_band_data_point: this is only valid when interp_on = True. if plot_band_data_point = True, the raw data of the data points will be shown.
     - band_gap_label: Logic value. If band_gap_label = True, then the band gap, CBM, CVM will be labeled.
     - band_palette_dict: this is used to define the color of specific band. Dictionary key is the band index (numbered from 1).
     - band_lty_dict: this is used to define the linestyle of specific band. Dictionary key is the band index (numbered from 1).
@@ -1894,6 +1902,9 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     funcs.mkdir(output_dir)
 
     #initialization
+    plot_bs_dict = {}
+    plot_bs_dict['fig_file'] = None 
+
     default_palette_list = ['black','red','cyan','darkviolet','magenta','gray','darkorange','darkcyan','palegreen',
                    'goldenrod','lightpink','tan','mediumpurple','steelblue','tomato','mediumturquoise',
                    'mediumslateblue','brown','darkseagreen','wheat','seagreen','maroon','deeppink','chocolate',
@@ -1963,27 +1974,27 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     #plt.subplots_adjust(bottom =0.13, left = 0.16, top = 0.98, right = 0.98)
 
     if general_params_dict['xlim'] in [None, 'None', 'none']:
-        xlo = 9999999
-        xhi = -9999999
+        xlo = 999999
+        xhi = -999999
     else:
         if general_params_dict['xlim'][0] in [None, 'None', 'none']:
-            xlo = 9999999
+            xlo = 999999
         else:
             xlo = general_params_dict['xlim'][0]
         if general_params_dict['xlim'][1] in [None, 'None', 'none']:
-            xhi = -9999999
+            xhi = -999999
         else:
             xhi = general_params_dict['xlim'][1]
     if general_params_dict['ylim'] in [None, 'None', 'none']:
-        ylo = 9999999
-        yhi = -9999999
+        ylo = 999999
+        yhi = -999999
     else:
         if general_params_dict['ylim'][0] in [None, 'None', 'none']:
-            ylo = 9999999
+            ylo = 999999
         else:
             ylo = general_params_dict['ylim'][0]
         if general_params_dict['ylim'][1] in [None, 'None', 'none']:
-            yhi = -9999999
+            yhi = -999999
         else:
             yhi = general_params_dict['ylim'][1]
     #plot band structure for each system.
@@ -2264,6 +2275,7 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                     log_str = log_str + ("pd.DataFrame(proj_arr" + str(i_sys + 1) + ").to_csv(csv_file" + str(i_sys + 1) + ",header=['spin', 'mag', 'ions_list'      , 'orbit', 'color' , 'legend'],index=False,doublequote=False)" + '\n') 
 
 
+        # Define band_palette_dict and band_lty_dict
         band_palette_customize = False
         band_lty_customize = False
         if band_palette_dict not in [None,'None','none']:
@@ -2327,10 +2339,14 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                     band_color = system_color_list[i_sys] 
                     #band_lty = system_lty_list[i_sys] 
                     band_lty = system_lty_list[0] 
-                if show_band_data_point == False:
+                if plot_band_data_point == False:
                     band_marker = ''
-                elif show_band_data_point == True:
+                elif plot_band_data_point == True:
                     band_marker = '.'
+                if plot_line == False:
+                    band_lty = ''
+                elif plot_line == True:
+                    band_lty = system_lty_list[0]
                 if interp_on == True:
                     #interpolation of bands
                     for i_interval in range(0, kpath_num_intersections_interval):
@@ -2345,7 +2361,9 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                             plot_dot, = plt.plot(kpoints_slice_arr, eigs_slice_arr, color = band_color, linestyle = '', marker = band_marker, label = band_label)
                 elif interp_on == False:
                     if spd_and_site_projections_file_path_list in [None, 'None', 'none'] or spd_and_site_projections_file_path_list[i_sys] in [None, 'None', 'none']:
-                        plot_dot, = plt.plot(kpoints_arr, band_arr, color = band_color, linestyle = '', marker = '.', label = band_label)
+                        plot_dot, = plt.plot(kpoints_arr, band_arr, color = band_color, linestyle = band_lty, marker = band_marker, label = band_label)
+                    if spd_and_site_projections_file_path_list not in [None, 'None', 'none'] and spd_and_site_projections_file_path_list[i_sys] not in [None, 'None', 'none']:
+                        plot_dot, = plt.plot(kpoints_arr, band_arr, color = band_color, linestyle = band_lty, marker = '', label = band_label)
             elif ispin == 2:
                 #band plotting
                 band_arr_up = eigs_up[:, i_band]
@@ -2359,17 +2377,23 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                     band_color_dw = band_palette_dict[str(i_band_indx)][1]
                     band_lty_up = band_lty_dict[str(i_band_indx)][0]
                     band_lty_dw = band_lty_dict[str(i_band_indx)][1]
-                elif num_sys > 1: #for multiple system
+                elif num_sys > 1: #for multiple systems
                     band_color_up = system_color_list[i_sys] 
                     band_color_dw = system_color_list[i_sys]
                     band_lty_up = band_lty_dict[str(i_band_indx)][0]
                     band_lty_dw = band_lty_dict[str(i_band_indx)][1]
                 band_label_up = 'spin up'
                 band_label_dw = 'spin dw'
-                if show_band_data_point == False:
+                if plot_band_data_point == False:
                     band_marker = ''
-                elif show_band_data_point == True:
+                elif plot_band_data_point == True:
                     band_marker = '.'
+                if plot_line == False:
+                    band_lty_up = ''
+                    band_lty_dw = ''
+                elif plot_line == True:
+                    band_lty_up = band_lty_dict[str(i_band_indx)][0]
+                    band_lty_dw = band_lty_dict[str(i_band_indx)][1]
                 if interp_on == True:
                     #interpolation of bands
                     for i_interval in range(0, kpath_num_intersections_interval):
@@ -2390,8 +2414,11 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                         
                 elif interp_on == False:
                     if spd_and_site_projections_file_path_list in [None, 'None', 'none'] or spd_and_site_projections_file_path_list[i_sys] in [None, 'None', 'none']:
-                        plot_dot_up, = plt.plot(kpoints_arr, band_arr_up, color = band_color_up, linestyle = '', marker = '.')
-                        plot_dot_dw, = plt.plot(kpoints_arr, band_arr_dw, color = band_color_dw, linestyle = '', marker = '.', mfc='none')
+                        plot_dot_up, = plt.plot(kpoints_arr, band_arr_up, color = band_color_up, linestyle = band_lty_up, marker = band_marker)
+                        plot_dot_dw, = plt.plot(kpoints_arr, band_arr_dw, color = band_color_dw, linestyle = band_lty_dw, marker = band_marker, mfc='none')
+                    if spd_and_site_projections_file_path_list not in [None, 'None', 'none'] and spd_and_site_projections_file_path_list[i_sys] not in [None, 'None', 'none']:
+                        plot_dot_up, = plt.plot(kpoints_arr, band_arr_up, color = band_color_up, linestyle = band_lty_up, marker = '')
+                        plot_dot_dw, = plt.plot(kpoints_arr, band_arr_dw, color = band_color_dw, linestyle = band_lty_dw, marker = '', mfc='none')
             # plot the spd- and site projected wave function character of each band (fat band)
             if spd_and_site_projections_file_path_list not in [None, 'None', 'none'] and spd_and_site_projections_file_path_list[i_sys] not in [None, 'None', 'none']:
                 # first, the file in infile_path_list should be the PROCAR file, not EIGENVAL. Codes needs to be added to avoid loading the EIGNEVAL file here!!!!! Or an ERROR would occur.
@@ -2488,6 +2515,7 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                                     band_label_dw = legend
                             projections_up = procar_dict['projections_up']
                             projections_dw = procar_dict['projections_dw']
+
                             for i_kpoint in range(0, num_kpoints):
                                 markersize_up = 0
                                 markersize_dw = 0
@@ -2585,23 +2613,24 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
             if band_gap_dict['VBM_dw'] not in [None, 'None', 'none']:   
                 log_str = log_str + ('# VBM(dw) = ' + '{:.6f}'.format(band_gap_dict['VBM_dw']) + ' (eV)' + '\n')
 
+        # Band gap label
         cbm_vbm_text_label = False
         cbm_vbm_markersize = 20
         if band_gap_label == True:
-            if band_gap_dict['band_gap'] != 0:
+            if band_gap_dict['band_gap'] != 0 and band_gap_dict['band_gap'] < 999 and band_gap_dict['band_gap'] != None:
                 plt.plot(band_gap_dict['kpoint_CBM'], band_gap_dict['CBM'], marker = 'o', color = 'blue', markersize = cbm_vbm_markersize)
                 plt.plot(band_gap_dict['kpoint_VBM'], band_gap_dict['VBM'], marker = 'o', color = 'blue', markersize = cbm_vbm_markersize)
                 if cbm_vbm_text_label == True:
                     plt.text(band_gap_dict['kpoint_CBM'], band_gap_dict['CBM'], '{:.6f}'.format(band_gap_dict['CBM']) + ' eV', color = 'blue', fontsize = font_size * golden_ratio)
                     plt.text(band_gap_dict['kpoint_VBM'], band_gap_dict['VBM'], '{:.6f}'.format(band_gap_dict['VBM']) + ' eV', color = 'blue', fontsize = font_size * golden_ratio)
             if ispin == 2:
-                if band_gap_dict['band_gap_up'] != 0:
+                if band_gap_dict['band_gap_up'] != 0 and band_gap_dict['band_gap_up'] < 999 and band_gap_dict['band_gap_up'] != None:
                     plt.plot(band_gap_dict['kpoint_CBM_up'], band_gap_dict['CBM_up'], marker = '^', color = 'black', markersize = cbm_vbm_markersize)
                     plt.plot(band_gap_dict['kpoint_VBM_up'], band_gap_dict['VBM_up'], marker = '^', color = 'black', markersize = cbm_vbm_markersize)
                     if cbm_vbm_text_label == True:
                         plt.text(band_gap_dict['kpoint_CBM_up'], band_gap_dict['CBM_up'], '{:.6f}'.format(band_gap_dict['CBM_up']) + ' eV', color = 'black', fontsize = font_size * golden_ratio)
                         plt.text(band_gap_dict['kpoint_VBM_up'], band_gap_dict['VBM_up'], '{:.6f}'.format(band_gap_dict['VBM_up']) + ' eV', color = 'black', fontsize = font_size * golden_ratio)
-                if band_gap_dict['band_gap_dw'] != 0:
+                if band_gap_dict['band_gap_dw'] != 0 and band_gap_dict['band_gap_dw'] < 999 and band_gap_dict['band_gap_dw'] != None:
                     plt.plot(band_gap_dict['kpoint_CBM_dw'], band_gap_dict['CBM_dw'], marker = 'v', color = 'red', markersize = cbm_vbm_markersize)
                     plt.plot(band_gap_dict['kpoint_VBM_dw'], band_gap_dict['VBM_dw'], marker = 'v', color = 'red', markersize = cbm_vbm_markersize)
                     if cbm_vbm_text_label == True:
@@ -2679,6 +2708,8 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
             ncol = 5
         else:
             ncol = 6
+        if spd_and_site_projections_file_path_list not in [None, 'None', 'none']:
+            lgnd = plt.legend(handles = handle_list, labels = label_list, loc = 'best', frameon = True, fontsize = general_params_dict['font_size'] * legend_fontsize_scale, ncol = ncol)
         if num_sys != 1:
             lgnd = plt.legend(handles = handle_list, labels = label_list, loc = 'best', frameon = True, fontsize = general_params_dict['font_size'] * legend_fontsize_scale, ncol = ncol)
             # rescale the legend marker sizes to ensure all the marker sizes are the same.
@@ -2700,11 +2731,13 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     #plt.yaxis.set_minor_locator(AutoMinorLocator(5))
     formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time.time()))
 
-    fig_file = os.path.join(output_dir, 'fig_' + str(formatted_time) + '_band.' + general_params_dict['fig_format'])
-    plt.savefig(fig_file, dpi = general_params_dict['fig_dpi'])
+    plot_bs_dict['fig_file'] = os.path.join(output_dir, 'fig_' + str(formatted_time) + '_band.' + general_params_dict['fig_format'])
+    if output_fig_file_path not in [None, 'None', 'none']:
+        plot_bs_dict['fig_file'] = output_fig_file_path
+    plt.savefig(plot_bs_dict['fig_file'], dpi = general_params_dict['fig_dpi'])
     plt.close()
     #Write Figure information into logfile
-    fig_log_file = os.path.splitext(fig_file)[0] + '.log'
+    plot_bs_dict['fig_log_file'] = os.path.splitext(plot_bs_dict['fig_file'])[0] + '.log'
     infile_list = []
     projections_file_list = []
     for i_sys in range(0,len(infile_path_list)):
@@ -2738,7 +2771,7 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
         '    fermi_shift_zero = ' + str(fermi_shift_zero) + ',\n' +
         '    band_list = ' + str(band_list) + ',\n' + 
         '    interp_on = ' + str(interp_on) + ',\n' + 
-        '    show_band_data_point = ' + str(show_band_data_point) + ',\n' + 
+        '    plot_band_data_point = ' + str(plot_band_data_point) + ',\n' + 
         '    band_gap_label = ' + str(band_gap_label) + ',\n' + 
         '    band_palette_dict = band_palette_dict' + ',\n' + 
         '    band_lty_dict = band_lty_dict' + ',\n' + 
@@ -2757,6 +2790,6 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
         '    fig_dpi = ' + str(fig_dpi) + ',\n' +
         '    write_band_data = ' + str(write_band_data) + ')\n' +
         '################################################\n')
-    funcs.write_log(fig_log_file, log_str)
+    funcs.write_log(plot_bs_dict['fig_log_file'], log_str)
     funcs.write_log(logfile, log_str)
-    return fig_file
+    return plot_bs_dict

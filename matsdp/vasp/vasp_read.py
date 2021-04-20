@@ -151,7 +151,7 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
             added_atom_data_arr = np.array([None] * n_atoms * num_added_atom_data_column)
             added_atom_data_arr.shape = n_atoms, num_added_atom_data_column        
             #Atom coordinates
-            #pos_arr is the coordinates of all the atoms, first three columns are in Direct coordinate, last columns are in Cartesian coordinate
+            #pos_arr is the coordinates of all the atoms, first three columns are in Direct coordinate, last three columns are in Cartesian coordinate
             #coord_arr is the x, y, z coordinate in POSCAR, without the influence of lattice vector or scale factor
             coord_arr = np.array([0.0]*n_atoms*3,dtype = np.float)
             coord_arr.shape = n_atoms,3
@@ -243,19 +243,28 @@ def read_outcar(outcar_file_path):
     from .. import funcs
     from .. import convert
     from .. import default_params
+    import copy
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
 
     outcar_file_path = os.path.abspath(outcar_file_path)
+    work_dir, outcar_file = funcs.file_path_name(outcar_file_path)
+    # Initialize the outcar_params_dict
     outcar_params_dict = {}
-    outcar_params_dict['file_path'] = outcar_file_path
-    outcar_params_dict['file_status'] = None
-    outcar_params_dict['num_atoms'] = 0
+    outcar_params_dict['file_path'] = None
+    outcar_params_dict['work_dir'] = None
     outcar_params_dict['num_elmt_type'] = None
     outcar_params_dict['num_elmt_type_list'] = None
-    outcar_params_dict['num_ionic_step'] = 0
-    outcar_params_dict['LORIBT'] = None
+    outcar_params_dict['file_status'] = None
+    outcar_params_dict['read_status'] = None
+    outcar_params_dict['num_atoms'] = None
+    outcar_params_dict['num_elmt_type'] = None
+    outcar_params_dict['num_elmt_type_list'] = None
+    outcar_params_dict['num_ionic_step'] = None
+    outcar_params_dict['LORBIT'] = None
+    outcar_params_dict['ISPIN'] = None
     outcar_params_dict['e_fermi'] = None
+    outcar_params_dict['e_fermi_mod'] = None
     outcar_params_dict['XC(G=0)'] = None
     outcar_params_dict['alpha+bet'] = None
     outcar_params_dict['TOTEN'] = None
@@ -266,12 +275,18 @@ def read_outcar(outcar_file_path):
     outcar_params_dict['elapsed_time'] = None
     outcar_params_dict['NELM'] = None
     outcar_params_dict['NSW'] = None
+    outcar_params_dict['initial_value_dict'] = {}
 
+    outcar_params_dict['initial_value_dict'] = copy.deepcopy(outcar_params_dict)
+
+    outcar_params_dict['file_path'] = outcar_file_path
+    outcar_params_dict['work_dir'] = work_dir
     file_status = funcs.file_status(outcar_file_path)
     outcar_params_dict['file_status'] = file_status
 
     if file_status != 1:
         print('WARNING #20120312 (from read_outcar): The file ' + outcar_file_path + ' does not exist or is empty, please check this file.')
+        outcar_params_dict['read_status'] = 0
     else:
         with open(outcar_file_path,'r') as f:
             line = f.readlines()
@@ -286,66 +301,140 @@ def read_outcar(outcar_file_path):
                 if kwd in i_line:
                     temp_line_indx = indx + 6
                     outcar_params_dict['elapsed_time'] = float(funcs.split_line(line = line[temp_line_indx])[-1])
-
-            i_ionic_step = 0
-            for i in range(len(line)):
-                if 'ions per type' in line[i]:
-                    outcar_params_dict['num_elmt_type'] = len(funcs.split_line(line = line[i], separator='=')[-1].split())
-                    outcar_params_dict['num_elmt_type_list'] = funcs.split_line(line = funcs.split_line(line = line[i], separator='=')[-1], separator = ' ')[:]
-                    outcar_params_dict['num_atoms'] = np.sum([int(item) for item in outcar_params_dict['num_elmt_type_list']])
-                    outcar_params_dict['force'] = np.array([None] * outcar_params_dict['num_ionic_step'] * outcar_params_dict['num_atoms'] * 6)
-                    outcar_params_dict['force'].shape = outcar_params_dict['num_ionic_step'] , outcar_params_dict['num_atoms'] , 6
-                    
-                if 'LORBIT' in line[i]:
-                    outcar_params_dict['LORBIT'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
-                if 'NELM' in line[i]:
-                    outcar_params_dict['NELM'] = int(funcs.split_line(line = line[i],separator = ';')[0].split()[-1]) 
-                if 'NSW' in line[i]:
-                    outcar_params_dict['NSW'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
-                if 'ISPIN' in line[i]:
-                    outcar_params_dict['ISPIN'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
-                if 'E-fermi' in line[i] and len(funcs.split_line(line = line[i],separator = ':')) > 1:
-                    outcar_params_dict['e_fermi'] = float(funcs.split_line(line = line[i],separator = ':')[1].split()[0]) 
-                    outcar_params_dict['XC(G=0)'] = float(funcs.split_line(line = line[i],separator = ':')[2].split()[0]) 
-                    outcar_params_dict['alpha+bet'] = float(funcs.split_line(line = line[i],separator = ':')[-1].strip()) 
-                    outcar_params_dict['e_fermi_mod'] = outcar_params_dict['e_fermi'] + outcar_params_dict['alpha+bet']
-                if 'TOTEN' in line[i] and 'time' not in line[i] and len(funcs.split_line(line[i], '=')) > 1:
-                    outcar_params_dict['TOTEN'] = float(funcs.split_line(line[i], '=')[1].split()[0])
-                if 'energy' in line[i] and 'without' in line[i] and 'entropy' in line[i] and 'time' not in line[i] and len(funcs.split_line(line[i], '=')) == 3 and 'energy(sigma->0)' in line[i]:
-                    outcar_params_dict['energy_without_entropy'] = float(funcs.split_line(line[i], '=')[1].split()[0])
-                if 'energy' in line[i] and 'sigma' in line[i] and 'entropy' in line[i] and 'time' not in line[i]:
-                    #print(outcar_file_path, line[i])
-                    outcar_params_dict['energy(sigma->0)'] = float(funcs.split_line(line[i], '=')[-1].split()[0])
-                if 'NBANDS' in line[i] and 'NKPTS' in line[i] and 'NKDIM' in line[i]:
-                    outcar_params_dict['NBANDS'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
-                if 'TOTAL-FORCE' in line[i] and outcar_params_dict['num_elmt_type'] != None:
-                    for i_atom in range(0, outcar_params_dict['num_atoms']):
-                        i_atom_line = i + i_atom + 2
-                        if len(funcs.split_line(line[i_atom_line])) != 6:
-                            # in case of the following situation, this problem still exists until vasp5.3:
-                            #POSITION                                       TOTAL-FORCE (eV/Angst)
-                            #-----------------------------------------------------------------------------------
-                            #0.02082      0.00016     -0.02030    473254.270891  -6163.613158-493186.317939
-                            print('WARNING (from vasp_read): The OUTCAR file format is not correct for matsdp to read\n' + outcar_file_path + '\n' + 'line number: ' + str(i_atom_line + 1) + '\n' + line[i_atom_line] + '\n' + 'trying to solve this problem ...\n')
-                            funcs.write_log(logfile, '# WARNING (from vasp_read): Please check the format of the file: ' + outcar_file_path + '\n' + '#line number: ' + str(i_atom_line + 1) + '\n' + '#' + line[i_atom_line] + '\n' + '#trying to solve this problem ...\n')
-                            # this formatting problem is caused by too large force on an atom
-                            line[i_atom_line] = ' '.join(funcs.split_line(line[i_atom_line])[0:3]) + ' ' + line[i_atom_line].strip('\n').strip()[-42:-28] + ' ' + line[i_atom_line].strip('\n').strip()[-28:-14] + ' ' + line[i_atom_line].strip('\n').strip()[-14:] + '\n'
-                            all_are_digits = True
-                            for item in funcs.split_line(line[i_atom_line]):
-                                try:
-                                    float(item)
-                                except ValueError:
-                                    # not a float
-                                    all_are_digits = False
-                            if all_are_digits == True:
-                                print('the line ' + str(i_atom_line + 1) + ' is converted to: \n' + line[i_atom_line])
-                                funcs.write_log(logfile, '# the line ' + str(i_atom_line + 1) + ' is converted to: \n' + '#' + line[i_atom_line])
-                            else:
-                                print('WARNING #20120201 (from vasp_read). The problem has not been solved. Please check the OUTCAR file ' + outcar_file_path + '\n')
-                                funcs.write_log(logfile, '# WARNING #20120201 (from vasp_read): The problem has not been solved. Please check the OUTCAR file ' + outcar_file_path + '\n')
-                        else:
-                            outcar_params_dict['force'][i_ionic_step,i_atom,:] = [float(item) for item in funcs.split_line(line[i_atom_line])]
-                    i_ionic_step += 1
+           
+            def outcar_extract_info(line, outcar_params_dict):
+                from .. import funcs
+                
+                i_ionic_step = 0
+                for i in range(len(line)):
+                    if 'ions per type' in line[i]:
+                        try:
+                            outcar_params_dict['num_elmt_type'] = len(funcs.split_line(line = line[i], separator='=')[-1].split())
+                        except:
+                            pass
+                        try:
+                            outcar_params_dict['num_elmt_type_list'] = funcs.split_line(line = funcs.split_line(line = line[i], separator='=')[-1], separator = ' ')[:]
+                        except:
+                            pass
+                        try:
+                            outcar_params_dict['num_atoms'] = np.sum([int(item) for item in outcar_params_dict['num_elmt_type_list']])
+                        except:
+                            pass
+                        try:
+                            outcar_params_dict['force'] = np.array([None] * outcar_params_dict['num_ionic_step'] * outcar_params_dict['num_atoms'] * 6)
+                        except:
+                            pass
+                        try:
+                            outcar_params_dict['force'].shape = outcar_params_dict['num_ionic_step'] , outcar_params_dict['num_atoms'] , 6
+                        except:
+                            pass
+                    if 'LORBIT' in line[i]:
+                        try:
+                            outcar_params_dict['LORBIT'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
+                        except:
+                            pass
+                    if 'NELM' in line[i] and 'NELMIN' in line[i]:
+                        try:
+                            outcar_params_dict['NELM'] = int(funcs.split_line(line = line[i],separator = ';')[0].split('=')[-1]) 
+                        except:
+                            pass
+                    if 'NSW' in line[i]:
+                        try:
+                            outcar_params_dict['NSW'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
+                        except:
+                            pass
+                    if 'ISPIN' in line[i]:
+                        try:
+                            outcar_params_dict['ISPIN'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
+                        except:
+                            pass
+                    if 'E-fermi' in line[i] and len(funcs.split_line(line = line[i],separator = ':')) > 1:
+                        try:
+                            outcar_params_dict['e_fermi'] = float(funcs.split_line(line = line[i],separator = ':')[1].split()[0]) 
+                        except:
+                            pass
+                        try:
+                            outcar_params_dict['XC(G=0)'] = float(funcs.split_line(line = line[i],separator = ':')[2].split()[0]) 
+                        except:
+                            pass
+                        try:
+                            outcar_params_dict['alpha+bet'] = float(funcs.split_line(line = line[i],separator = ':')[-1].strip()) 
+                        except:
+                            pass
+                        try:
+                            outcar_params_dict['e_fermi_mod'] = outcar_params_dict['e_fermi'] + outcar_params_dict['alpha+bet']
+                        except:
+                            pass
+                    if 'TOTEN' in line[i] and 'time' not in line[i] and len(funcs.split_line(line[i], '=')) > 1:
+                        try:
+                            outcar_params_dict['TOTEN'] = float(funcs.split_line(line[i], '=')[1].split()[0])
+                        except:
+                            pass
+                    if 'energy' in line[i] and 'without' in line[i] and 'entropy' in line[i] and 'time' not in line[i] and len(funcs.split_line(line[i], '=')) == 3 and 'energy(sigma->0)' in line[i]:
+                        try:
+                            outcar_params_dict['energy_without_entropy'] = float(funcs.split_line(line[i], '=')[1].split()[0])
+                        except:
+                            pass
+                    if 'energy' in line[i] and 'sigma' in line[i] and 'entropy' in line[i] and 'time' not in line[i]:
+                        try:
+                        #print(outcar_file_path, line[i])
+                            outcar_params_dict['energy(sigma->0)'] = float(funcs.split_line(line[i], '=')[-1].split()[0])
+                        except:
+                            pass
+                    if 'NBANDS' in line[i] and 'NKPTS' in line[i] and 'NKDIM' in line[i]:
+                        try:
+                            outcar_params_dict['NBANDS'] = int(funcs.split_line(line = line[i],separator = '=')[-1].split()[0]) 
+                        except:
+                            pass
+                    if 'TOTAL-FORCE' in line[i] and outcar_params_dict['num_elmt_type'] != None:
+                        try:
+                            for i_atom in range(0, outcar_params_dict['num_atoms']):
+                                i_atom_line = i + i_atom + 2
+                                if len(funcs.split_line(line[i_atom_line])) != 6:
+                                    # in case of the following situation, this problem still exists until vasp5.3:
+                                    #POSITION                                       TOTAL-FORCE (eV/Angst)
+                                    #-----------------------------------------------------------------------------------
+                                    #0.02082      0.00016     -0.02030    473254.270891  -6163.613158-493186.317939
+                                    print('WARNING (from vasp_read): The OUTCAR file format is not correct for matsdp to read\n' + outcar_file_path + '\n' + 'line number: ' + str(i_atom_line + 1) + '\n' + line[i_atom_line] + '\n' + 'trying to solve this problem ...\n')
+                                    funcs.write_log(logfile, '# WARNING (from vasp_read): Please check the format of the file: ' + outcar_file_path + '\n' + '#line number: ' + str(i_atom_line + 1) + '\n' + '#' + line[i_atom_line] + '\n' + '#trying to solve this problem ...\n')
+                                    # this formatting problem is caused by too large force on an atom
+                                    line[i_atom_line] = ' '.join(funcs.split_line(line[i_atom_line])[0:3]) + ' ' + line[i_atom_line].strip('\n').strip()[-42:-28] + ' ' + line[i_atom_line].strip('\n').strip()[-28:-14] + ' ' + line[i_atom_line].strip('\n').strip()[-14:] + '\n'
+                                    all_are_digits = True
+                                    for item in funcs.split_line(line[i_atom_line]):
+                                        try:
+                                            float(item)
+                                        except ValueError:
+                                            # not a float
+                                            all_are_digits = False
+                                    if all_are_digits == True:
+                                        print('the line ' + str(i_atom_line + 1) + ' is converted to: \n' + line[i_atom_line])
+                                        funcs.write_log(logfile, '# the line ' + str(i_atom_line + 1) + ' is converted to: \n' + '#' + line[i_atom_line])
+                                    else:
+                                        print('WARNING #20120201 (from vasp_read). The problem has not been solved. Please check the OUTCAR file ' + outcar_file_path + '\n')
+                                        funcs.write_log(logfile, '# WARNING #20120201 (from vasp_read): The problem has not been solved. Please check the OUTCAR file ' + outcar_file_path + '\n')
+                                else:
+                                    outcar_params_dict['force'][i_ionic_step,i_atom,:] = [float(item) for item in funcs.split_line(line[i_atom_line])]
+                        except:
+                            pass
+                        i_ionic_step += 1
+                return outcar_params_dict
+            try:
+                outcar_params_dict = outcar_extract_info(line, outcar_params_dict)
+                outcar_params_dict['read_status'] = 1
+            except:
+                print('WARNING #2103301011 (from vasp_read.read_outcar). Error in reading OUTCAR file. Please check the OUTCAR file ' + outcar_file_path + '\n')
+                outcar_params_dict['read_status'] = 0
+    def check_outcar_params_dict(outcar_params_dict):    
+        read_status = 1
+        for i_key in outcar_params_dict.keys():
+            i_value = outcar_params_dict[i_key]
+            j_value = outcar_params_dict['initial_value_dict'][i_key]
+            ij_equal = funcs.variables_equal(i_value, j_value)
+            if ij_equal == True:
+                print('WARNING #2103301030 (from vasp_read.read_outcar). Error in reading outcar_params_dict[\'' + str(i_key) + '\']. Please check the OUTCAR file ' + outcar_file_path + '\n')
+                read_status = 0
+        return read_status
+    outcar_params_dict['read_status'] = check_outcar_params_dict(outcar_params_dict)
     return outcar_params_dict
 
 def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
@@ -540,75 +629,120 @@ def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
                 doscar_dict['LDOS_dw'] = doscar_dict['s_dw'] + doscar_dict['p_dw'] + doscar_dict['d_dw'] + doscar_dict['f_dw']
     return doscar_dict
 
-def read_oszicar(oszicar_file_path, dpi = 100):
+def read_oszicar(oszicar_file_path, save_fig = False, dpi = 100):
     '''Read OSZICAR'''
     import os
     import numpy as np
     from .. import funcs
+    import copy
+
     try:
         import matplotlib.pyplot as plt
     except:
         pass
 
     oszicar_file_path = os.path.abspath(oszicar_file_path)
+    work_dir, oszicar_file = funcs.file_path_name(oszicar_file_path)
+    #initializethe OSZICAR dictionary
     oszicar_dict = {}
-    file_status = funcs.file_status(oszicar_file_path)
-    oszicar_dict['file_status'] = file_status
+    oszicar_dict['file_status'] = None
+    oszicar_dict['file_path'] = None
+    oszicar_dict['num_ionic_steps'] = None
+    oszicar_dict['ionic_step_line_indx_list'] = []
+    oszicar_dict['num_electronic_steps_list'] = []
+    oszicar_dict['mag_list'] = []
+    oszicar_dict['etot_arr'] = np.array([])
+    oszicar_dict['initial_value_dict'] = {}
 
-    if file_status != 1:
+    oszicar_dict['initial_value_dict'] = copy.deepcopy(oszicar_dict)
+
+    oszicar_dict['file_status'] = funcs.file_status(oszicar_file_path)
+    oszicar_dict['file_path'] = oszicar_file_path
+
+    if oszicar_dict['file_status'] != 1:
         print('WARNING #20120307 (from read_oszicar): File ' + oszicar_file_path + ' does not exist or is empty. Please check this file.')
     else:
-        oszicar_dict['ionic_step_line_indx_list'] = []
-        oszicar_dict['num_electronic_steps_list'] = []
-        oszicar_dict['F_list'] = []
-        oszicar_dict['E0_list'] = []
-        oszicar_dict['d E_list'] = []
-        oszicar_dict['mag_list'] = []
         with open(oszicar_file_path,'r') as f:
             line = f.readlines()
 
-        # get the number of ionic steps
-        num_ionic_steps = 0
-        for i_line in range(len(line)):
-            if funcs.split_line(line[i_line])[1] == 'F=':
-                num_ionic_steps += 1
-                oszicar_dict['ionic_step_line_indx_list'].append(i_line)
-                oszicar_dict['mag_list'].append(float(funcs.split_line(line = line[i_line], separator = '=')[-1]))
-        oszicar_dict['num_ionic_steps'] = num_ionic_steps
-        # get data
-        etot_arr = np.array([None] * num_ionic_steps)
-        ionic_step = 0
-        for i_line in range(len(line)):
-            if funcs.split_line(line[i_line])[1] == 'F=':
-                #print('------------ionic = ',ionic_step) 
-                etot_arr[ionic_step] = float(funcs.split_line(line[i_line])[2])
-                # get information about electronic steps
-                last_electronic_step_found = True
-                if ionic_step == 0:
-                    temp_line = 0
-                else:
-                    temp_line = oszicar_dict['ionic_step_line_indx_list'][ionic_step - 1]
-                #print('INI, FIN=', i_line, temp_line)
-                for j_line in range(i_line, temp_line, -1):
-                    #print('ionic=', ionic_step, 'j_line=',j_line)
-                    if line[j_line][0:5] in ['CG : ', 'DIA: ', 'NONE ', 'RMM: ', 'DAV: ']:
-                        if last_electronic_step_found == True:
-                            oszicar_dict['num_electronic_steps_list'].append(int(line[j_line][5:8]))
-                            last_electronic_step_found = False
-                ionic_step = ionic_step + 1
+        def oszicar_extract_info(line, oszicar_dict):
+            from .. import funcs
+            # get the number of ionic steps
+            num_ionic_steps = 0
+            for i_line in range(len(line)):
+                if len(funcs.split_line(line[i_line])) > 1:
+                    if funcs.split_line(line[i_line])[1] == 'F=':
+                        num_ionic_steps += 1
+                        oszicar_dict['ionic_step_line_indx_list'].append(i_line)
+                        mag_str = funcs.split_line(line = line[i_line], separator = '=')[-1]
+                        mag_list = mag_str.replace('\t', '    ').strip('\n').strip().split(' ')
+                        oszicar_dict['mag_list'].append(funcs.split_line(line = line[i_line], separator = '=')[-1])
+            oszicar_dict['num_ionic_steps'] = num_ionic_steps
+            # get num_electronic_steps_list
+            ionic_step = 0
+            for i_line in range(len(line)):
+                if len(funcs.split_line(line[i_line])) > 1:
+                    if funcs.split_line(line[i_line])[1] == 'F=':
+                        # get information about electronic steps
+                        last_electronic_step_found = True
+                        if ionic_step == 0:
+                            temp_line = 0
+                        else:
+                            temp_line = oszicar_dict['ionic_step_line_indx_list'][ionic_step - 1]
+                        #print('INI, FIN=', i_line, temp_line)
+                        for j_line in range(i_line, temp_line, -1):
+                            #print('ionic=', ionic_step, 'j_line=',j_line)
+                            if line[j_line][0:5] in ['CG : ', 'DIA: ', 'NONE ', 'RMM: ', 'DAV: ']:
+                                if last_electronic_step_found == True:
+                                    oszicar_dict['num_electronic_steps_list'].append(int(line[j_line][5:8]))
+                                    last_electronic_step_found = False
+                        ionic_step = ionic_step + 1
+            #Get etot_arr
+            # solely read etot_arr will avoid interupting getting num_electronic)steps_list if etot_arr cannot be read.
+            oszicar_dict['etot_arr'] = np.array([None] * num_ionic_steps)
+            ionic_step = 0
+            for i_line in range(len(line)):
+                if len(funcs.split_line(line[i_line])) > 1:
+                    if funcs.split_line(line[i_line])[1] == 'F=':
+                        # get information about electronic steps
+                        last_electronic_step_found = True
+                        if ionic_step == 0:
+                            temp_line = 0
+                        else:
+                            temp_line = oszicar_dict['ionic_step_line_indx_list'][ionic_step - 1]
+                        for j_line in range(i_line, temp_line, -1):
+                            if len(funcs.split_line(line[i_line])) > 2:
+                                #print('------------ionic = ',ionic_step) 
+                                 oszicar_dict['etot_arr'][ionic_step] = float(funcs.split_line(line[i_line])[2])
+                        ionic_step = ionic_step + 1
 
-        oszicar_dict['etot_arr'] = etot_arr
+            return oszicar_dict
         try:
-            fig = plt.figure('n_etot')
-            ax = fig.add_subplot(111)
-            plt.plot(range(len(etot_arr)), etot_arr, marker = '.')
-            ax.set(xlabel = 'Ionic steps')
-            ax.set(ylabel = '$E_{tot}(eV)$')
-            etot_oszicar_figfile = 'etot_oszicar.pdf'
-            plt.savefig(etot_oszicar_figfile,dpi = dpi)
-            plt.close
+            oszicar_dict = oszicar_extract_info(line, oszicar_dict)
         except:
-            pass
+            print('WARNING #2103311236 (from vasp_read.read_oszicar). Error in reading OSZICAR file. Please check the OSZICAR file ' + oszicar_file_path + '\n')
+
+        if save_fig == True:
+            try:
+                fig, ax = plt.subplots()
+                plt.plot(range(len(etot_arr)), etot_arr, marker = '.')
+                ax.set(xlabel = 'Ionic steps')
+                ax.set(ylabel = '$E_{tot}(eV)$')
+                etot_oszicar_figfile = os.path.join(work_dir, 'etot_oszicar.pdf')
+                plt.savefig(etot_oszicar_figfile,dpi = dpi)
+                plt.close
+            except:
+                pass
+    def check_oszicar_dict(oszicar_dict):    
+        for i_key in oszicar_dict.keys():
+            i_value = oszicar_dict[i_key]
+            j_value = oszicar_dict['initial_value_dict'][i_key]
+            #if isinstance(j_value,(list,pd.core.series.Series,np.ndarray)):
+            ij_equal = funcs.variables_equal(i_value, j_value)
+            if ij_equal == True:
+                print('WARNING #2103302253 (from vasp_read.read_oszicar). Error in reading oszicar_dict[\'' + str(i_key) + '\']. Please check the OSZICAR file ' + oszicar_file_path + '\n')
+        return 0
+    check_oszicar_dict(oszicar_dict)
     return oszicar_dict
 
 def read_kpoints(kpoints_file_path):
@@ -671,9 +805,15 @@ def read_kpoints(kpoints_file_path):
                 ##    subdivisions_arr[2] = 0
                 ##else:
                 ##    subdivisions_arr[2] = int(float(subdivisions_arr_2))
-                subdivisions_arr[0] = int(float(subdivisions_arr_0))
-                subdivisions_arr[1] = int(float(subdivisions_arr_1))
-                subdivisions_arr[2] = int(float(subdivisions_arr_2))
+                try:
+                    subdivisions_arr[0] = int(float(subdivisions_arr_0))
+                    subdivisions_arr[1] = int(float(subdivisions_arr_1))
+                    subdivisions_arr[2] = int(float(subdivisions_arr_2))
+                except:
+                    #if the type of value is string, we denote it as a meaningless negative number
+                    subdivisions_arr[0] = -999999 
+                    subdivisions_arr[1] = -999999 
+                    subdivisions_arr[2] = -999999 
                 kpoints_dict['subdivisions_arr'] = subdivisions_arr
 
                 origin_shift_arr_0 = funcs.split_line(line[4])[0]
@@ -722,7 +862,7 @@ def read_kpoints(kpoints_file_path):
                     high_symm_kpt_label = ''.join(funcs.split_line(line[i_line])[3:]).strip('!').strip('\\')
                     ##print('original',high_symm_kpt_x, high_symm_kpt_y, high_symm_kpt_z, high_symm_kpt_label)
                     #############################################################
-                    # if the coordinate is reciprocal, change it to Cartesian
+                    # if the coordinate is reciprocal, change it to Cartesian (See VASP manual: VASP the Guide)
                     # \vec{k}=x_{1}\vec{b}_{1}+x_{2}\vec{b}_{2}+x_{3}\vec{b}_{3}
                     #############################################################
                     if kpoints_dict['coord_type'] in ['R', 'r']:
@@ -731,7 +871,7 @@ def read_kpoints(kpoints_file_path):
                         high_symm_kpt_z = temp_x * poscar_dict['reciprocal_arr'][0,2] + temp_y * poscar_dict['reciprocal_arr'][1,2] + temp_z * poscar_dict['reciprocal_arr'][2,2]
                         ##print('x,y,z',high_symm_kpt_x, high_symm_kpt_y, high_symm_kpt_z, high_symm_kpt_label)
                     # Change the labeling of the band to LaTeX format
-                    if high_symm_kpt_label in ['GAMMA']:
+                    if high_symm_kpt_label in ['GAMMA', 'gamma', 'Gamma']:
                         high_symm_kpt_label = 'Gamma'
                     for i_greek_capital_lett in defaults_dict['greek_capital_letter_list']:
                         if i_greek_capital_lett in high_symm_kpt_label:
@@ -746,7 +886,7 @@ def read_kpoints(kpoints_file_path):
                         kpath_nodes_coord_z_list.append(high_symm_kpt_z)
                         kpath_nodes_label_list.append(high_symm_kpt_label)
                     last_high_symm_kpt_label = high_symm_kpt_label
-                #print(kpath_nodes_label_list)
+                #print(kpath_nodes_label_list)   #for debugging purpose
                 #check the continuity of the kpath
                 kpath_node_counter_list = [0] * len(kpath_nodes_label_list)
                 kpath_continuous_list = [False] * len(kpath_nodes_label_list)
@@ -764,6 +904,22 @@ def read_kpoints(kpoints_file_path):
                 for i_kpt in range(0, len(kpath_nodes_label_list)):
                     if kpath_node_counter_list[i_kpt] != 1:
                         kpath_continuous_list[i_kpt] = True
+                # based on the kpath_continuous_list, we determine the left_right_list
+                kpath_left_right_list = ['L'] * len(kpath_nodes_label_list)
+                kpath_left_right_list[0] = 'R'
+                for i_kpt in range(0, len(kpath_nodes_label_list)):
+                    if kpath_continuous_list[i_kpt] == True:
+                        kpath_left_right_list[i_kpt] = 'LR'
+                    if kpath_continuous_list[i_kpt] == False and i_kpt != 0:
+                        #find the nearest point in the kpath_continuous_list which is True
+                        for temp_i_kpt in reversed(range(0,i_kpt)): 
+                            if kpath_continuous_list[temp_i_kpt] == True and (i_kpt - temp_i_kpt) % 2 != 0:
+                                kpath_left_right_list[i_kpt] = 'R'
+                                continue
+                            elif kpath_continuous_list[temp_i_kpt] == True and (i_kpt - temp_i_kpt) % 2 == 0:
+                                kpath_left_right_list[i_kpt] = 'L'
+                                continue
+                kpath_left_right_list[-1] = 'L'
                 #build xaxis tick list for high symmetry k points
                 kpath_nodes_xaxis_tick_list = []
                 last_high_symm_kpt_x = kpath_nodes_coord_x_list[0]
@@ -777,7 +933,8 @@ def read_kpoints(kpoints_file_path):
                     new_xaxis_tick = last_xaxis_tick + kpts_dist 
                     ##if (i_kpt % 2) == 0 and kpath_continuous_list[i_kpt] == False and kpath_continuous_list[i_kpt - 1] == False:
                     ##if (i_kpt % 2) == 0 and kpath_continuous_list[i_kpt] == False and kpath_continuous_list[i_kpt - 1] == False and i_kpt != len(kpath_nodes_label_list) - 1:
-                    if kpath_continuous_list[i_kpt] == False and kpath_continuous_list[i_kpt - 1] == False and i_kpt != len(kpath_nodes_label_list) - 1:
+                    ##if kpath_continuous_list[i_kpt] == False and kpath_continuous_list[i_kpt - 1] == False and i_kpt != len(kpath_nodes_label_list) - 1:
+                    if kpath_continuous_list[i_kpt] == False and kpath_left_right_list[i_kpt] == 'R':
                         #print('i_kpt=',i_kpt, 'last=', last_xaxis_tick, 'new=',new_xaxis_tick)
                         new_xaxis_tick = last_xaxis_tick
                     kpath_nodes_xaxis_tick_list.append(new_xaxis_tick)
@@ -790,8 +947,9 @@ def read_kpoints(kpoints_file_path):
                 num_kpath_nodes = len(kpath_nodes_label_list)
                 kpoints_dict['num_kpath_nodes'] = num_kpath_nodes
                 kpoints_dict['kpath_nodes_list'] = kpath_nodes_label_list
-                kpath_nodes_arr = np.array([None] * num_kpath_nodes * 7)
-                kpath_nodes_arr.shape = num_kpath_nodes, 7
+                kpoints_dict['kpath_left_right_list'] = kpath_left_right_list
+                kpath_nodes_arr = np.array([None] * num_kpath_nodes * 8)
+                kpath_nodes_arr.shape = num_kpath_nodes, 8
                 #bs_xaxis_indx = 0
                 bs_xaxis_label = None
                 bs_xaxis_label_arr = [None] * num_kpath_nodes
@@ -803,6 +961,7 @@ def read_kpoints(kpoints_file_path):
                     kpath_nodes_arr[i_kpt, 4] = kpath_nodes_label_list[i_kpt]
                     kpath_nodes_arr[i_kpt, 5] = format(kpath_nodes_xaxis_tick_list[i_kpt], '.9f')
                     kpath_nodes_arr[i_kpt, 6] = kpath_continuous_list[i_kpt]
+                    kpath_nodes_arr[i_kpt, 7] = kpath_left_right_list[i_kpt]
                 kpoints_dict['kpath_nodes_arr'] = kpath_nodes_arr
                 # determine the k points in the xaxis for the band structure plot
                 intersections_end_kpt_list = [False] * len(kpath_continuous_list)
@@ -810,7 +969,8 @@ def read_kpoints(kpoints_file_path):
                 num_intersections_interval = 0
                 for i_kpt in range(1, len(kpath_continuous_list)):
                     if i_kpt != len(kpath_continuous_list) - 1:
-                        if not (kpath_continuous_list[i_kpt - 1] == False and kpath_continuous_list[i_kpt] == False):
+                        #if not (kpath_continuous_list[i_kpt - 1] == False and kpath_continuous_list[i_kpt] == False):
+                        if kpath_left_right_list[i_kpt] == 'LR' or kpath_left_right_list[i_kpt] == 'L':
                             num_intersections_interval = num_intersections_interval + 1
                             intersections_end_kpt_list[i_kpt] = True
                     elif i_kpt == len(kpath_continuous_list) - 1:
@@ -844,10 +1004,10 @@ def read_kpoints(kpoints_file_path):
                         if intersections_end_kpt_list[i_kpt] == True and intersections_end_kpt_list[i_kpt - 1] != False and i_kpt != 1:
                             bs_xaxis_label_list.append(kpath_nodes_label_list[i_kpt - 1])
                             bs_xaxis_tick_list.append(kpath_nodes_xaxis_tick_list[i_kpt - 1])
-                        elif intersections_end_kpt_list[i_kpt] == True and intersections_end_kpt_list[i_kpt - 1] == False and i_kpt != 1:
-                            bs_xaxis_label_list.append('')
-                            bs_xaxis_tick_list.append(kpath_nodes_xaxis_tick_list[i_kpt - 1])
-                        elif intersections_end_kpt_list[i_kpt] == False:
+                        ##elif intersections_end_kpt_list[i_kpt] == True and intersections_end_kpt_list[i_kpt - 1] == False and i_kpt != 1:
+                        ##    bs_xaxis_label_list.append('')
+                        ##    bs_xaxis_tick_list.append(kpath_nodes_xaxis_tick_list[i_kpt - 1])
+                        elif intersections_end_kpt_list[i_kpt] == False and kpath_left_right_list[i_kpt] == 'R':
                             bs_xaxis_label_list.append(kpath_nodes_label_list[i_kpt - 1] + '|' + kpath_nodes_label_list[i_kpt])
                             bs_xaxis_tick_list.append(kpath_nodes_xaxis_tick_list[i_kpt - 1])
                     elif i_kpt == len(intersections_end_kpt_list) - 1:
@@ -880,103 +1040,114 @@ def read_eigenval(eigenval_file_path):
 
     file_status = funcs.file_status(eigenval_file_path)
     eigenval_dict['file_status'] = file_status
+    # read_status: 1: sucessfully read; 0: fail to read
+    eigenval_dict['read_status'] = None
+    eigenval_dict['num_lines'] = None
+    eigenval_dict['num_ions'] = None
+    eigenval_dict['loops_after_write_apcf_dos'] = None
+    eigenval_dict['ispin'] = None
+    eigenval_dict['cell_volume'] = None
+    eigenval_dict['box_size_list'] = None
+    eigenval_dict['num_valence_electrons'] = None
+    eigenval_dict['num_kpoints'] = None
+    eigenval_dict['num_bands'] = None
+    eigenval_dict['kpt_coord_arr'] = None
+    eigenval_dict['weights'] = None
+    eigenval_dict['eigs'] = None
+    eigenval_dict['eigs_up'] = None
+    eigenval_dict['eigs_dw'] = None
+    eigenval_dict['occupancy'] = None
+    eigenval_dict['occupancy_up'] = None
+    eigenval_dict['occupancy_dw'] = None
 
     if file_status != 1:
-        print('WARNING #20120310 (from read_eigenval): The file ' + eigenval_file_path + ' does not exist or is empty. Please check the EIGENVAL file.')
+        print('WARNING #20120310 (from read_eigenval): The file ' + eigenval_dict['file_path'] + ' does not exist or is empty. Please check the EIGENVAL file.')
+        eigenval_dict['read_status'] = 0
     else:
-        file_type = vasp_tools.check_file_type(eigenval_file_path)
+        file_type = vasp_tools.check_file_type(eigenval_dict['file_path'])
         if file_type != 'EIGENVAL':
-            print('WARNING #20120301 (from read_eigenval): Incorrect EIGENVAL format. Please check the file' + eigenval_file_path)
+            print('WARNING #20120301 (from read_eigenval): Incorrect EIGENVAL format. Please check the file' + eigenval_dict['file_path'])
+            eigenval_dict['read_status'] = 0
         elif file_type == 'EIGENVAL':
             num_header = 7
 
             with open(eigenval_file_path,'r') as f:
                 line = f.readlines()
-                num_lines = len(line)
-                num_ions = int(funcs.split_line(line[0])[0])
-                loops_after_write_apcf_dos = int(funcs.split_line(line[0])[2]) # number of loops after writing the averaged pair correlation functions and DOS.
+                eigenval_dict['num_lines'] = len(line)
+                eigenval_dict['num_ions'] = int(funcs.split_line(line[0])[0])
+                eigenval_dict['loops_after_write_apcf_dos'] = int(funcs.split_line(line[0])[2]) # number of loops after writing the averaged pair correlation functions and DOS.
                 #print(eigenval_file_path)
                 ##print(line[0])
-                ispin = int(funcs.split_line(line[0])[3])
-                cell_volume = float(funcs.split_line(line[1])[0])
-                box_size_list = [float(funcs.split_line(line[1])[1]), float(funcs.split_line(line[1])[2]), float(funcs.split_line(line[1])[3])]
-                num_valence_electrons = int(funcs.split_line(line[5])[0])
-                num_kpoints = int(funcs.split_line(line[5])[1])
-                num_bands = int(funcs.split_line(line[5])[2])
+                eigenval_dict['ispin'] = int(funcs.split_line(line[0])[3])
+                eigenval_dict['cell_volume'] = float(funcs.split_line(line[1])[0])
+                eigenval_dict['box_size_list'] = [float(funcs.split_line(line[1])[1]), float(funcs.split_line(line[1])[2]), float(funcs.split_line(line[1])[3])]
+                eigenval_dict['nnum_valence_electrons'] = int(funcs.split_line(line[5])[0])
+                eigenval_dict['num_kpoints'] = int(funcs.split_line(line[5])[1])
+                eigenval_dict['num_bands'] = int(funcs.split_line(line[5])[2])
                     
                 #to avoid the following error: mask = np.isnan(self.x) TypeError: ufunc 'isnan' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''.    Use dtype = np.float64 instead of dtype = object.
-                if ispin == 1:
-                    eigs = np.array([None] * num_kpoints * num_bands, dtype=np.float64)
-                    eigs.shape = num_kpoints, num_bands
-                    occupancy = np.array([None] * num_kpoints * num_bands, dtype=np.float64)
-                    occupancy.shape = num_kpoints, num_bands
-                elif ispin == 2:
-                    eigs_up = np.array([None] * num_kpoints * num_bands, dtype=np.float64)
-                    eigs_up.shape = num_kpoints, num_bands
-                    eigs_dw = np.array([None] * num_kpoints * num_bands, dtype=np.float64)
-                    eigs_dw.shape = num_kpoints, num_bands
-                    occupancy_up = np.array([None] * num_kpoints * num_bands, dtype=np.float64)
-                    occupancy_up.shape = num_kpoints, num_bands
-                    occupancy_dw = np.array([None] * num_kpoints * num_bands, dtype=np.float64)
-                    occupancy_dw.shape = num_kpoints, num_bands
+                if eigenval_dict['ispin'] == 1:
+                    eigenval_dict['eigs'] = np.array([None] * eigenval_dict['num_kpoints'] * eigenval_dict['num_bands'], dtype=np.float64)
+                    eigenval_dict['eigs'].shape = eigenval_dict['num_kpoints'], eigenval_dict['num_bands']
+                    eigenval_dict['occupancy'] = np.array([None] * eigenval_dict['num_kpoints'] * eigenval_dict['num_bands'], dtype=np.float64)
+                    eigenval_dict['occupancy'].shape = eigenval_dict['num_kpoints'], eigenval_dict['num_bands']
+                elif eigenval_dict['ispin'] == 2:
+                    eigenval_dict['eigs_up'] = np.array([None] * eigenval_dict['num_kpoints'] * eigenval_dict['num_bands'], dtype=np.float64)
+                    eigenval_dict['eigs_up'].shape = eigenval_dict['num_kpoints'], eigenval_dict['num_bands']
+                    eigenval_dict['eigs_dw'] = np.array([None] * eigenval_dict['num_kpoints'] * eigenval_dict['num_bands'], dtype=np.float64)
+                    eigenval_dict['eigs_dw'].shape = eigenval_dict['num_kpoints'], eigenval_dict['num_bands']
+                    eigenval_dict['occupancy_up'] = np.array([None] * eigenval_dict['num_kpoints'] * eigenval_dict['num_bands'], dtype=np.float64)
+                    eigenval_dict['occupancy_up'].shape = eigenval_dict['num_kpoints'], eigenval_dict['num_bands']
+                    eigenval_dict['occupancy_dw'] = np.array([None] * eigenval_dict['num_kpoints'] * eigenval_dict['num_bands'], dtype=np.float64)
+                    eigenval_dict['occupancy_dw'].shape = eigenval_dict['num_kpoints'], eigenval_dict['num_bands']
 
-                kpt_coord_arr = np.array([None] * num_kpoints * 3)     
-                kpt_coord_arr.shape = num_kpoints, 3
-                weights = np.array([None] * num_kpoints)
+                eigenval_dict['kpt_coord_arr'] = np.array([None] * eigenval_dict['num_kpoints'] * 3)     
+                eigenval_dict['kpt_coord_arr'].shape = eigenval_dict['num_kpoints'], 3
+                eigenval_dict['weights'] = np.array([None] * eigenval_dict['num_kpoints'])
 
                 i_line = num_header
-                if ispin == 1:
-                    for i_kpoint in range(0, num_kpoints):
-                        kpt_coord_arr[i_kpoint, 0] = float(funcs.split_line(line[i_line])[0])
-                        kpt_coord_arr[i_kpoint, 1] = float(funcs.split_line(line[i_line])[1])
-                        kpt_coord_arr[i_kpoint, 2] = float(funcs.split_line(line[i_line])[2])
-                        weights[i_kpoint] = float(funcs.split_line(line[i_line])[3])
-                        for i_band in range(0, num_bands):
+                if eigenval_dict['ispin'] == 1:
+                    for i_kpoint in range(0, eigenval_dict['num_kpoints']):
+                        eigenval_dict['kpt_coord_arr'][i_kpoint, 0] = float(funcs.split_line(line[i_line])[0])
+                        eigenval_dict['kpt_coord_arr'][i_kpoint, 1] = float(funcs.split_line(line[i_line])[1])
+                        eigenval_dict['kpt_coord_arr'][i_kpoint, 2] = float(funcs.split_line(line[i_line])[2])
+                        eigenval_dict['weights'][i_kpoint] = float(funcs.split_line(line[i_line])[3])
+                        for i_band in range(0, eigenval_dict['num_bands']):
                             i_line = i_line + 1
-                            eigs[i_kpoint,i_band] = float(funcs.split_line(line[i_line])[1])
+                            try:
+                                eigenval_dict['eigs'][i_kpoint,i_band] = float(funcs.split_line(line[i_line])[1])
+                            except:
+                                # This happens when the parameter cannot be converted to string, for example: sting: '***************'
+                                eigenval_dict['eigs'][i_kpoint,i_band] = 999999
                             # Currently, the occupancy will not be read, because the format is unclear for now
                             ##occupancy[i_kpoint, i_band] = float(funcs.split_line(line[i_line])[2])
-                            if i_band == (num_bands - 1):
+                            if i_band == (eigenval_dict['num_bands'] - 1):
                                 i_line = i_line + 2
-                elif ispin == 2:
-                    for i_kpoint in range(0, num_kpoints):
-                        kpt_coord_arr[i_kpoint, 0] = float(funcs.split_line(line[i_line])[0])
-                        kpt_coord_arr[i_kpoint, 1] = float(funcs.split_line(line[i_line])[1])
-                        kpt_coord_arr[i_kpoint, 2] = float(funcs.split_line(line[i_line])[2])
-                        weights[i_kpoint] = float(funcs.split_line(line[i_line])[3])
-                        for i_band in range(0, num_bands):
+                elif eigenval_dict['ispin'] == 2:
+                    for i_kpoint in range(0, eigenval_dict['num_kpoints']):
+                        eigenval_dict['kpt_coord_arr'][i_kpoint, 0] = float(funcs.split_line(line[i_line])[0])
+                        eigenval_dict['kpt_coord_arr'][i_kpoint, 1] = float(funcs.split_line(line[i_line])[1])
+                        eigenval_dict['kpt_coord_arr'][i_kpoint, 2] = float(funcs.split_line(line[i_line])[2])
+                        eigenval_dict['weights'][i_kpoint] = float(funcs.split_line(line[i_line])[3])
+                        for i_band in range(0, eigenval_dict['num_bands']):
                             i_line = i_line + 1
-                            eigs_up[i_kpoint,i_band] = float(funcs.split_line(line[i_line])[1])
-                            eigs_dw[i_kpoint,i_band] = float(funcs.split_line(line[i_line])[2])
+                            try:
+                                eigenval_dict['eigs_up'][i_kpoint,i_band] = float(funcs.split_line(line[i_line])[1])
+                                eigenval_dict['eigs_dw'][i_kpoint,i_band] = float(funcs.split_line(line[i_line])[2])
+                            except:
+                                # This happens when the parameter cannot be converted to string, for example: sting: '***************'
+                                eigenval_dict['eigs_up'][i_kpoint,i_band] = 999999
+                                eigenval_dict['eigs_dw'][i_kpoint,i_band] = 999999
                             # Currently, the occupancy will not be read, because the format is unclear for now
                             #occupancy_up[i_kpoint, i_band] = float(funcs.split_line(line[i_line])[3])
                             #occupancy_dw[i_kpoint, i_band] = float(funcs.split_line(line[i_line])[4])
-                            if i_band == (num_bands - 1):
+                            if i_band == (eigenval_dict['num_bands'] - 1):
                                 i_line = i_line + 2
-
-            eigenval_dict['num_lines'] = num_lines
-            eigenval_dict['num_ions'] = num_ions
-            eigenval_dict['loops_after_write_apcf_dos'] = loops_after_write_apcf_dos
-            eigenval_dict['ispin'] = ispin
-            eigenval_dict['cell_volume'] = cell_volume
-            eigenval_dict['box_size_list'] = box_size_list
-            eigenval_dict['num_valence_electrons'] = num_valence_electrons
-            eigenval_dict['num_kpoints'] = num_kpoints
-            eigenval_dict['num_bands'] = num_bands
-            eigenval_dict['kpt_coord_arr'] = kpt_coord_arr
-            eigenval_dict['weights'] = weights 
+            eigenval_dict['read_status'] = 1
+                
             band_data_txt = ''
             band_data_txt_up = ''
             band_data_txt_dw = ''
-            #band_eigs_XXX.txt is the file containing information of the band structure
-            if ispin == 1:
-                eigenval_dict['eigs'] = eigs
-                ##eigenval_dict['occupancy'] = occupancy
-            elif ispin == 2:
-                eigenval_dict['eigs_up'] = eigs_up
-                eigenval_dict['eigs_dw'] = eigs_dw
-                #eigenval_dict['occupancy_up'] = occupancy_up
-                #eigenval_dict['occupancy_dw'] = occupancy_dw
     return eigenval_dict
 
 def read_procar(procar_file_path):
@@ -1192,6 +1363,54 @@ def read_incar(incar_file_path):
                         pass
                     incar_dict[incar_key] = incar_val
     return incar_dict
+
+def read_potcar(potcar_file_path):
+    '''
+    Description:
+        Read information from POTCAR file
+    Args:
+        @.potcar_file_path: String format. The file path of POTCAR. It can either be full path or relative path
+    Return:
+        potcar_dict: dictionary type.
+    '''
+    import os
+    import numpy as np
+    import sys
+    import time
+    from .. import funcs
+    from .. import default_params
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
+
+    potcar_file_path = os.path.abspath(potcar_file_path)
+    potcar_dict = {}
+
+    file_status = funcs.file_status(potcar_file_path)
+    potcar_dict['file_status'] = file_status
+
+    potcar_dict['num_elmts'] = 0
+    potcar_dict['elmt_list'] = []
+    potcar_dict['zvalf_list'] = []
+    if file_status != 1:
+        print('WARNING #2103101917 (from read_potcar): The file ' + potcar_file_path + ' does not exist or is empty, please check this file.')
+    else:
+        with open(potcar_file_path) as f:
+            line = f.readlines()
+            eod_indx_list = funcs.find_kwd_line_indx(kwd = 'End of Dataset', file_path = potcar_file_path)
+            num_elmts = len(eod_indx_list)
+            elmt = funcs.split_line(line = line[0], separator = ' ')[1]
+            zvalf = funcs.split_line(line = line[1], separator = ' ')[0]
+            potcar_dict['elmt_list'].append(elmt)
+            potcar_dict['zvalf_list'].append(zvalf)
+            potcar_dict['num_elmts'] = num_elmts
+            for i_elmt_indx in range(1, num_elmts):
+                elmt = funcs.split_line(line = line[i_elmt_indx + 1], separator = ' ')[1]
+                zvalf = funcs.split_line(line = line[i_elmt_indx + 2], separator = ' ')[0]
+                potcar_dict['elmt_list'].append(elmt)
+                potcar_dict['zvalf_list'].append(zvalf)
+    return potcar_dict
 
 ##def read_vasprun(vasprun_file_path, screen_list = None):
 ##    '''

@@ -13,7 +13,7 @@ extra_files = package_files('./matsdp/tests')
 
 
 setup(name =  'matsdp',
-      version = '0.2.2',
+      version = '0.2.3',
       description = 'The materials simulation and data processing toolkit',
       long_description = open('README.rst.txt').read(),
       author = 'Dianwu Wang',

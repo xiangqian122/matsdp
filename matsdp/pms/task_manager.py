@@ -19,6 +19,8 @@ def write_task_summary(task_dir, task_type = 'VASP', band_gap_label = True, plot
     from ..vasp import vasp_read
     from ..vasp import vasp_tools
     from ..vasp import vasp_analyze
+    import time
+    import random
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
@@ -39,9 +41,11 @@ def write_task_summary(task_dir, task_type = 'VASP', band_gap_label = True, plot
     #project_dir_name = os.path.split(os.path.abspath(os.path.join(task_dir, '../')))[-1]
     #project_summary_dir = os.path.join(projects_summary_dir, 'summary_' + project_dir_name)
     task_summary_dir = os.path.join(task_summary_dir, 'summary_' + task_dir_name)
+    task_summary_fig_dir = os.path.join(task_summary_dir, 'figs')
     #task_summary_dir = os.path.join(project_summary_dir, task_dir_name)
     #funcs.mkdir(project_summary_dir)
     funcs.mkdir(task_summary_dir)
+    funcs.mkdir(task_summary_fig_dir)
 
     font_size = 24
 
@@ -84,7 +88,7 @@ r'\rfoot{}                                                      ' + '\n' +
 r'\fancyhead[CE,CO]{\zihao{-5}\nouppercase{\leftmark}}          ' + '\n' +         
 r'\fancyfoot[CE,CO]{\zihao{-5}\thepage}                         ' + '\n')      
 
-    task_summary_ctex_str = task_summary_ctex_str + r'\graphicspath{{' + r'./' + defaults_dict['output_dir_name'] + r'/}{' +  r'../../' + r'}{./}}' + '\n'
+    task_summary_ctex_str = task_summary_ctex_str + r'\graphicspath{{' + r'./' + defaults_dict['output_dir_name'] + r'/}{' +  r'../../' + r'}{./}{./' + os.path.split(task_summary_fig_dir)[-1] + r'/}}' + '\n'
 
     task_summary_ctex_str = task_summary_ctex_str + r'\renewcommand{\figurename}{Figure}' + '\n'
     task_summary_ctex_str = task_summary_ctex_str + r'\renewcommand{\tablename}{Table}' + '\n'
@@ -199,6 +203,7 @@ r'\setcounter{page}{1}    ' + '\n')
 ##        path_recorder_list.append(os.path.basename(root))
 ##        i_dir_path = os.path.join(path1, '/'.join(path_recorder_list))
 
+    fig_format = 'pdf'
     for root, dirs, files in os.walk(task_dir):
         dirs.sort()
         temp_indx = temp_indx + 1
@@ -263,7 +268,7 @@ r'\setcounter{page}{1}    ' + '\n')
             energy_without_entropy = '{:.4f}'.format(outcar_params_dict['energy_without_entropy'])
             toten = '{:.4f}'.format(outcar_params_dict['TOTEN'])
             energy_sigma_0 = '{:.4f}'.format(outcar_params_dict['energy(sigma->0)'])
-            elapsed_time_hour = '{:.4f}'.format(convert.time_converter(hour = 0, min = 0, sec = outcar_params_dict['elapsed_time'], unit = 'hour'))
+            elapsed_time_hour = '{:.4f}'.format(convert.time_converter(hour = 0, minute = 0, second = outcar_params_dict['elapsed_time'], unit = 'hour'))
             e_fermi = outcar_params_dict['e_fermi']
             e_fermi_mod = outcar_params_dict['e_fermi_mod']
             kpoints_dict = vasp_read.read_kpoints(kpoints_file_path)
@@ -329,37 +334,38 @@ r'\setcounter{page}{1}    ' + '\n')
                 vbm_dw = '{:.6f}'.format(vbm_dw)
 
             poscar_dict = vasp_read.read_poscar(poscar_file_path)
+            if poscar_dict['file_status'] == 1:
+                poscar_len_vec_a = poscar_dict['len_vec_a']
+                poscar_len_vec_b = poscar_dict['len_vec_b']
+                poscar_len_vec_c = poscar_dict['len_vec_c']
+                poscar_angle_alpha_degree = poscar_dict['angle_alpha_degree']
+                poscar_angle_beta_degree = poscar_dict['angle_beta_degree']
+                poscar_angle_gamma_degree = poscar_dict['angle_gamma_degree']
+                poscar_box_volume = poscar_dict['box_volume']
+                poscar_len_vec_a = '{:.4f}'.format(poscar_len_vec_a)
+                poscar_len_vec_b = '{:.4f}'.format(poscar_len_vec_b)
+                poscar_len_vec_c = '{:.4f}'.format(poscar_len_vec_c)
+                poscar_angle_alpha_degree = '{:.4f}'.format(poscar_angle_alpha_degree)
+                poscar_angle_beta_degree = '{:.4f}'.format(poscar_angle_beta_degree)
+                poscar_angle_gamma_degree = '{:.4f}'.format(poscar_angle_gamma_degree)
+                poscar_box_volume = '{:.4f}'.format(poscar_box_volume)
+
             contcar_dict = vasp_read.read_poscar(contcar_file_path)
-
-            poscar_len_vec_a = poscar_dict['len_vec_a']
-            poscar_len_vec_b = poscar_dict['len_vec_b']
-            poscar_len_vec_c = poscar_dict['len_vec_c']
-            poscar_angle_alpha_degree = poscar_dict['angle_alpha_degree']
-            poscar_angle_beta_degree = poscar_dict['angle_beta_degree']
-            poscar_angle_gamma_degree = poscar_dict['angle_gamma_degree']
-            poscar_box_volume = poscar_dict['box_volume']
-            poscar_len_vec_a = '{:.4f}'.format(poscar_len_vec_a)
-            poscar_len_vec_b = '{:.4f}'.format(poscar_len_vec_b)
-            poscar_len_vec_c = '{:.4f}'.format(poscar_len_vec_c)
-            poscar_angle_alpha_degree = '{:.4f}'.format(poscar_angle_alpha_degree)
-            poscar_angle_beta_degree = '{:.4f}'.format(poscar_angle_beta_degree)
-            poscar_angle_gamma_degree = '{:.4f}'.format(poscar_angle_gamma_degree)
-            poscar_box_volume = '{:.4f}'.format(poscar_box_volume)
-
-            contcar_len_vec_a = contcar_dict['len_vec_a']
-            contcar_len_vec_b = contcar_dict['len_vec_b']
-            contcar_len_vec_c = contcar_dict['len_vec_c']
-            contcar_angle_alpha_degree = contcar_dict['angle_alpha_degree']
-            contcar_angle_beta_degree = contcar_dict['angle_beta_degree']
-            contcar_angle_gamma_degree = contcar_dict['angle_gamma_degree']
-            contcar_box_volume = contcar_dict['box_volume']
-            contcar_len_vec_a = '{:.4f}'.format(contcar_len_vec_a)
-            contcar_len_vec_b = '{:.4f}'.format(contcar_len_vec_b)
-            contcar_len_vec_c = '{:.4f}'.format(contcar_len_vec_c)
-            contcar_angle_alpha_degree = '{:.4f}'.format(contcar_angle_alpha_degree)
-            contcar_angle_beta_degree = '{:.4f}'.format(contcar_angle_beta_degree)
-            contcar_angle_gamma_degree = '{:.4f}'.format(contcar_angle_gamma_degree)
-            contcar_box_volume = '{:.4f}'.format(contcar_box_volume)
+            if contcar_dict['file_status'] == 1:
+                contcar_len_vec_a = contcar_dict['len_vec_a']
+                contcar_len_vec_b = contcar_dict['len_vec_b']
+                contcar_len_vec_c = contcar_dict['len_vec_c']
+                contcar_angle_alpha_degree = contcar_dict['angle_alpha_degree']
+                contcar_angle_beta_degree = contcar_dict['angle_beta_degree']
+                contcar_angle_gamma_degree = contcar_dict['angle_gamma_degree']
+                contcar_box_volume = contcar_dict['box_volume']
+                contcar_len_vec_a = '{:.4f}'.format(contcar_len_vec_a)
+                contcar_len_vec_b = '{:.4f}'.format(contcar_len_vec_b)
+                contcar_len_vec_c = '{:.4f}'.format(contcar_len_vec_c)
+                contcar_angle_alpha_degree = '{:.4f}'.format(contcar_angle_alpha_degree)
+                contcar_angle_beta_degree = '{:.4f}'.format(contcar_angle_beta_degree)
+                contcar_angle_gamma_degree = '{:.4f}'.format(contcar_angle_gamma_degree)
+                contcar_box_volume = '{:.4f}'.format(contcar_box_volume)
 
             table_label = 'tab:' + i_dir_name + str(temp_indx)
             task_summary_ctex_str = task_summary_ctex_str + (r'The job summary is shown in Table \ref{' + table_label + '}.' + '\n')
@@ -381,20 +387,22 @@ r'\setcounter{page}{1}    ' + '\n')
             task_summary_ctex_str = task_summary_ctex_str + ('E-fermi (corrected) & ' + str(e_fermi_mod) + '\\\\\n')
 
             task_summary_ctex_str = task_summary_ctex_str + (r'\hline' + '\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{a}|$ ($\mathring{A}$) (POSCAR)& ' + str(poscar_len_vec_a) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{b}|$ ($\mathring{A}$) (POSCAR)& ' + str(poscar_len_vec_b) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{c}|$ ($\mathring{A}$) (POSCAR)& ' + str(poscar_len_vec_c) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$\\alpha$ (degree) (POSCAR)& ' + str(poscar_angle_alpha_degree) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$\\beta$ (degree) (POSCAR)& ' + str(poscar_angle_beta_degree) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$\\gamma$ (degree) (POSCAR)& ' + str(poscar_angle_gamma_degree) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('Volume ($\mathring{A}^{3}$) (POSCAR)& ' + str(poscar_box_volume) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{a}|$ ($\mathring{A}$) (CONTCAR)& ' + str(contcar_len_vec_a) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{b}|$ ($\mathring{A}$) (CONTCAR)& ' + str(contcar_len_vec_b) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{c}|$ ($\mathring{A}$) (CONTCAR)& ' + str(contcar_len_vec_c) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$\\alpha$ (degree) (CONTCAR)& ' + str(contcar_angle_alpha_degree) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$\\beta$ (degree) (CONTCAR)& ' + str(contcar_angle_beta_degree) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$\\gamma$ (degree) (CONTCAR)& ' + str(contcar_angle_gamma_degree) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('Volume ($\mathring{A}^{3}$) (CONTCAR)& ' + str(contcar_box_volume) + '\\\\\n')
+            if poscar_dict['file_status'] == 1:
+                task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{a}|$ ($\mathring{A}$) (POSCAR)& ' + str(poscar_len_vec_a) + '\\\\\n')
+                task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{b}|$ ($\mathring{A}$) (POSCAR)& ' + str(poscar_len_vec_b) + '\\\\\n')
+                task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{c}|$ ($\mathring{A}$) (POSCAR)& ' + str(poscar_len_vec_c) + '\\\\\n')
+                task_summary_ctex_str = task_summary_ctex_str + ('$\\alpha$ (degree) (POSCAR)& ' + str(poscar_angle_alpha_degree) + '\\\\\n')
+                task_summary_ctex_str = task_summary_ctex_str + ('$\\beta$ (degree) (POSCAR)& ' + str(poscar_angle_beta_degree) + '\\\\\n')
+                task_summary_ctex_str = task_summary_ctex_str + ('$\\gamma$ (degree) (POSCAR)& ' + str(poscar_angle_gamma_degree) + '\\\\\n')
+                task_summary_ctex_str = task_summary_ctex_str + ('Volume ($\mathring{A}^{3}$) (POSCAR)& ' + str(poscar_box_volume) + '\\\\\n')
+            if contcar_dict['file_status'] == 1:
+                task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{a}|$ ($\mathring{A}$) (CONTCAR)& ' + str(contcar_len_vec_a) + '\\\\\n')
+                task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{b}|$ ($\mathring{A}$) (CONTCAR)& ' + str(contcar_len_vec_b) + '\\\\\n')
+                task_summary_ctex_str = task_summary_ctex_str + ('$|\\vec{c}|$ ($\mathring{A}$) (CONTCAR)& ' + str(contcar_len_vec_c) + '\\\\\n')
+                task_summary_ctex_str = task_summary_ctex_str + ('$\\alpha$ (degree) (CONTCAR)& ' + str(contcar_angle_alpha_degree) + '\\\\\n')
+                task_summary_ctex_str = task_summary_ctex_str + ('$\\beta$ (degree) (CONTCAR)& ' + str(contcar_angle_beta_degree) + '\\\\\n')
+                task_summary_ctex_str = task_summary_ctex_str + ('$\\gamma$ (degree) (CONTCAR)& ' + str(contcar_angle_gamma_degree) + '\\\\\n')
+                task_summary_ctex_str = task_summary_ctex_str + ('Volume ($\mathring{A}^{3}$) (CONTCAR)& ' + str(contcar_box_volume) + '\\\\\n')
 
             task_summary_ctex_str = task_summary_ctex_str + (r'\hline' + '\n')
             task_summary_ctex_str = task_summary_ctex_str + ('$E_{gap}$ (eV) & ' + str(band_gap) + '\\\\\n')
@@ -449,19 +457,21 @@ r'\setcounter{page}{1}    ' + '\n')
             ##for i_fig_poscar_indx in [0, 1, 2]:
             for i_fig_poscar_indx in [0]:
                 viewing_direction = viewing_direction_list[i_fig_poscar_indx]
-                i_fig_poscar = vasp_plot.plot_poscar(
+                formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time.time()))
+                i_fig_file_path = os.path.join(task_summary_fig_dir, 'fig_poscar_' + formatted_time + '_randnum' + str(random.randint(0,99)) +  '.' +  fig_format)
+                plot_poscar_dict = vasp_plot.plot_poscar(
                     poscar_file_path,
                     euler_angle_type = euler_angle_type_phi_theta_psi_list_dict[viewing_direction][0], 
                     phi = euler_angle_type_phi_theta_psi_list_dict[viewing_direction][1], 
                     theta = euler_angle_type_phi_theta_psi_list_dict[viewing_direction][2], 
                     psi = euler_angle_type_phi_theta_psi_list_dict[viewing_direction][3], 
                     elmt_color = None, draw_mirror_atom = True, box_on = True, axis_indicator = True,
-                    plot_cell_basis_vector_label = False, plot_atom_label = 'atom_name', label_size = 16, fig_format = 'pdf', fig_dpi = 150,
-                    draw_colormap = False, colormap_column_indx = 1, colormap_vmin = None, colormap_vmax = None, vmin_color = 'blue', vmax_color = 'red', colorbar_alignment = 'vertical')
+                    plot_cell_basis_vector_label = False, plot_atom_label = 'atom_name', label_size = 16, fig_format = fig_format, fig_dpi = 150,
+                    draw_colormap = False, colormap_column_indx = 1, colormap_vmin = None, colormap_vmax = None, vmin_color = 'blue', vmax_color = 'red', colorbar_alignment = 'vertical', output_fig_file_path = i_fig_file_path)
                 #i_fig_poscar = fig_poscar_list[i_fig_poscar_indx]
-                if i_fig_poscar in [None, 'None', 'none']:
+                if plot_poscar_dict['fig_file'] in [None, 'None', 'none']:
                     continue
-                parent_path, filename1 = funcs.file_path_name(i_fig_poscar)
+                parent_path, filename1 = funcs.file_path_name(plot_poscar_dict['fig_file'])
                 tex_fig_label1 = 'fig:model' + str(i_fig_poscar_indx) +'_' + str(i_dir_name) 
                 task_summary_ctex_str = task_summary_ctex_str + (r'The model (' + viewing_direction + ') is shown in Figure ' +  r'\ref{' + tex_fig_label1 +  '}.' + '\n\n')
                 task_summary_ctex_str = task_summary_ctex_str + (r'\begin{figure}[h!]' + '\n')
@@ -560,17 +570,20 @@ r'\setcounter{page}{1}    ' + '\n')
                         e_min = min(e_min_up, e_min_dw)
                     if band_struct_ylim in [None, 'None', 'none']:
                         band_struct_ylim = [e_min, e_max]
-                    fig_bs = vasp_plot.plot_bs(infile_path_list = [eigenval_file_path], xlim = None, ylim = band_struct_ylim, fermi_shift_zero = True, band_list = None,
-                        interp_on = True, show_band_data_point = False,
+                    formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time.time()))
+                    i_fig_file_path = os.path.join(task_summary_fig_dir, 'fig_bs_' + formatted_time + '_randnum' + str(random.randint(0,99)) + '.' +  fig_format)
+                    plot_bs_dict = vasp_plot.plot_bs(infile_path_list = [eigenval_file_path], xlim = None, ylim = band_struct_ylim, fermi_shift_zero = True, band_list = None,
+                        interp_on = False, plot_band_data_point = False, plot_line = True,
                         band_gap_label = band_gap_label,
                         band_palette_dict = None, band_lty_dict = None, #for single system
                         system_color_list = None, system_lty_list = None, #multiple systems
                         spd_and_site_projections_file_path_list = None, projections_point_size_factor = 1,
                         legend_on = True, plot_fermi_level = True,
                         xtick_direction = 'out', ytick_direction = 'out',
-                        line_width = 2.0, font_size = font_size, fig_format = 'pdf', fig_size = [15,10], fig_dpi = 150)
+                        line_width = 2.0, font_size = font_size, fig_format = 'pdf', fig_size = [15,10], fig_dpi = 150,
+                        output_fig_file_path = i_fig_file_path)
                     ##fig_bs1 = vasp_plot.plot_bs(infile_path_list = [eigenval_file_path], xlim = None, ylim = band_struct_ylim, fermi_shift_zero = True, band_list = None,
-                    ##    interp_on = True, show_band_data_point = False,
+                    ##    interp_on = True, plot_band_data_point = False,
                     ##    band_gap_label = band_gap_label,
                     ##    band_palette_dict = None, band_lty_dict = None, #for single system
                     ##    system_color_list = None, system_lty_list = None, #multiple systems
@@ -578,7 +591,7 @@ r'\setcounter{page}{1}    ' + '\n')
                     ##    legend_on = True, plot_fermi_level = True,
                     ##    xtick_direction = 'out', ytick_direction = 'out',
                     ##    line_width = 2.0, font_size = 18, fig_format = 'png', fig_size = [15,10], fig_dpi = 150)
-                    parent_path, filename = funcs.file_path_name(fig_bs)
+                    parent_path, filename = funcs.file_path_name(plot_bs_dict['fig_file'])
                     # band structure over the whole energy range
                     tex_fig_label = 'fig:bs_' + i_task_str.strip('\\').strip('#')
                     task_summary_ctex_str = task_summary_ctex_str + (r'The band structure is shown in Figure ' +  r'\ref{' + tex_fig_label +  '}.' + '\n')
@@ -662,17 +675,20 @@ spin_label + r"  , tot, " + r"['" + i_elmt_species + r"']     , tot      , " + d
                         e_min = min(e_min_up, e_min_dw)
                     if band_struct_ylim in [None, 'None', 'none']:
                         band_struct_ylim = [e_min, e_max]
-                    fig_bs_fatband = vasp_plot.plot_bs(infile_path_list = [procar_file_path], xlim = None, ylim = band_struct_ylim, fermi_shift_zero = True, band_list = None,
-                        interp_on = False, show_band_data_point = False,
+                    formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time.time()))
+                    i_fig_file_path = os.path.join(task_summary_fig_dir, 'fig_bs_fatband_' + formatted_time + '_randnum' + str(random.randint(0,99)) + '.' +  fig_format)
+                    plot_bs_dict_fatband = vasp_plot.plot_bs(infile_path_list = [procar_file_path], xlim = None, ylim = band_struct_ylim, fermi_shift_zero = True, band_list = None,
+                        interp_on = False, plot_band_data_point = True, plot_line = False,
                         band_gap_label = band_gap_label,
                         band_palette_dict = None, band_lty_dict = None, #for single system
                         system_color_list = None, system_lty_list = None, #multiple systems
                         spd_and_site_projections_file_path_list = [projections_file_path], projections_point_size_factor = 1,
                         legend_on = True, plot_fermi_level = True,
                         xtick_direction = 'out', ytick_direction = 'out',
-                        line_width = 2.0, font_size = font_size, fig_format = 'pdf', fig_size = [15,10], fig_dpi = 150)
+                        line_width = 2.0, font_size = font_size, fig_format = 'pdf', fig_size = [15,10], fig_dpi = 150,
+                        output_fig_file_path = i_fig_file_path)
                     ##fig_bs_fatband1 = vasp_plot.plot_bs(infile_path_list = [procar_file_path], xlim = None, ylim = band_struct_ylim, fermi_shift_zero = True, band_list = None,
-                    ##    interp_on = False, show_band_data_point = False,
+                    ##    interp_on = False, plot_band_data_point = False,
                     ##    band_gap_label = band_gap_label,
                     ##    band_palette_dict = None, band_lty_dict = None, #for single system
                     ##    system_color_list = None, system_lty_list = None, #multiple systems
@@ -680,7 +696,7 @@ spin_label + r"  , tot, " + r"['" + i_elmt_species + r"']     , tot      , " + d
                     ##    legend_on = True, plot_fermi_level = True,
                     ##    xtick_direction = 'out', ytick_direction = 'out',
                     ##    line_width = 2.0, font_size = 18, fig_format = 'png', fig_size = [15,10], fig_dpi = 150)
-                    parent_path, filename = funcs.file_path_name(fig_bs_fatband)
+                    parent_path, filename = funcs.file_path_name(plot_bs_dict_fatband['fig_file'])
                     # band structure over the whole energy range
                     tex_fig_label = 'fig:fatband_' + i_task_str.strip('\\').strip('#')
                     task_summary_ctex_str = task_summary_ctex_str + (r'The fat band is shown in Figure ' +  r'\ref{' + tex_fig_label +  '}.' + '\n')
@@ -743,8 +759,71 @@ spin_label + r"  , tot, " + r"['" + i_elmt_species + r"']     , tot      , " + d
         print('WARNING #2012271610: .tex file ' + task_summary_ctex_file_path + ' compilation failed.')
     return task_summary_ctex_file_path
 
+def gen_kpath(fpath, kpath_scheme, kpath_params):
+    '''
+    Generate KPOINTS (currently, we use pymatgen and vaspkit to generate k-path)
+    fpath: the working directory of the job
+    kpath_scheme: pymatgen, vaspkit
+    kpath_params: 'echo 3;echo 303 | vaspkit'
+    '''
+    import os
+    #fpath = bs_dir
+    fpath = fpath
+    pwd_dir = os.getcwd()
+    if kpath_scheme in ['pymatgen', 'PYMATGEN']:
+        temp_file_path = os.path.join(fpath, 'gen_kpoints_line_mode_pymatgen.py')
+        kpath_params = '''from pymatgen.io.vasp.inputs import Kpoints
+from pymatgen.core import Structure
+from pymatgen.symmetry.bandstructure import HighSymmKpath
+struct = Structure.from_file('POSCAR')
+kpath = HighSymmKpath(struct)
+kpts = Kpoints.automatic_linemode(divisions = 20, ibz = kpath)
+kpts.write_file('KPOINTS')'''
+        with open(temp_file_path, 'w') as f:
+            f.write(kpath_params)
+        try:
+            poscar_file_path_bs = os.path.join(fpath, 'POSCAR')
+            kpoints_file_path_bs = os.path.join(fpath, 'KPOINTS')
+            from pymatgen.io.vasp.inputs import Kpoints
+            from pymatgen.core import Structure
+            from pymatgen.symmetry.bandstructure import HighSymmKpath
+            #from pymatgen import Structure
+            from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+            ###################
+            # prepare KPOINTS line-mode
+            ###################
+            struct = Structure.from_file(poscar_file_path_bs)
+            kpath = HighSymmKpath(struct)
+            kpts = Kpoints.automatic_linemode(divisions = 20, ibz = kpath)
+            kpts.write_file(kpoints_file_path_bs)
+            ###################
+            # prepare primitive cell for band structure calculation
+            ###################
+            analyzer = SpacegroupAnalyzer(struct)
+            prim_cell = analyzer.find_primitive()
+            #print(prim_cell)
+            prim_cell.to(filename = poscar_file_path_bs)
+        except:
+            pass
+    elif kpath_scheme in ['vaspkit', 'VASPKIT', 'VaspKit', 'vasp kit']:
+        # the vaspkit scheme can also be used to generate k-points:
+        temp_file_path = os.path.join(fpath, 'gen_kpoints_line_mode_vaspkit.sh')
+        temp_str = ''
+        temp_str = temp_str + '#!/bin/bash\n'
+        temp_str = temp_str + 'cd ' + fpath + '\n' 
+        temp_str = temp_str + kpath_params + '\n'
+        temp_str = temp_str + 'cd ' + pwd_dir + '\n' 
+        with open(temp_file_path, 'w') as f:
+            f.write(temp_str)
+        try:
+            os.system('sh ' + temp_file_path + ' > ' + os.path.join(fpath, 'vaspkit.log'))
+            os.system('cp -r ' + os.path.join(fpath, 'KPATH.in') + ' ' + os.path.join(fpath, 'KPOINTS'))
+        except:
+            pass
+    return 0
+
 def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', elmt_potcar_dir = None,
-               apply_to_existed_task = True, use_primitive_cell = True,
+               apply_to_existed_task = True, use_primitive_cell = True, kpath_scheme = 'vaspkit', kpath_params = '''echo 3 ; echo 303 | vaspkit''',
               ):
     '''
     generate inputs for a specified structure. The generated inputs are used for further structural optimization.
@@ -755,6 +834,7 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
     import time
     import math
     import os
+    import re
     import random
     import numpy as np
     from .. import funcs
@@ -821,6 +901,10 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
         # It is better for the user to name the input structure (POSCAR file) with a specific name, not to directly name it to 'POSCAR'.
         if task_dir_name == 'POSCAR' and middle_dir_name in ['opt']:
             task_dir_name = os.path.split(os.path.split(os.path.split(poscar_file_path)[0])[0])[-1]
+            # remove the parenthesis '(', or ')' in the name, to avoid the following errors:
+            #     sh: -c: line 0: syntax error near unexpected token `('
+            #     sh: -c: line 0: `sh a.sh'
+            task_dir_name = re.sub('[()]', '', task_dir_name)
         task_dir = os.path.join(project_dir, task_dir_name)
         existed_task_dir_list = [os.path.join(project_dir, x) for x in os.listdir(project_dir) if os.path.isdir(os.path.join(project_dir, x))]
         if task_dir in existed_task_dir_list:
@@ -849,6 +933,12 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
         funcs.mkdir(nscf_dir)
         funcs.mkdir(test_encut_dir)
         funcs.mkdir(test_kpoints_dir)
+        opt_poscar_file_path = os.path.join(opt_dir, 'POSCAR')
+        scf_poscar_file_path = os.path.join(scf_dir, 'POSCAR')
+        dos_poscar_file_path = os.path.join(dos_dir, 'POSCAR')
+        bs_poscar_file_path = os.path.join(bs_dir, 'POSCAR')
+        bs_soc_poscar_file_path = os.path.join(bs_soc_dir, 'POSCAR')
+        nscf_poscar_file_path = os.path.join(nscf_dir, 'POSCAR')
 
         task_dir_list = [opt_dir, scf_dir, dos_dir, bs_dir, bs_soc_dir, nscf_dir, test_encut_dir, test_kpoints_dir]
         for i_task_dir in task_dir_list:
@@ -998,42 +1088,45 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
                 incar_dict_temp['MAGMOM'] = magmom
                 vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
 
-            # set ENCUT and KPOINTS according to the ENCUT and KPOINT test results (if the tests has been done)
-            if os.path.exists(test_encut_dir) and not os.path.isfile(test_encut_dir):
-                opt_outcar_file_path = os.path.join(task_dir, 'opt', 'OUTCAR')
-                i_job_finished = vasp_tools.vasp_job_finished(opt_outcar_file_path, suppress_warning = True)
-                i_job_type = check_job_type(os.path.join(task_dir, 'opt'))
-                if i_job_type == 'VASP' and i_job_finished != True:
-                    recommended_encut_test = get_recommended_test_param(test_encut_dir)
-                    funcs.touch(os.path.join(test_encut_dir, 'test.log'))
-                    if recommended_encut_test <= encut_val:
-                        recommended_encut_test = encut_val
-                    with open(os.path.join(test_encut_dir, 'test.log'), 'w') as f:
-                        f.write(str(recommended_encut_test))
-                    vasp_write.write_incar(incar_file_path, incar_dict = {'ENCUT': recommended_encut_test}, mode = 's')
+            #Currently, we don't use tested parameters, to save the computational cost, the tested parameters is recommended to be used only in the refined calculations.
+            use_tested_parameters = False
+            if use_tested_parameters == True:
+                # set ENCUT and KPOINTS according to the ENCUT and KPOINT test results (if the tests has been done)
+                if os.path.exists(test_encut_dir) and not os.path.isfile(test_encut_dir):
+                    opt_outcar_file_path = os.path.join(task_dir, 'opt', 'OUTCAR')
+                    i_job_finished = vasp_tools.vasp_job_finished(opt_outcar_file_path, suppress_warning = True)
+                    i_job_type = check_job_type(os.path.join(task_dir, 'opt'))
+                    if i_job_type == 'VASP' and i_job_finished != True:
+                        recommended_encut_test = get_recommended_test_param(test_encut_dir)
+                        funcs.touch(os.path.join(test_encut_dir, 'test.log'))
+                        if recommended_encut_test <= encut_val:
+                            recommended_encut_test = encut_val
+                        with open(os.path.join(test_encut_dir, 'test.log'), 'w') as f:
+                            f.write(str(recommended_encut_test))
+                        vasp_write.write_incar(incar_file_path, incar_dict = {'ENCUT': recommended_encut_test}, mode = 's')
 
-            if os.path.exists(test_kpoints_dir) and not os.path.isfile(test_kpoints_dir):
-                opt_outcar_file_path = os.path.join(task_dir, 'opt', 'OUTCAR')
-                i_job_finished = vasp_tools.vasp_job_finished(opt_outcar_file_path, suppress_warning = True)
-                i_job_type = check_job_type(os.path.join(task_dir, 'opt'))
-                if i_job_type == 'VASP' and i_job_finished != True:
-                    recommended_kpoints_test = int(get_recommended_test_param(test_kpoints_dir))
-                    funcs.touch(os.path.join(test_kpoints_dir, 'test.log'))
-                    kpoints_dict_opt = vasp_read.read_kpoints(os.path.join(opt_dir, 'KPOINTS'))
-                    kpoints_val = kpoints_dict_opt['subdivisions_arr'][0]
-                    if recommended_kpoints_test <= kpoints_val:
-                        recommended_kpoints_test = kpoints_val
-                    with open(os.path.join(test_kpoints_dir, 'test.log'), 'w') as f:
-                        f.write(str(recommended_kpoints_test))
-                    kpoints_dict = vasp_read.read_kpoints(os.path.join(opt_dir, 'KPOINTS'))
-                    if kpoints_dict['scheme'] in ['g', 'G', 'm', 'M']:
-                        subdivisions_arr = (kpoints_dict['subdivisions_arr'])
-                        subdivisions_arr[0] = recommended_kpoints_test   
-                        subdivisions_arr[1] = recommended_kpoints_test
-                        subdivisions_arr[2] = recommended_kpoints_test
-                        kpoints_dict_temp = {}
-                        kpoints_dict_temp['subdivisions_arr'] = subdivisions_arr
-                        vasp_write.write_kpoints(os.path.join(opt_dir, 'KPOINTS'), kpoints_dict = kpoints_dict_temp, mode = 's')
+                if os.path.exists(test_kpoints_dir) and not os.path.isfile(test_kpoints_dir):
+                    opt_outcar_file_path = os.path.join(task_dir, 'opt', 'OUTCAR')
+                    i_job_finished = vasp_tools.vasp_job_finished(opt_outcar_file_path, suppress_warning = True)
+                    i_job_type = check_job_type(os.path.join(task_dir, 'opt'))
+                    if i_job_type == 'VASP' and i_job_finished != True:
+                        recommended_kpoints_test = int(get_recommended_test_param(test_kpoints_dir))
+                        funcs.touch(os.path.join(test_kpoints_dir, 'test.log'))
+                        kpoints_dict_opt = vasp_read.read_kpoints(os.path.join(opt_dir, 'KPOINTS'))
+                        kpoints_val = kpoints_dict_opt['subdivisions_arr'][0]
+                        if recommended_kpoints_test <= kpoints_val:
+                            recommended_kpoints_test = kpoints_val
+                        with open(os.path.join(test_kpoints_dir, 'test.log'), 'w') as f:
+                            f.write(str(recommended_kpoints_test))
+                        kpoints_dict = vasp_read.read_kpoints(os.path.join(opt_dir, 'KPOINTS'))
+                        if kpoints_dict['scheme'] in ['g', 'G', 'm', 'M']:
+                            subdivisions_arr = (kpoints_dict['subdivisions_arr'])
+                            subdivisions_arr[0] = recommended_kpoints_test   
+                            subdivisions_arr[1] = recommended_kpoints_test
+                            subdivisions_arr[2] = recommended_kpoints_test
+                            kpoints_dict_temp = {}
+                            kpoints_dict_temp['subdivisions_arr'] = subdivisions_arr
+                            vasp_write.write_kpoints(os.path.join(opt_dir, 'KPOINTS'), kpoints_dict = kpoints_dict_temp, mode = 's')
 
         # when opt job is running, or it has been finished, the test will be skipped
         job_id_file_path = os.path.join(opt_dir, job_id_file_name)
@@ -1250,7 +1343,8 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
                                      'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
                                      'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',]
             if os.path.exists(scf_poscar_file_path) and os.path.isfile(scf_poscar_file_path):
-                poscar_dict = vasp_read.read_poscar(scf_poscar_file_path)
+                # in case the POSCAR in the scf folder is empty, we use the POSCAR from opt directory
+                poscar_dict = vasp_read.read_poscar(opt_poscar_file_path)
                 magmom = ''
                 for i_indx in range(0, len(poscar_dict['elmt_species_arr'])): 
                     i_elmt = poscar_dict['elmt_species_arr'][i_indx]
@@ -1272,7 +1366,6 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
         ############################
         # bs
         ############################
-        outcar_path = os.path.join(bs_dir, 'OUTCAR')
         bs_poscar_file_path = os.path.join(bs_dir, 'POSCAR')
         # when the job is running, or it has been finished, it will be skipped
         job_id_file_path = os.path.join(bs_dir, job_id_file_name)
@@ -1352,7 +1445,8 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
                                      'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
                                      'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',]
             if os.path.exists(bs_poscar_file_path) and os.path.isfile(bs_poscar_file_path):
-                poscar_dict = vasp_read.read_poscar(bs_poscar_file_path)
+                # in case the POSCAR in the scf folder is empty, we use the POSCAR from opt directory
+                poscar_dict = vasp_read.read_poscar(opt_poscar_file_path)
                 magmom = ''
                 for i_indx in range(0, len(poscar_dict['elmt_species_arr'])): 
                     i_elmt = poscar_dict['elmt_species_arr'][i_indx]
@@ -1374,43 +1468,8 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
             else:
                 incar_dict_temp['NBANDS'] = nbands_scf
                 vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
-            # generate KPOINTS (currently, we use pymatgen to generate k-path)
-            temp_str = ''
-            temp_str = temp_str + "from pymatgen.io.vasp.inputs import Kpoints" + '\n'
-            temp_str = temp_str + "from pymatgen.core import Structure" + '\n'
-            temp_str = temp_str + "from pymatgen.symmetry.bandstructure import HighSymmKpath" + '\n'
-            temp_str = temp_str + "struct = Structure.from_file('POSCAR')" + '\n'
-            temp_str = temp_str + "kpath = HighSymmKpath(struct)" + '\n'
-            temp_str = temp_str + "kpts = Kpoints.automatic_linemode(divisions = 20, ibz = kpath)" + '\n'
-            temp_str = temp_str + "kpts.write_file('KPOINTS')" + '\n'
-            with open('gen_kpoints_line_mode_pymatgen.py', 'w') as f:
-                f.write(temp_str)
-
-            try:
-                poscar_file_path_bs = os.path.join(bs_dir, 'POSCAR')
-                kpoints_file_path_bs = os.path.join(bs_dir, 'KPOINTS')
-                from pymatgen.io.vasp.inputs import Kpoints
-                from pymatgen.core import Structure
-                from pymatgen.symmetry.bandstructure import HighSymmKpath
-                #from pymatgen import Structure
-                from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
-                ###################
-                # prepare KPOINTS line-mode
-                ###################
-                struct = Structure.from_file(poscar_file_path_bs)
-                kpath = HighSymmKpath(struct)
-                kpts = Kpoints.automatic_linemode(divisions = 20, ibz = kpath)
-                kpts.write_file(kpoints_file_path_bs)
-                ###################
-                # prepare primitive cell for band structure calculation
-                ###################
-                analyzer = SpacegroupAnalyzer(struct)
-                prim_cell = analyzer.find_primitive()
-                #print(prim_cell)
-                prim_cell.to(filename = poscar_file_path_bs)
-            except:
-                pass
-
+            # generate KPATH
+            gen_kpath(fpath = bs_dir, kpath_scheme = kpath_scheme, kpath_params = kpath_params)
         ############################
         # bs_soc
         ############################
@@ -1498,28 +1557,42 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
                                      'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
                                      'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',]
             if os.path.exists(bs_soc_poscar_file_path) and os.path.isfile(bs_soc_poscar_file_path):
-                poscar_dict = vasp_read.read_poscar(bs_soc_poscar_file_path)
+                # in case the POSCAR in the scf folder is empty, we use the POSCAR from opt directory
+                poscar_dict = vasp_read.read_poscar(opt_poscar_file_path)
                 magmom = ''
                 for i_indx in range(0, len(poscar_dict['elmt_species_arr'])): 
                     i_elmt = poscar_dict['elmt_species_arr'][i_indx]
                     i_elmt_num = poscar_dict['elmt_num_arr'][i_indx]
-                    if i_elmt in transition_metal_list:
-                        magmom = magmom + str(i_elmt_num) + '*5.0 '
-                    else:
-                        magmom = magmom + str(i_elmt_num) + '*0.6 '
+                    for j_indx in range(0, i_elmt_num):
+                        if i_elmt in transition_metal_list:
+                            magmom = magmom + '0 0 5.0 '
+                        else:
+                            magmom = magmom + '0 0 0.6 '
                 incar_dict_temp['MAGMOM'] = magmom
                 vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
             # modify NBANDS
             outcar_path_bs = os.path.join(bs_dir, 'OUTCAR')
-            nbands_bs = None
-            if os.path.exists(outcar_path_bs) and os.path.isfile(outcar_path_bs): 
-                outcar_params_dict_bs = vasp_read.read_outcar(outcar_path_bs)
-                nbands_bs = outcar_params_dict_bs['NBANDS']
-            if nbands_bs in [None, 'None', 'none']:
+            ##nbands_bs = None
+            ##if os.path.exists(outcar_path_bs) and os.path.isfile(outcar_path_bs): 
+            ##    outcar_params_dict_bs = vasp_read.read_outcar(outcar_path_bs)
+            ##    nbands_bs = outcar_params_dict_bs['NBANDS']
+            ##if nbands_bs in [None, 'None', 'none']:
+            ##    pass
+            ##else:
+            ##    incar_dict_temp['NBANDS'] = int(nbands_bs * 2)
+            ##    vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
+            outcar_path_scf = os.path.join(scf_dir, 'OUTCAR')
+            nbands_scf = None
+            if os.path.exists(outcar_path_scf) and os.path.isfile(outcar_path_scf): 
+                outcar_params_dict_scf = vasp_read.read_outcar(outcar_path_scf)
+                nbands_scf = outcar_params_dict_scf['NBANDS']
+            if nbands_scf in [None, 'None', 'none']:
                 pass
             else:
-                incar_dict_temp['NBANDS'] = int(nbands_bs * 2)
+                incar_dict_temp['NBANDS'] = int(nbands_scf * 2)
                 vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
+            # generate KPATH
+            gen_kpath(fpath = bs_soc_dir, kpath_scheme = kpath_scheme, kpath_params = kpath_params)
 
         ############################
         # dos
@@ -1604,7 +1677,8 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
                                      'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
                                      'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',]
             if os.path.exists(dos_poscar_file_path) and os.path.isfile(dos_poscar_file_path):
-                poscar_dict = vasp_read.read_poscar(dos_poscar_file_path)
+                # in case the POSCAR in the scf folder is empty, we use the POSCAR from opt directory
+                poscar_dict = vasp_read.read_poscar(opt_poscar_file_path)
                 magmom = ''
                 for i_indx in range(0, len(poscar_dict['elmt_species_arr'])): 
                     i_elmt = poscar_dict['elmt_species_arr'][i_indx]
@@ -1705,7 +1779,8 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
                                      'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
                                      'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',]
             if os.path.exists(nscf_poscar_file_path) and os.path.isfile(nscf_poscar_file_path):
-                poscar_dict = vasp_read.read_poscar(nscf_poscar_file_path)
+                # in case the POSCAR in the scf folder is empty, we use the POSCAR from opt directory
+                poscar_dict = vasp_read.read_poscar(opt_poscar_file_path)
                 magmom = ''
                 for i_indx in range(0, len(poscar_dict['elmt_species_arr'])): 
                     i_elmt = poscar_dict['elmt_species_arr'][i_indx]
@@ -2025,7 +2100,7 @@ def latt_const_test(job_dir, model_dimension = 2, increment = 0.005, num_points 
         )
     return 0
 
-def gen_submit_script(task_dir, submit_script_path_dict = None, queue_system = 'PBS'):
+def gen_submit_script(task_dir, submit_script_path_dict = None, task_flow_list = None, queue_system = 'PBS'):
     '''
     generate submit script for the specified task
     submit_script_path_dict: the keyword 'universal' must exist in submit_script_path_dict, if no submit files are provided for other calculations, the submit file in submit_script_path_dict['universal'] will be used. 
@@ -2043,7 +2118,10 @@ def gen_submit_script(task_dir, submit_script_path_dict = None, queue_system = '
     output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
     projects_dir = os.path.join(output_dir, defaults_dict['projects_dir_name'])
 
-    task_flow_list = ['opt', 'test_encut', 'test_kpoints', 'scf', 'bs', 'bs_soc', 'dos', 'nscf']
+    if task_flow_list in [None, 'None', 'none']:
+        task_flow_list = ['opt', 'test_encut', 'test_kpoints', 'scf', 'bs', 'bs_soc', 'dos', 'nscf']
+    else:
+        pass
 
     if submit_script_path_dict in [None, 'None', 'none']:
         submit_script_path_dict = {}
@@ -2083,28 +2161,28 @@ def gen_submit_script(task_dir, submit_script_path_dict = None, queue_system = '
             for i_subjob_indx in range(0, len(subjob_name_list)):
                 i_subjob_dir = os.path.join(i_job_dir, subjob_name_list[i_subjob_indx])
                 submit_script_file_path = os.path.join(i_subjob_dir, submit_script_name)
-                if os.path.exists(submit_script_file_path) == False:
-                    fpath, fname = funcs.file_path_name(submit_script_file_path)
-                    if os.path.exists(fpath) and os.path.isfile(fpath):
-                        os.remove(fpath)
-                    funcs.mkdir(fpath)
-                    with open(submit_script_file_path, 'w') as f:
-                        if line_dict[task_flow_list[i_job_indx]] in [None, 'None', 'none']:
-                            f.writelines(line_dict['universal'])
-                        else:
-                            f.writelines(line_dict[task_flow_list[i_job_indx]])
-        else:
-            submit_script_file_path = os.path.join(i_job_dir, submit_script_name)
-            if os.path.exists(submit_script_file_path) == False:
+                ##if os.path.exists(submit_script_file_path) == False:
                 fpath, fname = funcs.file_path_name(submit_script_file_path)
                 if os.path.exists(fpath) and os.path.isfile(fpath):
-                    os.remove(fpat)
+                    os.remove(fpath)
                 funcs.mkdir(fpath)
                 with open(submit_script_file_path, 'w') as f:
                     if line_dict[task_flow_list[i_job_indx]] in [None, 'None', 'none']:
                         f.writelines(line_dict['universal'])
                     else:
                         f.writelines(line_dict[task_flow_list[i_job_indx]])
+        else:
+            submit_script_file_path = os.path.join(i_job_dir, submit_script_name)
+            ##if os.path.exists(submit_script_file_path) == False:
+            fpath, fname = funcs.file_path_name(submit_script_file_path)
+            if os.path.exists(fpath) and os.path.isfile(fpath):
+                os.remove(fpat)
+            funcs.mkdir(fpath)
+            with open(submit_script_file_path, 'w') as f:
+                if line_dict[task_flow_list[i_job_indx]] in [None, 'None', 'none']:
+                    f.writelines(line_dict['universal'])
+                else:
+                    f.writelines(line_dict[task_flow_list[i_job_indx]])
     return 0 
 
 def job_id_exists(job_id, queue_system = 'PBS'):
@@ -2134,6 +2212,82 @@ def job_id_exists(job_id, queue_system = 'PBS'):
         id_exists = False
     ##print('job ' + str(job_id) + ' exists? ' + str(id_exists))
     return id_exists
+
+def job_submission_status(job_dir, job_kwd = 'R', queue_system = 'PBS'):
+    '''
+    Check the submission status status of a job, only consider those unfinished jobs
+    job_dir: directory of the job
+    job_kwd: user-defined job identifier
+    queue_system: PBS, SLURM, LSF
+    '''
+    import os
+    from .. import funcs
+    from .. import default_params
+    from ..vasp import vasp_tools
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
+    output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
+    #######################################################################################################
+    # get submitted(including running, queued, held or waiting jobs) job file paths and put them in a list
+    #######################################################################################################
+    job_dir = os.path.abspath(job_dir)
+    fpath = job_dir
+    pwd_dir = os.getcwd()
+    temp_file_path = os.path.join(fpath, 'temp.sh')
+    temp_log_path = os.path.join(fpath, 'temp.log')
+    if queue_system == 'PBS':
+        with open(temp_file_path, 'w') as f:
+            f.write('#!/bin/bash\n')
+            f.write('cd ' + fpath + '\n')
+            temp_str = '''cp /dev/null temp.log
+n=1
+##output_kwd1='Output_Path'
+##output_kwd2='Priority'
+
+output_kwd1='PBS_O_WORKDIR'
+output_kwd2='PBS_O_HOST'
+
+ntot=`{ qstat -r & qstat -i; } | grep $1 | awk 'END{print NR}'`
+for i in `{ qstat -r & qstat -i; } | grep $1 | awk '{print $1}'`
+do
+    n1=`qstat -f $i | awk "/$output_kwd1/{print NR}"`
+    n2=`qstat -f $i | awk "/$output_kwd2/{print NR}"`
+    a=$(($n2-$n1-1))
+    temp_dir=$(echo `qstat -f $i | grep -A $a "$output_kwd1"` | tr -d '[:space:]' | sed "s/$output_kwd1=//g" | sed 's/, *$//')
+    echo $temp_dir >> temp.log
+    n=$(($n+1))
+done'''
+            f.write(temp_str + '\n')
+            f.write('cd ' + pwd_dir + '\n')
+
+        os.system('sh ' + temp_file_path + ' ' + job_kwd)
+
+    submitted_job_list = []
+    if os.path.exists(temp_log_path) and os.path.isfile(temp_log_path):
+        with open(temp_log_path, 'r') as f:
+            lines = f.readlines()
+            num_lines = len(lines)
+            for i in range(0, num_lines):
+                submitted_job_list.append(lines[i].strip().strip('\n').strip('r'))
+    os.remove(temp_file_path)
+    os.remove(temp_log_path)
+ 
+    ###################################################
+    # Check whether the job has been submitted
+    ###################################################
+    submission_status = False
+    outcar_file_path = os.path.join(job_dir, 'OUTCAR')
+    #job_finished = vasp_tools.vasp_job_finished(outcar_file_path, suppress_warning = True) 
+    #if job_finished == False:
+
+    # Check whether the job is submitted to job management system
+    if job_dir in submitted_job_list:
+        submission_status = True
+    else:
+        submission_status = False
+
+    return submission_status
 
 def check_job_type(job_dir):
     '''
