@@ -3,6 +3,7 @@ def ordered_incar_dict(incar_dict):
     '''
     rearrange the order of the keys of the incar_dict according to vasp_default.incar_default()
     '''  
+    args_dict = locals()
     from collections import OrderedDict
     from . import vasp_default
     incar_default_dict = vasp_default.incar_default()
@@ -22,7 +23,7 @@ def check_warning(job_dir):
     '''
     check WARNING of the vasp job
     '''
-
+    args_dict = locals()
     #########################################################################
     # WARNING: aliasing errors must be expected set NGX to  34 to avoid them
     #########################################################################
@@ -58,18 +59,18 @@ def check_warning(job_dir):
     #WARNING: small aliasing (wrap around) errors must be expected
     ##################################################################
 
-    ##################################################################
+    ############################################################################
     #WARNING: random wavefunctions but no delay for mixing, default for NELMDL
-    ##################################################################
+    ############################################################################
 
     ##################################################################
     #WARNING in EDDRMM: call to ZHEGV failed, returncode =   6  3 27
     ##################################################################
 
-    #################################################################################################
+    ######################################################################################################
     # RNING in EDDRMM: call to ZHEGV failed, returncode =   6  3 31
     # num prob  num prob  num prob  num prob  num prob  num prob  num prob  num prob  num prob  num prob
-    #################################################################################################
+    ######################################################################################################
 
     #################################################################################################
     #  -----------------------------------------------------------------------------
@@ -138,7 +139,30 @@ def check_warning(job_dir):
     #  -----------------------------------------------------------------------------
     #################################################################################################
 
+    #################################################################################################
+    #  -----------------------------------------------------------------------------
+    # |                                                                             |
+    # |           W    W    AA    RRRRR   N    N  II  N    N   GGGG   !!!           |
+    # |           W    W   A  A   R    R  NN   N  II  NN   N  G    G  !!!           |
+    # |           W    W  A    A  R    R  N N  N  II  N N  N  G       !!!           |
+    # |           W WW W  AAAAAA  RRRRR   N  N N  II  N  N N  G  GGG   !            |
+    # |           WW  WW  A    A  R   R   N   NN  II  N   NN  G    G                |
+    # |           W    W  A    A  R    R  N    N  II  N    N   GGGG   !!!           |
+    # |                                                                             |
+    # |      The number of bands has been changed from the values supplied          |
+    # |      in the INCAR file. This is a result of running the parallel version.   |
+    # |      The orbitals not found in the WAVECAR file will be initialized with    |
+    # |      random numbers, which is usually adequate. For correlated              |
+    # |      calculations, however, you should redo the groundstate calculation.    |
+    # |      I found NBANDS    =      172  now  NBANDS  =     192                   |
+    # |                                                                             |
+    #  -----------------------------------------------------------------------------
+    #################################################################################################
 
+    #################################################################################################
+    # WARNING: dimensions on CHGCAR file are different
+    #################################################################################################
+    # This could be caused by a change in lattice constant for the POSCAR and the CHGCAR files
 
     pass
     return 0
@@ -149,6 +173,7 @@ def check_error(job_dir):
     it returns a error list
     NOTE: errors are those prompt that cannot be ignored, and the job has to stop due to an error, which is different from warnings
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from . import vasp_analyze
@@ -328,7 +353,54 @@ def check_error(job_dir):
     #################################################################################################
 
     #################################################################################################
+    #  -----------------------------------------------------------------------------
+    # |                                                                             |
+    # |     EEEEEEE  RRRRRR   RRRRRR   OOOOOOO  RRRRRR      ###     ###     ###     |
+    # |     E        R     R  R     R  O     O  R     R     ###     ###     ###     |
+    # |     E        R     R  R     R  O     O  R     R     ###     ###     ###     |
+    # |     EEEEE    RRRRRR   RRRRRR   O     O  RRRRRR       #       #       #      |
+    # |     E        R   R    R   R    O     O  R   R                               |
+    # |     E        R    R   R    R   O     O  R    R      ###     ###     ###     |
+    # |     EEEEEEE  R     R  R     R  OOOOOOO  R     R     ###     ###     ###     |
+    # |                                                                             |
+    # |      VASP internal routines  have requested a change of the k-point set.    |
+    # |      Unfortunately this is only possible if NPAR=number of nodes.           |
+    # |      Please remove the tag NPAR from the INCAR file and restart the         |
+    # |      calculations.                                                          |
+    # |                                                                             |
+    # |      ---->  I REFUSE TO CONTINUE WITH THIS SICK JOB ..., BYE!!! <----       |
+    # |                                                                             |
+    #  -----------------------------------------------------------------------------
     #################################################################################################
+
+
+
+    #################################################################################################
+    # ERROR: charge density could not be read from file CHGCAR for ICHARG>10
+    #################################################################################################
+
+    #################################################################################################
+    #  -----------------------------------------------------------------------------
+    # |                                                                             |
+    # |     EEEEEEE  RRRRRR   RRRRRR   OOOOOOO  RRRRRR      ###     ###     ###     |
+    # |     E        R     R  R     R  O     O  R     R     ###     ###     ###     |
+    # |     E        R     R  R     R  O     O  R     R     ###     ###     ###     |
+    # |     EEEEE    RRRRRR   RRRRRR   O     O  RRRRRR       #       #       #      |
+    # |     E        R   R    R   R    O     O  R   R                               |
+    # |     E        R    R   R    R   O     O  R    R      ###     ###     ###     |
+    # |     EEEEEEE  R     R  R     R  OOOOOOO  R     R     ###     ###     ###     |
+    # |                                                                             |
+    # |      VASP internal routines  have requested a change of the k-point set.    |
+    # |      Unfortunately this is only possible if NPAR=number of nodes.           |
+    # |      Please remove the tag NPAR from the INCAR file and restart the         |
+    # |      calculations.                                                          |
+    # |                                                                             |
+    # |      ---->  I REFUSE TO CONTINUE WITH THIS SICK JOB ..., BYE!!! <----       |
+    # |                                                                             |
+    #  -----------------------------------------------------------------------------
+    #################################################################################################
+    error_kwds_list_dict['VASP internal routines  have requested a change of the k-point set'] = ['VASP internal routines  have requested a change of the k-point set',]
+
 
     # read errors 
     error_type = None
@@ -372,6 +444,7 @@ def error_handler(task_dir):
     '''
     provide solution for the specific error or warning
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from . import vasp_write 
@@ -431,6 +504,13 @@ def error_handler(task_dir):
                   'SOLUTION: Manually check the NBANDS tag of INCAR file and continue.\n' +
                   'Please set NBANDS>NELECT/2 for collinear calculations or NBANDS*2>NELECT*2 for noncollinear calculations.\n'
                   )
+        if error_type == 'VASP internal routines  have requested a change of the k-point set':
+            print('Error type ' + error_type + ' is detected for the directory: ' + i_dir_path + '\n' + 
+                  'This error usually appears in the DFPT calculation (IBRION = 8).' + '\n' + 
+                  'SOLUTION: ' + 'n' + 
+                  '    (1) This may be caused by specifying NPAR value in the INCAR, Try not setting the NPAR value in the INCAR file. The VASP program then set the NPAR to its default value' + '\n' + 
+                  '    (2) When the kpoint changed, it may cause an increase of k-points, which gives rise to a demand of large memory. In this case, please check your memory of the current job.'
+                  )
                   
     return 0
 
@@ -438,6 +518,7 @@ def vasp_job_finished(outcar_file_path, suppress_warning = True):
     '''
     check whether the VASP job has been finished or not
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     kwd = 'timing'
@@ -464,31 +545,87 @@ def vasp_job_finished(outcar_file_path, suppress_warning = True):
         pass
     return retn_val
 
-def job_status(job_parent_dir = './', write_abspath = False, write_band_gap = False):
+def job_status(job_parent_dir = './', write_abspath = False, write_band_gap = False, write_e_fermi = False, write_formula = False, write_volume = False, write_area = False, sort_by = None, screen_by = None, suppress_warning = False):
     '''
     Check the job status for multiple jobs
     job_parent_dir: This is the parent directory which contains multiple VASP jobs
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import convert
     from . import vasp_read
     from . import vasp_analyze
+    from . import vasp_default
     from .. import default_params
     import multiprocessing
     from multiprocessing import Pool
     import time
     import math
+    import numpy as np
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
     output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
     funcs.mkdir(output_dir)
+    incar_default_dict = vasp_default.incar_default() 
 
     job_parent_dir = os.path.abspath(job_parent_dir)
 
     if funcs.dir_status(job_parent_dir) == 0:
         quit()
+    #############################################
+    # initialize parameters
+    #############################################
+    # write_abspath tag
+    if not write_abspath == True and (not screen_by is None or not sort_by is None):
+        if suppress_warning == False:
+            print('#WARNING #2104251041 (from vasp_tools): screen_by or sort_by tag is not None, the write_abspath is automatically set to write_abspath = True')
+        write_abspath = True
+
+    if not sort_by is None:
+        if not write_band_gap == True and all(x in sort_by for x in ['band', 'gap']):
+            if suppress_warning == False:
+                print('#WARNING #2104251426 (from vasp_tools): sort by band gap is designated, the write_band_gap tag is automatically set to write_band_gap = True')
+            write_band_gap = True
+        if not write_e_fermi == True and all(x in sort_by for x in ['fermi']):
+            if suppress_warning == False:
+                print('#WARNING #2104251616 (from vasp_tools): sort by e_fermi is designated, the write_e_fermi tag is automatically set to write_e_fermi = True')
+            write_e_fermi = True
+        if not write_formula == True and all(x in sort_by for x in ['formula']):
+            if suppress_warning == False:
+                print('#WARNING #2104251617 (from vasp_tools): sort by formula is designated, the write_formula tag is automatically set to write_formula = True')
+            write_formula = True
+        if not write_volume == True and all(x in sort_by for x in ['volume']):
+            if suppress_warning == False:
+                print('#WARNING #2104252001 (from vasp_tools): sort by volume is designated, the write_volume tag is automatically set to write_volume = True')
+            write_volume = True
+        if not write_area == True and all(x in sort_by for x in ['area']):
+            if suppress_warning == False:
+                print('#WARNING #2104252002 (from vasp_tools): sort by area is designated, the write_area tag is automatically set to write_area = True')
+            write_area = True
+
+    if not screen_by is None:
+        if not write_band_gap == True and all(x in screen_by for x in ['band', 'gap']):
+            if suppress_warning == False:
+                print('#WARNING #2104251442 (from vasp_tools): screen by band gap is designated, the write_band_gap tag is automatically set to write_band_gap = True')
+            write_band_gap = True
+        if not write_e_fermi == True and all(x in screen_by for x in ['fermi']):
+            if suppress_warning == False:
+                print('#WARNING #2104251617 (from vasp_tools): screen by e_fermi is designated, the write_e_fermi tag is automatically set to write_e_fermi = True')
+            write_e_fermi = True
+        if not write_formula == True and all(x in screen_by for x in ['formula']):
+            if suppress_warning == False:
+                print('#WARNING #2104251618 (from vasp_tools): screen by formula is designated, the write_formula tag is automatically set to write_formula = True')
+            write_formula = True
+        if not write_volume == True and all(x in screen_by for x in ['volume']):
+            if suppress_warning == False:
+                print('#WARNING #2104252002 (from vasp_tools): screen by volume is designated, the write_volume tag is automatically set to write_volume = True')
+            write_volume = True
+        if not write_area == True and all(x in screen_by for x in ['area']):
+            if suppress_warning == False:
+                print('#WARNING #2104252003 (from vasp_tools): screen by area is designated, the write_area tag is automatically set to write_area = True')
+            write_area = True
 
     folder_level_list = []
     folder_path_list = []
@@ -507,6 +644,8 @@ def job_status(job_parent_dir = './', write_abspath = False, write_band_gap = Fa
     max_length_folder_path_str = max([len(x) for x in folder_path_str_list])
 
     job_status_file_path = os.path.join(output_dir, 'job_status_vasp_' + os.path.split(job_parent_dir)[-1] + '.txt')
+    job_status_arr = np.array([None] * len(folder_path_list) * 7)
+    job_status_arr.shape = len(folder_path_list), 7
     
     temp_str = ''
     # prepare header
@@ -518,9 +657,17 @@ def job_status(job_parent_dir = './', write_abspath = False, write_band_gap = Fa
         'energy(sigma->0)' + ' ' * (17 - len('energy(sigma->0)')) + 
         'elapsed_time' + ' ' * (14 - len('elapsed_time'))
         )
-##        'E-fermi' + ' ' * (8 - len('E-fermi')) + '\n' + 
     if write_band_gap == True:
-        temp_str = temp_str +  'Egap' + ' ' * (8 - len('Egap'))
+        temp_str = temp_str +  funcs.str_format('Egap', max_len = 8)
+    if write_e_fermi == True:
+        temp_str = temp_str +  funcs.str_format('Efermi', max_len = 8)
+    if write_formula == True:
+        temp_str = temp_str + funcs.str_format('atoms', max_len = 6) + funcs.str_format('formula', max_len = 21)
+    if write_volume == True:
+        temp_str = temp_str +  funcs.str_format('volume', max_len = 11)
+    if write_area == True:
+        # area_star is the cross product of the two vectors with the smallest lengths
+        temp_str = temp_str +  funcs.str_format('area_ab', max_len = 10) + funcs.str_format('area_bc', max_len = 10) + funcs.str_format('area_ca', max_len = 10) + funcs.str_format('area_star', max_len = 10)
     temp_str = temp_str + '\n'
     temp_str = temp_str + (
         ' ' * len('job_dir') + ' ' * (max_length_folder_path_str - len('job_dir')) + 
@@ -541,7 +688,15 @@ def job_status(job_parent_dir = './', write_abspath = False, write_band_gap = Fa
 ##        '-' * len('E-fermi') + ' ' * (8 - len('E-fermi')) + '\n' 
         )
     if write_band_gap == True:
-        temp_str = temp_str + '-' * len('Egap') + ' ' * (8 - len('Egap')) 
+        temp_str = temp_str + funcs.str_format('-' * len('Egap'), max_len = 8)
+    if write_e_fermi == True:
+        temp_str = temp_str + funcs.str_format('-' * len('Efermi'), max_len = 8)
+    if write_formula == True:
+        temp_str = temp_str + funcs.str_format('-' * len('atoms'), max_len = 6) + funcs.str_format('-' * len('formula'), max_len = 21)
+    if write_volume == True:
+        temp_str = temp_str + funcs.str_format('-' * len('volume'), max_len = 11)
+    if write_area == True:
+        temp_str = temp_str + funcs.str_format('-' * len('area_ab'), max_len = 10) + funcs.str_format('-' * len('area_bc'), max_len = 10) + funcs.str_format('-' * len('area_ca'), max_len = 10) + funcs.str_format('-' * len('area_star'), max_len = 10)
     temp_str = temp_str + '\n'
 
     # check each job
@@ -549,7 +704,7 @@ def job_status(job_parent_dir = './', write_abspath = False, write_band_gap = Fa
     for i_indx in range(0, len(folder_path_list)):
         #primitive_structure = data[i_indx]['cif']
         #material_id_list.append(data[i_indx]['material_id'])
-        args.append((folder_path_list, folder_path_str_list, i_indx, job_status_file_path, write_band_gap))
+        args.append((folder_path_list, folder_path_str_list, i_indx, job_status_file_path, write_band_gap, write_e_fermi, write_formula, write_volume, write_area))
     cores = math.ceil(multiprocessing.cpu_count() * 3 / 4)
 
     parallel_run = True
@@ -562,40 +717,279 @@ def job_status(job_parent_dir = './', write_abspath = False, write_band_gap = Fa
         print('# WARNING (2104082043): Running in serial mode.')
         parallel_run = False
 
-    results = ''
+    results_list = [None] * len(folder_path_list)
     if parallel_run == True:
         with Pool(cores) as p:
-            results = p.starmap(single_job_status, args)
+            results_list = p.starmap(single_job_status, args)
     elif parallel_run == False:
         for i_indx in range(0, len(folder_path_list)):
             # use unpacked arguments in the tuple
-            results = results + single_job_status(*args[i_indx])
+            results_list[i_indx] = single_job_status(*args[i_indx])
 
-    for i_str in results:
-        temp_str = temp_str + i_str
+    ##########################################################
+    # Screen the jobs according to certain criteria
+    ##########################################################
+    job_status_kwd_lowercase_list = ['job_dir', 'status', 'energy_without_entropy', 'toten', 'energy(sigma->0)', 'elapsed_time', 'egap', 'efermi', 'atoms', 'formula', 'volume', 'area_ab', 'area_bc', 'area_ca', 'area_star']
+    job_status_kwd_list = ['folder_path_str', 'job_status_str', 'energy_without_entropy', 'TOTEN', 'energy(sigma->0)', 'elapsed_time_hour', 'band_gap', 'e_fermi', 'num_atoms', 'formula', 'volume', 'area_ab', 'area_bc', 'area_ca', 'area_star']
 
+    float_tag_list = ['energy_without_entropy', 'TOTEN', 'energy(sigma->0)', 'elapsed_time_hour', 'band_gap', 'num_atoms', 'e_fermi', 'volume', 'area_ab', 'area_bc', 'area_ca', 'area_star']
+    str_tag_list = ['folder_path_str', 'job_status_str', 'formula']
+
+    screen_list = []
+    if not screen_by is None:
+        if '!=' in screen_by:
+            temp_logic_val = False
+        else:
+            temp_logic_val = True
+
+        for i_indx in range(0, len(folder_path_list)):
+            if '=' in screen_by and all(x not in screen_by for x in ['>', '<']):
+                screen_key = screen_by.split('=')[0].replace('\t', '    ').strip('\n').strip()
+                screen_value = screen_by.split('=')[1].replace('\t', '    ').strip('\n').strip()
+                if screen_key in incar_default_dict.keys() and not results_list[i_indx]['incar_dict'] is None:
+                    if results_list[i_indx]['incar_dict']['read_status'] == 1 and screen_key in results_list[i_indx]['incar_dict']:
+                        results_value = results_list[i_indx]['incar_dict'][screen_key]
+                    else:
+                        results_value = None
+                    if not (isinstance(results_value, int) or isinstance(results_value, float)):
+                        results_value = str(results_value).replace('\t', '    ').strip('\n').strip()
+                    else:
+                        screen_value = float(screen_value)
+                    screen_status = (screen_value == results_value)
+                    if screen_status == temp_logic_val:
+                        screen_list.append(results_list[i_indx])
+                if screen_key.lower() in job_status_kwd_lowercase_list:
+                    temp_indx = job_status_kwd_lowercase_list.index(screen_key.lower())
+                    if job_status_kwd_list[temp_indx] in str_tag_list:
+                        results_value = results_list[i_indx][job_status_kwd_list[temp_indx]]
+                    elif job_status_kwd_list[temp_indx] in float_tag_list:
+                        if results_list[i_indx][job_status_kwd_list[temp_indx]] != '--':
+                            results_value = float(results_list[i_indx][job_status_kwd_list[temp_indx]])
+                        else:
+                            results_value = results_list[i_indx][job_status_kwd_list[temp_indx]]
+                        if screen_value != '--':
+                            screen_value = float(screen_value)
+                    screen_status = (screen_value == results_value)
+                    if screen_status == temp_logic_val:
+                        screen_list.append(results_list[i_indx])
+                if screen_key == 'dir_level':
+                    results_value = float(folder_level_list[i_indx])
+                    if not (isinstance(results_value, int) or isinstance(results_value, float)):
+                        results_value = str(results_value).replace('\t', '    ').strip('\n').strip()
+                    else:
+                        screen_value = float(screen_value)
+                    screen_status = (screen_value == results_value)
+                    if screen_status == temp_logic_val:
+                        screen_list.append(results_list[i_indx])
+            elif '>' in screen_by:
+                if '>=' not in screen_by:
+                    screen_key = screen_by.split('>')[0].replace('\t', '    ').strip('\n').strip()
+                    screen_value = float(screen_by.split('>')[1].replace('\t', '    ').strip('\n').strip())
+                elif '>=' in screen_by:
+                    screen_key = screen_by.split('>=')[0].replace('\t', '    ').strip('\n').strip()
+                    screen_value = float(screen_by.split('>=')[1].replace('\t', '    ').strip('\n').strip())
+                if screen_key in incar_default_dict.keys() and not results_list[i_indx]['incar_dict'] is None:
+                    if results_list[i_indx]['incar_dict']['read_status'] == 1 and screen_key in results_list[i_indx]['incar_dict']:
+                        results_value = results_list[i_indx]['incar_dict'][screen_key]
+                    else:
+                        results_value = None
+                    screen_status = (results_value > screen_value)
+                    if '>=' in screen_by:
+                        screen_status = (results_value >= screen_value)
+                    if screen_status == True:
+                        screen_list.append(results_list[i_indx])
+                if screen_key.lower() in job_status_kwd_lowercase_list:
+                    temp_indx = job_status_kwd_lowercase_list.index(screen_key.lower())
+                    if job_status_kwd_list[temp_indx] in str_tag_list:
+                        results_value = results_list[i_indx][job_status_kwd_list[temp_indx]]
+                    elif job_status_kwd_list[temp_indx] in float_tag_list:
+                        if results_list[i_indx][job_status_kwd_list[temp_indx]] != '--':
+                            results_value = float(results_list[i_indx][job_status_kwd_list[temp_indx]])
+                        else:
+                            results_value = results_list[i_indx][job_status_kwd_list[temp_indx]]
+                        if screen_value != '--':
+                            screen_value = float(screen_value)
+                    screen_status = False
+                    if type(results_value) == type(screen_value):
+                        screen_status = (results_value > screen_value)
+                        if '>=' in screen_by:
+                            screen_status = (results_value >= screen_value)
+                        if screen_status == True:
+                            screen_list.append(results_list[i_indx])
+                if screen_key == 'dir_level':
+                    results_value = float(folder_level_list[i_indx])
+                    if not (isinstance(results_value, int) or isinstance(results_value, float)):
+                        results_value = str(results_value).replace('\t', '    ').strip('\n').strip()
+                    else:
+                        screen_value = float(screen_value)
+                    screen_status = False
+                    if type(results_value) == type(screen_value):
+                        screen_status = (results_value > screen_value)
+                    if '>=' in screen_by:
+                        screen_status = (results_value >= screen_value)
+                    if screen_status == True:
+                        screen_list.append(results_list[i_indx])
+            elif '<' in screen_by:
+                if '<=' not in screen_by:
+                    screen_key = screen_by.split('<')[0].replace('\t', '    ').strip('\n').strip()
+                    screen_value = float(screen_by.split('<')[1].replace('\t', '    ').strip('\n').strip())
+                if '<=' in screen_by:
+                    screen_key = screen_by.split('<=')[0].replace('\t', '    ').strip('\n').strip()
+                    screen_value = float(screen_by.split('<=')[1].replace('\t', '    ').strip('\n').strip())
+                if screen_key in incar_default_dict.keys() and not results_list[i_indx]['incar_dict'] is None:
+                    if results_list[i_indx]['incar_dict']['read_status'] == 1 and screen_key in results_list[i_indx]['incar_dict']:
+                        results_value = results_list[i_indx]['incar_dict'][screen_key]
+                    else:
+                        results_value = None
+                    screen_status = (results_value < screen_value)
+                    if '<=' in screen_by:
+                        screen_status = (results_value <= screen_value)
+                    if screen_status == True:
+                        screen_list.append(results_list[i_indx])
+                if screen_key.lower() in job_status_kwd_lowercase_list:
+                    temp_indx = job_status_kwd_lowercase_list.index(screen_key.lower())
+                    if job_status_kwd_list[temp_indx] in str_tag_list:
+                        results_value = results_list[i_indx][job_status_kwd_list[temp_indx]]
+                    elif job_status_kwd_list[temp_indx] in float_tag_list:
+                        if results_list[i_indx][job_status_kwd_list[temp_indx]] != '--':
+                            results_value = float(results_list[i_indx][job_status_kwd_list[temp_indx]])
+                        else:
+                            results_value = results_list[i_indx][job_status_kwd_list[temp_indx]]
+                        if screen_value != '--':
+                            screen_value = float(screen_value)
+                    screen_status = False
+                    if type(results_value) == type(screen_value):
+                        screen_status = (results_value < screen_value)
+                        if '<=' in screen_by:
+                            screen_status = (results_value <= screen_value)
+                        if screen_status == True:
+                            screen_list.append(results_list[i_indx])
+                if screen_key == 'dir_level':
+                    results_value = float(folder_level_list[i_indx])
+                    if not (isinstance(results_value, int) or isinstance(results_value, float)):
+                        results_value = str(results_value).replace('\t', '    ').strip('\n').strip()
+                    else:
+                        screen_value = float(screen_value)
+                    screen_status = False
+                    if type(results_value) == type(screen_value):
+                        screen_status = (results_value < screen_value)
+                    if '<=' in screen_by:
+                        screen_status = (results_value <= screen_value)
+                    if screen_status == True:
+                        screen_list.append(results_list[i_indx])
+
+        results_list = screen_list
+
+    ##########################################################
+    # Sort the jobs according to certain criteria
+    ##########################################################
+    if not sort_by is None:
+        i_tag = None
+        if all(x in sort_by for x in ['job', 'dir']):
+            i_tag = 'folder_path_str'
+            sorted_arg_arr = np.argsort(results_list['folder_path_str'])
+        elif all(x in sort_by for x in ['status']):
+            i_tag = 'job_status_str'
+            sorted_arg_arr = np.argsort([x['job_status_str'] for x in results_list])
+        elif all(x in sort_by for x in ['formula']):
+            i_tag = 'formula'
+            sorted_arg_arr = np.argsort([x['formula'] for x in results_list])
+        elif all(x in sort_by for x in ['energy', 'without', 'entropy']):
+            i_tag = 'energy_without_entropy'
+        elif all(x in sort_by for x in ['TOTEN']):
+            i_tag = 'TOTEN'
+        elif all(x in sort_by for x in ['energy', 'sigma', '0']):
+            i_tag = 'energy(sigma->0)'
+        elif all(x in sort_by for x in ['elapsed', 'time']):
+            i_tag = 'elapsed_time_hour'
+        elif all(x in sort_by for x in ['band', 'gap']):
+            i_tag = 'band_gap'
+        elif all(x in sort_by for x in ['atoms']):
+            i_tag = 'num_atoms'
+        elif all(x in sort_by for x in ['fermi']):
+            i_tag = 'e_fermi'
+        elif all(x in sort_by for x in ['volume']):
+            i_tag = 'volume'
+        elif all(x in sort_by for x in ['area_ab']):
+            i_tag = 'area_ab'
+        elif all(x in sort_by for x in ['area_bc']):
+            i_tag = 'area_bc'
+        elif all(x in sort_by for x in ['area_ca']):
+            i_tag = 'area_ca'
+        elif all(x in sort_by for x in ['area_star']):
+            i_tag = 'area_star'
+        else:
+            pass
+
+        if i_tag in float_tag_list:
+            # sort by float value
+            float_list = [x for x in results_list if x[i_tag] != '--']
+            float_value_list = [x[i_tag] for x in results_list if x[i_tag] != '--']
+            dash_list = [x for x in results_list if x[i_tag] == '--']
+            sorted_arg_arr = np.argsort(float_value_list)
+            sort_list = [None] * len(float_list)
+            for i_indx in range(len(float_list)):
+                sort_list[i_indx] = float_list[sorted_arg_arr[i_indx]]
+            sort_list = sort_list + dash_list
+            results_list = sort_list
+        elif i_tag in str_tag_list:
+            # sort by alphabetical order
+            sort_list = [None] * len(results_list)
+            for i_indx in range(len(results_list)):
+                sort_list[i_indx] = results_list[sorted_arg_arr[i_indx]]
+            results_list = sort_list
+
+    for i_indx in range(0, len(results_list)):
+        temp_str = temp_str + results_list[i_indx]['full_info_str']
 
     with open(job_status_file_path, 'w') as f:
         f.write(temp_str)
     funcs.write_log(logfile,
         'vasp_tools.job_status(\n' +
-        '    job_parent_dir = ' + 'r\'' + job_parent_dir + '\'' + '\n'
+        '    job_parent_dir = ' + 'r\'' + job_parent_dir + '\'' + '\n' + 
+        '    write_abspath = ' + str(write_abspath) + '\n' + 
+        '    write_band_gap = ' + str(write_band_gap) + '\n' + 
+        '    write_e_fermi = ' + str(write_e_fermi) + '\n' + 
+        '    write_formula = ' + str(write_formula) + '\n' + 
+        '    write_volume = ' + str(write_volume) + '\n' + 
+        '    write_area = ' + str(write_area) + '\n' + 
+        '    sort_by = ' + str(sort_by) + '\n' + 
+        '    screen_by = ' + str(screen_by) + '\n' + 
+        '    suppress_warning = ' + str(suppress_warning) + '\n' + 
         '    )\n' +
         '#############\n'
         )
+    return results_list
 
-    return temp_str
-
-def single_job_status(folder_path_list, folder_path_str_list, i_folder_indx, job_status_file_path, write_band_gap):
+def single_job_status(folder_path_list, folder_path_str_list, i_folder_indx, job_status_file_path, write_band_gap, write_e_fermi, write_formula, write_volume, write_area):
+    '''
+    Get the job status
+    '''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import convert
     from . import vasp_read
     from . import vasp_analyze
-    import numpy as np
 
-    data_arr = np.array([None] * len(folder_path_list) * 6)
-    data_arr.shape = len(folder_path_list), 6
+    single_job_status_dict = {}
+    single_job_status_dict['folder_path_str'] = None 
+    single_job_status_dict['job_status_str'] = None
+    single_job_status_dict['energy_without_entropy'] = None
+    single_job_status_dict['TOTEN'] = None
+    single_job_status_dict['energy(sigma->0)'] = None
+    single_job_status_dict['elapsed_time_hour'] = None
+    single_job_status_dict['band_gap'] = None
+    single_job_status_dict['e_fermi'] = None
+    single_job_status_dict['num_atoms'] = None
+    single_job_status_dict['formula'] = None
+    single_job_status_dict['volume'] = None
+    single_job_status_dict['area_ab'] = None
+    single_job_status_dict['area_bc'] = None
+    single_job_status_dict['area_ca'] = None
+    single_job_status_dict['area_star'] = None
+    single_job_status_dict['full_info_str'] = None
+    single_job_status_dict['incar_dict'] = None
 
     max_length_folder_path_str = max([len(x) for x in folder_path_str_list])
 #for i_folder_indx in range(0, len(folder_path_list)):
@@ -603,12 +997,39 @@ def single_job_status(folder_path_list, folder_path_str_list, i_folder_indx, job
     # check job status
     job_status = 'unfinished'
     job_status_str = 'undone'
+    poscar_file_path = os.path.join(folder_path_list[i_folder_indx], 'POSCAR')
+    poscar_file_status = funcs.file_status(poscar_file_path)
     if funcs.check_job_type(folder_path_list[i_folder_indx])['VASP'] == False:
         job_status = 'not_vasp_job'
         job_status_str = 'not_VASP_job'
-        #job_status_str = '--'
+        num_atoms = '--'
+        formula = '--'
+        volume = '--'
+        area_ab = '--'
+        area_bc = '--'
+        area_ca = '--'
+        area_star = '--'
+    else:
+        if poscar_file_status != 1:
+            num_atoms = '--'
+            formula = '--'
+            volume = '--'
+            area_ab = '--'
+            area_bc = '--'
+            area_ca = '--'
+            area_star = '--'
+        else:
+            poscar_dict = vasp_read.read_poscar(poscar_file_path)
+            num_atoms = poscar_dict['n_atoms']
+            formula = poscar_dict['alphabetical_formula']
+            volume = '{:.4f}'.format(poscar_dict['volume'])
+            area_ab = '{:.4f}'.format(poscar_dict['area_ab'])
+            area_bc = '{:.4f}'.format(poscar_dict['area_bc'])
+            area_ca = '{:.4f}'.format(poscar_dict['area_ca'])
+            area_star = '{:.4f}'.format(poscar_dict['area_star'])
     energy_without_entropy = None
     temp_str = ''
+    incar_dict = None
     for file0 in os.listdir(folder_path_list[i_folder_indx]):
         if 'OUTCAR' == file0:
             output_exist = True
@@ -616,6 +1037,7 @@ def single_job_status(folder_path_list, folder_path_str_list, i_folder_indx, job
             oszicar_file_path = os.path.join(folder_path_list[i_folder_indx], 'OSZICAR')
             kpoints_file_path = os.path.join(folder_path_list[i_folder_indx], 'KPOINTS')
             eigenval_file_path = os.path.join(folder_path_list[i_folder_indx], 'EIGENVAL')
+            incar_file_path = os.path.join(folder_path_list[i_folder_indx], 'INCAR')
             if vasp_job_finished(output_file_path) == True:
                 job_status = 'finished'
                 job_status_str = 'finished'
@@ -623,10 +1045,11 @@ def single_job_status(folder_path_list, folder_path_str_list, i_folder_indx, job
                 elapsed_time_hour = convert.time_converter(hour = 0, minute = 0, second = outcar_params_dict['elapsed_time'], unit = 'hour')
                 kpoints_dict = vasp_read.read_kpoints(kpoints_file_path)
                 oszicar_dict = vasp_read.read_oszicar(oszicar_file_path)
+                incar_dict = vasp_read.read_incar(incar_file_path)
 
                 # check if the parameters in the outcar_params_dict are valid
                 valid_outcar_par = True
-                temp_outcar_par_list = ['file_path', 'NELM', 'energy_without_entropy', 'TOTEN', 'energy(sigma->0)', 'elapsed_time']
+                temp_outcar_par_list = ['file_path', 'NELM', 'energy_without_entropy', 'TOTEN', 'energy(sigma->0)', 'elapsed_time', 'e_fermi']
                 for i_par in temp_outcar_par_list:
                     if funcs.variables_equal(outcar_params_dict[i_par], outcar_params_dict['initial_value_dict'][i_par]):
                         valid_outcar_par = False
@@ -647,6 +1070,7 @@ def single_job_status(folder_path_list, folder_path_str_list, i_folder_indx, job
                     job_status_str = 'NSW_reached'
 
                 valid_band_gap = True
+                band_gap = None
                 if write_band_gap == True:
                     eigenval_dict = vasp_read.read_eigenval(eigenval_file_path)
                     if eigenval_dict['read_status'] == 1:
@@ -661,22 +1085,47 @@ def single_job_status(folder_path_list, folder_path_str_list, i_folder_indx, job
                         band_gap = '--'
                     else:
                         band_gap = '{:.4f}'.format(band_gap)
-
-                    # check if the parameters in the band_gaps_dict are valid
-                    #if band_gap_dict['band_gap'] is None:
-                    #    valid_band_gap = False
-                    #    print('WARNING #2103301306 (from vasp_tools). band_gap_dict[\'band_gap\'] has an invalid value, please check the EIGENVAL/PROCAR file ' + band_gap_dict['file_path'] + '\n')
+                if write_e_fermi == True and valid_outcar_par == True:
+                    e_fermi = '{:.4f}'.format(outcar_params_dict['e_fermi'])
+                else:
+                    e_fermi = '--'
+                if write_formula == True and poscar_file_status == 1:
+                    num_atoms = poscar_dict['n_atoms']
+                    formula = poscar_dict['alphabetical_formula']
+                if write_volume == True and valid_outcar_par == True and poscar_file_status == 1:
+                    volume = '{:.4f}'.format(poscar_dict['volume'])
+                else:
+                    volume = '--'
+                if write_area == True and valid_outcar_par == True and poscar_file_status == 1:
+                    area_ab = '{:.4f}'.format(poscar_dict['area_ab'])
+                    area_bc = '{:.4f}'.format(poscar_dict['area_bc'])
+                    area_ca = '{:.4f}'.format(poscar_dict['area_ca'])
+                    area_star = '{:.4f}'.format(poscar_dict['area_star'])
+                else:
+                    area_ab = '--'
+                    area_bc = '--'
+                    area_ca = '--'
+                    area_star = '--'
             continue
   
     if job_status == 'finished' and valid_outcar_par and valid_oszicar_par:
+        single_job_status_dict['folder_path_str'] = folder_path_str_list[i_folder_indx] 
+        single_job_status_dict['job_status_str'] = job_status_str
+        single_job_status_dict['energy_without_entropy'] = outcar_params_dict['energy_without_entropy']
+        single_job_status_dict['TOTEN'] = outcar_params_dict['TOTEN']
+        single_job_status_dict['energy(sigma->0)'] = outcar_params_dict['energy(sigma->0)']
+        single_job_status_dict['elapsed_time_hour'] = elapsed_time_hour
+        single_job_status_dict['band_gap'] = band_gap
+        single_job_status_dict['e_fermi'] = e_fermi
+        single_job_status_dict['num_atoms'] = num_atoms
+        single_job_status_dict['formula'] = formula
+        single_job_status_dict['area_ab'] = area_ab
+        single_job_status_dict['area_bc'] = area_bc
+        single_job_status_dict['area_ca'] = area_ca
+        single_job_status_dict['area_star'] = area_star
+        single_job_status_dict['volume'] = volume
+        
         temp_str = temp_str + (
-            #(folder_path_str_list[i_folder_indx] + ' ' * (max_length_folder_path_str - len(folder_path_str_list[i_folder_indx])) + '   ' + 
-            #job_status_str + ' ' * (11 - len(job_status_str)) + 
-            #'{:.4f}'.format(outcar_params_dict['energy_without_entropy']) + ' ' * (16 - len('{:.4f}'.format(outcar_params_dict['energy_without_entropy']))) + 
-            #'{:.4f}'.format(outcar_params_dict['TOTEN']) + ' ' * (13 - len('{:.4f}'.format(outcar_params_dict['TOTEN']))) + 
-            #'{:.4f}'.format(outcar_params_dict['energy(sigma->0)']) + ' ' * (17 - len('{:.4f}'.format(outcar_params_dict['energy(sigma->0)']))) + 
-            #'{:.4f}'.format(elapsed_time_hour) + ' ' * (14 - len('{:.4f}'.format(elapsed_time_hour))) 
-            ## '{:.4f}'.format(outcar_params_dict['e_fermi']) + ' ' * (8 - len('{:.4f}'.format(outcar_params_dict['e_fermi']))) + 
             funcs.str_format(folder_path_str_list[i_folder_indx], max_len = max_length_folder_path_str) + '   '
             + funcs.str_format(job_status_str, max_len = 13) 
             + funcs.float_format(outcar_params_dict['energy_without_entropy'], max_len = 16, format_str = '{:.4f}')
@@ -686,8 +1135,31 @@ def single_job_status(folder_path_list, folder_path_str_list, i_folder_indx, job
             )
         if write_band_gap == True:
             temp_str = temp_str + funcs.str_format(band_gap, max_len = 8)
+        if write_e_fermi == True:
+            temp_str = temp_str + funcs.str_format(e_fermi, max_len = 8)
+        if write_formula == True:
+            temp_str = temp_str + funcs.str_format(num_atoms, max_len = 6) + funcs.str_format(formula, max_len = 21)
+        if write_volume == True:
+            temp_str = temp_str + funcs.str_format(volume, max_len = 11)
+        if write_area == True:
+            temp_str = temp_str + funcs.str_format(area_ab, max_len = 10) + funcs.str_format(area_bc, max_len = 10) + funcs.str_format(area_ca, max_len = 10) + funcs.str_format(area_star, max_len = 10)
         temp_str = temp_str + ' \n'
     else:
+        single_job_status_dict['folder_path_str'] = folder_path_str_list[i_folder_indx] 
+        single_job_status_dict['job_status_str'] = job_status_str
+        single_job_status_dict['energy_without_entropy'] = '--'
+        single_job_status_dict['TOTEN'] = '--'
+        single_job_status_dict['energy(sigma->0)'] = '--'
+        single_job_status_dict['elapsed_time_hour'] = '--'
+        single_job_status_dict['band_gap'] = '--'
+        single_job_status_dict['e_fermi'] = '--'
+        single_job_status_dict['num_atoms'] = num_atoms
+        single_job_status_dict['formula'] = formula
+        single_job_status_dict['area_ab'] = area_ab
+        single_job_status_dict['area_bc'] = area_bc
+        single_job_status_dict['area_ca'] = area_ca
+        single_job_status_dict['area_star'] = area_star
+        single_job_status_dict['volume'] = volume
         temp_str = temp_str + (
             funcs.str_format(folder_path_str_list[i_folder_indx], max_len = max_length_folder_path_str) + '   '
             + funcs.str_format(job_status_str, max_len = 13)
@@ -698,8 +1170,18 @@ def single_job_status(folder_path_list, folder_path_str_list, i_folder_indx, job
             )
         if write_band_gap == True:
             temp_str = temp_str + funcs.str_format('--', max_len = 8)
+        if write_e_fermi == True:
+            temp_str = temp_str + funcs.str_format('--', max_len = 8)
+        if write_formula == True:
+            temp_str = temp_str + funcs.str_format(num_atoms, max_len = 6) + funcs.str_format(formula, max_len = 21)
+        if write_volume == True:
+            temp_str = temp_str + funcs.str_format(volume, max_len = 11)
+        if write_area == True:
+            temp_str = temp_str + funcs.str_format(area_ab, max_len = 10) + funcs.str_format(area_bc, max_len = 10) + funcs.str_format(area_ca, max_len = 10) + funcs.str_format(area_star, max_len = 10)
         temp_str = temp_str + ' \n'
-    return temp_str
+    single_job_status_dict['full_info_str'] = temp_str
+    single_job_status_dict['incar_dict'] = incar_dict
+    return single_job_status_dict
 
 def check_file_type(file_path):
     '''
@@ -707,6 +1189,7 @@ def check_file_type(file_path):
     file_type: string format. It defines the file type, e.g. 'EIGENVAL', 'PROCAR'.
     the separator of each blocks in a line is white space.
     '''
+    args_dict = locals()
     import os
     from .. import funcs
 
@@ -764,6 +1247,7 @@ def get_latt_param(job_parent_dir = './'):
     Check the lattice properties (lattice size and angle) for multiple jobs
     job_parent_dir: This is the parent directory which contains multiple VASP jobs
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import convert
@@ -865,8 +1349,8 @@ def get_latt_param(job_parent_dir = './'):
                     angle_beta_degree_contcar = contcar_dict['angle_beta_degree']
                     angle_gamma_degree_contcar = contcar_dict['angle_gamma_degree']
 
-                    box_volume_poscar = poscar_dict['box_volume']
-                    box_volume_contcar = contcar_dict['box_volume']
+                    volume_poscar = poscar_dict['volume']
+                    volume_contcar = contcar_dict['volume']
                 continue
         if job_status == 'finished':
             temp_str = temp_str + (folder_path_str_list[i_folder_indx] + ' ' * (max_length_folder_path_str - len(folder_path_str_list[i_folder_indx])) + '   ' + 
@@ -884,8 +1368,8 @@ def get_latt_param(job_parent_dir = './'):
                 '{:.2f}'.format(angle_beta_degree_contcar) + ' ' * (11 - len('{:.2f}'.format(angle_beta_degree_contcar))) + 
                 '{:.2f}'.format(angle_gamma_degree_contcar) + ' ' * (11 - len('{:.2f}'.format(angle_gamma_degree_contcar))) + 
 
-                '{:.4f}'.format(box_volume_poscar) + ' ' * (13 - len('{:.4f}'.format(box_volume_poscar))) + 
-                '{:.4f}'.format(box_volume_contcar) + ' ' * (13 - len('{:.4f}'.format(box_volume_contcar))) + 
+                '{:.4f}'.format(volume_poscar) + ' ' * (13 - len('{:.4f}'.format(volume_poscar))) + 
+                '{:.4f}'.format(volume_contcar) + ' ' * (13 - len('{:.4f}'.format(volume_contcar))) + 
 
                 ' \n')
         else:
@@ -909,13 +1393,26 @@ def get_latt_param(job_parent_dir = './'):
                 ' \n')
     with open(job_status_file_path, 'w') as f:
         f.write(temp_str)
-    funcs.write_log(logfile,
-        'vasp_tools.get_latt_param(\n' +
-        '    job_parent_dir = ' + 'r\'' + job_parent_dir + '\'' + '\n'
-        '    )\n' +
-        '#############\n'
-        )
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    func_name = 'vasp_tools.get_latt_param'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
 
+        if i_arg == 'job_parent_dir':
+            arg_value_str = 'r\'' + job_parent_dir + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return temp_str
 
 def convert_coord_system(poscar_file_path, mode = 'direct2cartesian'):
@@ -923,6 +1420,7 @@ def convert_coord_system(poscar_file_path, mode = 'direct2cartesian'):
     Convert from Direct coordinate to Cartesian coordinate
     mode: 'direct2cartesian' or 'cartesian2direct'
     '''
+    args_dict = locals()
     import os
     from . import vasp_read
     from . import vasp_write
@@ -949,6 +1447,7 @@ def rm_outputs(dst_dir = None, clean_subdir = True):
     remove the output files of VASP jobs
     clean_subdir = True: also clean the subdirectories
     '''
+    args_dict = locals()
     import os
     from .. import default_params
     from .. import funcs
@@ -971,6 +1470,10 @@ def rm_outputs(dst_dir = None, clean_subdir = True):
     return 0
 
 def poscar_layer_dist_tolerance(poscar_dict, radius_style = 'csd', radius_scale_factor = 1.15):
+    '''
+    Get the tolerance value of the layer distance for a specific POSCAR file
+    '''
+    args_dict = locals()
     ###############################
     # Set layer_dist_tolerance
     ###############################
@@ -1002,6 +1505,7 @@ def poscar_direction_params(poscar_dict, direction = 'z'):
     '''
     get parameters related with a specified direction in a POSCAR file.
     '''
+    args_dict = locals()
     import numpy as np
     from .. import funcs
     poscar_direction_dict = {}
@@ -1042,7 +1546,7 @@ def poscar_direction_params(poscar_dict, direction = 'z'):
         ortho_vector = np.array([1, 0, 0])
         ortho_vector_1 = np.array([0, 1, 0])
         ortho_vector_2 = np.array([0, 0, 1])
-        box_len_ortho = (poscar_dict['vec_a'] + poscar_dict['vec_b'] + poscar_dict['vec_c']).dot(ortho_vector)
+        box_len_ortho = abs(poscar_dict['vec_a'] + poscar_dict['vec_b'] + poscar_dict['vec_c']).dot(ortho_vector)
         cos_angle = unit_vector.dot(ortho_vector)
         pos_arr_column = 3
         pos_arr_column_1 = 4
@@ -1064,7 +1568,7 @@ def poscar_direction_params(poscar_dict, direction = 'z'):
         ortho_vector = np.array([0, 1, 0])
         ortho_vector_1 = np.array([1, 0, 0])
         ortho_vector_2 = np.array([0, 0, 1])
-        box_len_ortho = (poscar_dict['vec_a'] + poscar_dict['vec_b'] + poscar_dict['vec_c']).dot(ortho_vector)
+        box_len_ortho = abs(poscar_dict['vec_a'] + poscar_dict['vec_b'] + poscar_dict['vec_c']).dot(ortho_vector)
         cos_angle = unit_vector.dot(ortho_vector)
         pos_arr_column = 4
         pos_arr_column_1 = 3
@@ -1086,7 +1590,7 @@ def poscar_direction_params(poscar_dict, direction = 'z'):
         ortho_vector = np.array([0, 0, 1])
         ortho_vector_1 = np.array([1, 0, 0])
         ortho_vector_2 = np.array([0, 1, 0])
-        box_len_ortho = (poscar_dict['vec_a'] + poscar_dict['vec_b'] + poscar_dict['vec_c']).dot(ortho_vector)
+        box_len_ortho = abs(poscar_dict['vec_a'] + poscar_dict['vec_b'] + poscar_dict['vec_c']).dot(ortho_vector)
         cos_angle = unit_vector.dot(ortho_vector)
         pos_arr_column = 5
         pos_arr_column_1 = 3
@@ -1116,11 +1620,12 @@ def poscar_direction_params(poscar_dict, direction = 'z'):
     poscar_direction_dict['pos_arr_direct_column_2'] = pos_arr_direct_column_2
     return poscar_direction_dict
 
-def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', delta = 0.05, layer_dist_tolerance = 'auto', radius_style = 'csd', radius_scale_factor = 1.15, write_layer_info = False, suppress_warning = True):
+def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', delta = 0.05, layer_dist_tolerance = 'auto', radius_style = 'csd', radius_scale_factor = 2.00, write_layer_info = False, suppress_warning = True):
     '''
     Get layer parameters from POSCAR
     delta: This is the spacial resolution (in unit of Angstrom) for the atoms, for example z=0.24 and z=0.25 are considered to be in the same position if delta=0.01. Default: delta = 0.05
     '''
+    args_dict = locals()
     import numpy as np
     from .. import funcs
     from . import vasp_read
@@ -1129,18 +1634,21 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
     import math
     import os
     from . import vasp_build
+    import itertools
 
     periodic_table_dict = periodic_table.periodic_tab()
 
     original_criteria = criteria
     original_layer_dist_tolerance = layer_dist_tolerance
     #recommended_layer_dist_tolerance = 0.664 
-    #################################################
+    #######################################################
     # Creating layer property dictionary: poscar_layer_dict
-    #################################################
+    #######################################################
     poscar_layer_dict = {}
     poscar_layer_dict['delta'] = delta
 
+    ##import pprint
+    ##pprint.pprint(poscar_direction_dict)
     poscar_dict['atom_number_ortho_' + poscar_direction_dict['number_order_text']] = funcs.atom_number_ortho(
         atom_key_arr = poscar_dict['atom_key_arr'],
         pos_arr_cartesian= poscar_dict['pos_arr'][:,3:6],
@@ -1149,6 +1657,7 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
         )
     layer_dist_tolerance = poscar_layer_dist_tolerance(poscar_dict, radius_style = radius_style, radius_scale_factor = radius_scale_factor)
     # group layers according to different properties and adding tags
+    poscar_layer_dict['direction'] = poscar_direction_dict['direction']
     poscar_layer_dict['num_layers'] = 0 
     poscar_layer_dict['layer_coord_list'] = [None]
     poscar_layer_dict['indx_list'] = [None]
@@ -1169,6 +1678,7 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
     poscar_layer_dict['vacuum_exist'] = None
     poscar_layer_dict['vacuum_width'] = None
     poscar_layer_dict['crystal_width'] = None
+    poscar_layer_dict['layer_info_str'] = None
 
     ######################################################################################################################################
     # Check whether the value of layer_dist_tolerance is appropriate or not.
@@ -1189,60 +1699,8 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
     ordered_atom_dist_arr = ordered_atom_pos_arr - ordered_last_atom_pos_arr
     abs_ordered_atom_dist_arr = np.abs(ordered_atom_dist_arr, out = ordered_atom_dist_arr)
     max_ordered_atom_dist = np.max(abs_ordered_atom_dist_arr)	
-    ###############################################################
-    #find the reasonable interlayer distance 
-    ###############################################################
-    if radius_style in ['csd', 'CSD']:
-        csd_covalent_radius_list = [periodic_table_dict['csd_covalent_radius'][i_elmt] for i_elmt in poscar_dict['elmt_species_arr']]
-        csd_covalent_radius_list.sort()
-        smallest_atom_radius = csd_covalent_radius_list[0]
-        largest_atom_radius = csd_covalent_radius_list[-1]
-        min_atom_bonding_len = smallest_atom_radius * 2 / 100 * radius_scale_factor
-        max_atom_bonding_len = largest_atom_radius * 2 / 100 * radius_scale_factor
-    low_interlayer_dist = poscar_layer_dict['delta']
-    high_interlayer_dist = max_atom_bonding_len 
-    normal_interlayer_dist_arr = np.array([x for x in abs_ordered_atom_dist_arr if x > low_interlayer_dist and x < high_interlayer_dist])
-    #normal_interlayer_dist_arr = np.array([x for x in normal_interlayer_dist_arr if abs(x - low_interlayer_dist) > delta])    
-    #print('normal_interalyer_dist_arr=',normal_interlayer_dist_arr)
-    if len(normal_interlayer_dist_arr) != 0:
-        poscar_layer_dict['corrected_layer_dist_tolerance'] = np.min(normal_interlayer_dist_arr) - delta_layer_dist
-    else:
-        poscar_layer_dict['corrected_layer_dist_tolerance'] = max_ordered_atom_dist - delta_layer_dist
-    #print('corrected_layer_dist_tolerance=',poscar_layer_dict['corrected_layer_dist_tolerance'])
 
-    #layer_dist_tolerance = poscar_layer_dict['corrected_layer_dist_tolerance']
-
-    # Set criteria
-    if layer_dist_tolerance >= max_ordered_atom_dist:
-        ##print('WARNING #2103202201 (from vasp_build.exfoliation): layer_dist_tolerance = ' + str(layer_dist_tolerance) + ' is too large for model ' + str(poscar_dict['file_path']) + '. It is automatically set to layer_dist_tolerance = ' + str(poscar_layer_dict['corrected_layer_dist_tolerance']))
-        layer_dist_tolerance = poscar_layer_dict['corrected_layer_dist_tolerance']
-        if criteria == 'auto':
-            criteria = 'periodicity'
-        elif criteria == 'bonding':
-            if suppress_warning == False:
-                print('# WARNING #2103211849 (from vasp_tools): Layers are connected by atom bonds. It is recommended to use the \'periodicity\' criterion to exfoliate the 2D material.')
-    elif layer_dist_tolerance < max_ordered_atom_dist:
-        layer_dist_tolerance = poscar_layer_dict['corrected_layer_dist_tolerance']
-        if criteria == 'auto':
-            criteria = 'bonding'
-        elif criteria == 'periodicity':
-            if suppress_warning == False:
-                print('There are atomic layers without interlayer atom bonding. It is recommended to use the \'bonding\' criterion to exfoliate the 2D material.')
-    poscar_layer_dict['criteria'] = criteria
-    #print('******',original_layer_dist_tolerance, layer_dist_tolerance)
-    # Use user-defined or automatically generated layer_dist_tolerance
-    if original_layer_dist_tolerance == 'auto':
-        pass
-    else:
-        # use user-defined value 
-        layer_dist_tolerance = original_layer_dist_tolerance
-    poscar_layer_dict['layer_dist_tolerance'] = layer_dist_tolerance
-    ##print('layer_dist_tolerance=================',layer_dist_tolerance)
-
-    ##if layer_dist_tolerance < recommended_layer_dist_tolerance:
-    ##    print('WARNING #2012301056 (from vasp_build.exfoliation): layer_dist_tolerance is smaller than ' + str(recommended_layer_dist_tolerance) + '(Default value of layer_dist_tolerance is (1.15 * 2 * (CSD_covalent_radius of He)) + arbitrary_delta = 1.15 * 2 * 0.28 + 0.02 = 0.664 Angstrom), It is recommended to be larger than this value.')
-    ##def poscar_layer_status(poscar_dict, poscar_direction_dict, poscar_layer_dict, radius_style = 'csd', radius_scale_factor = 1.15, write_layer_info = False, suppress_warning = True):
-    def poscar_layer_status(poscar_dict, poscar_direction_dict, delta = 0.05, radius_style = 'csd', radius_scale_factor = 1.15, write_layer_info = False, suppress_warning = True):
+    def poscar_layer_status(poscar_dict, poscar_direction_dict, delta = 0.05, radius_style = 'csd', radius_scale_factor = 2.00, write_layer_info = False, suppress_warning = True):
         '''
         Get the status of each layer
         Two modes: bonding, periodicity
@@ -1253,16 +1711,22 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
         # Reinitialize the parameters in poscar_layer_dict
         ###############################################################################
         poscar_layer_dict = {}
+        poscar_layer_dict['direction'] = poscar_direction_dict['direction']
         poscar_layer_dict['delta'] = delta
         poscar_layer_dict['num_layers'] = 0 
-        poscar_layer_dict['layer_coord_list'] = [None]
+        poscar_layer_dict['layer_coord_list'] = [list()]
         poscar_layer_dict['indx_list'] = [None]
         poscar_layer_dict['atoms_indx_list'] =  [list()]
         poscar_layer_dict['atom_name_list'] =  [list()]
         poscar_layer_dict['bond_status_list'] = [None]
         poscar_layer_dict['layer_bonding_indx_list'] = [None]
         poscar_layer_dict['layer_bonding_atom_name_list'] = [None]
+        # periodicity_status_list: Each layer is labled with the periodicity of the layer
         poscar_layer_dict['periodicity_status_list'] = [None]
+        # cell_by_bond_list: Each layer is labeled with the bond status of the cell. If all the items in the list are zeros, then this means the structure cannot be analyzed by bonding crietrion and atom layers are all bonded.
+        # cell_by_periodicity_list: Each layer is labeled with the periodicity status of the cell
+        poscar_layer_dict['cell_by_bond_list'] = [None]
+        poscar_layer_dict['cell_by_periodicity_list'] = [None]
         poscar_layer_dict['vacuum_exist'] = None
         poscar_layer_dict['vacuum_width'] = None
         poscar_layer_dict['crystal_width'] = None
@@ -1277,7 +1741,19 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
         i_layer_indx = 0
         bond_breaking = True
         shift_vec = poscar_dict['l_arr'][poscar_direction_dict['l_arr_row'],:]
+        s1 = poscar_dict['l_arr'][poscar_direction_dict['l_arr_column_1'],:]
+        s2 = poscar_dict['l_arr'][poscar_direction_dict['l_arr_column_2'],:]
+        shift_1 = s1
+        shift_2 = -s1
+        shift_3 = s2
+        shift_4 = -s2
+        shift_5 = s1 + s2
+        shift_6 = s1 - s2
+        shift_7 = -s1 + s2
+        shift_8 = -s1 - s2
         # First, find the atoms in each layer according to the parameter 'delta'
+        poscar_layer_dict['cell_by_bond_list'][0] = 1
+        poscar_layer_dict['cell_by_periodicity_list'][0] = 1
         for i in range(1, poscar_dict['n_atoms'] + 1):
             shift_top2bottom = False
             i_atom_indx = int(np.argwhere(poscar_dict['atom_number_ortho_' + poscar_direction_dict['number_order_text']] == i))
@@ -1295,16 +1771,19 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
             else:
                 i_layer_indx = i_layer_indx + 1
                 poscar_layer_dict['indx_list'].append(None)
-                poscar_layer_dict['layer_coord_list'].append(None)
+                poscar_layer_dict['layer_coord_list'].append(list())
                 poscar_layer_dict['atoms_indx_list'].append(list())
                 poscar_layer_dict['atom_name_list'].append(list())
                 poscar_layer_dict['bond_status_list'].append(None)
                 poscar_layer_dict['layer_bonding_indx_list'].append(None)
                 poscar_layer_dict['layer_bonding_atom_name_list'].append(None)
                 poscar_layer_dict['periodicity_status_list'].append(None)
+                poscar_layer_dict['cell_by_bond_list'].append(1)
+                poscar_layer_dict['cell_by_periodicity_list'].append(1)
             poscar_layer_dict['indx_list'][i_layer_indx] = i_layer_indx
-            poscar_layer_dict['layer_coord_list'][i_layer_indx] = i_atom_pos
+            poscar_layer_dict['layer_coord_list'][i_layer_indx].append(i_atom_pos)
             if shift_top2bottom == False:
+                ##poscar_layer_dict['layer_coord_list'][i_layer_indx] = i_atom_pos
                 poscar_layer_dict['atoms_indx_list'][i_layer_indx].append(i_atom_indx)
                 poscar_layer_dict['atom_name_list'][i_layer_indx].append(poscar_dict['atomname_list'][i_atom_indx])
             poscar_layer_dict['bond_status_list'][i_layer_indx] = 0
@@ -1319,6 +1798,7 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
         # where j = i + n, k = i - n, n = 1, 2, 3, 4, 5 and n should be smaller than half the 
         # number of layers
         #######################################################################################
+
         bottom_indx = 0
         top_indx = poscar_layer_dict['num_layers'] - 1
         n_indx_max = 15
@@ -1351,7 +1831,18 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
                         j_atom_pos = poscar_dict['pos_arr'][j_atom_indx, 3:6] + base_j * shift_vec
                         ##print(n_indx, base_j, poscar_dict['pos_arr'][j_atom_indx, 3:6])
                         ##print(j_atom_pos)
-                        bonding = funcs.form_bond(i_elmt, j_elmt, i_atom_pos, j_atom_pos, mode = radius_style, factor = radius_scale_factor) 
+                        # Due to periodic boundary condition, some atoms may form bond across the boundary. The j atom is shifted to account for this 
+                        bonding_0 = funcs.form_bond(i_elmt, j_elmt, i_atom_pos, j_atom_pos, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_1 = funcs.form_bond(i_elmt, j_elmt, i_atom_pos, j_atom_pos + shift_1, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_2 = funcs.form_bond(i_elmt, j_elmt, i_atom_pos, j_atom_pos + shift_2, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_3 = funcs.form_bond(i_elmt, j_elmt, i_atom_pos, j_atom_pos + shift_3, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_4 = funcs.form_bond(i_elmt, j_elmt, i_atom_pos, j_atom_pos + shift_4, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_5 = funcs.form_bond(i_elmt, j_elmt, i_atom_pos, j_atom_pos + shift_5, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_6 = funcs.form_bond(i_elmt, j_elmt, i_atom_pos, j_atom_pos + shift_6, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_7 = funcs.form_bond(i_elmt, j_elmt, i_atom_pos, j_atom_pos + shift_7, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_8 = funcs.form_bond(i_elmt, j_elmt, i_atom_pos, j_atom_pos + shift_8, mode = radius_style, factor = radius_scale_factor) 
+                        ##bonding = funcs.form_bond(i_elmt, j_elmt, i_atom_pos, j_atom_pos, mode = radius_style, factor = radius_scale_factor) 
+                        bonding = any([bonding_0, bonding_1, bonding_2, bonding_3, bonding_4, bonding_5 ,bonding_6, bonding_7 ,bonding_8])
                         ij_atom_bonding_list.append(bonding)
                         if bonding == True:
                             ij_layer_bonding = True
@@ -1359,7 +1850,17 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
                     for k_atom_indx in k_layer_atom_indx_list:
                         k_elmt = poscar_dict['atom_species_arr'][k_atom_indx]
                         k_atom_pos = poscar_dict['pos_arr'][k_atom_indx, 3:6] + base_k * shift_vec
-                        bonding = funcs.form_bond(i_elmt, k_elmt, i_atom_pos, k_atom_pos, mode = radius_style, factor = radius_scale_factor) 
+                        ##bonding = funcs.form_bond(i_elmt, k_elmt, i_atom_pos, k_atom_pos, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_0 = funcs.form_bond(i_elmt, k_elmt, i_atom_pos, k_atom_pos, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_1 = funcs.form_bond(i_elmt, k_elmt, i_atom_pos, k_atom_pos + shift_1, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_2 = funcs.form_bond(i_elmt, k_elmt, i_atom_pos, k_atom_pos + shift_2, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_3 = funcs.form_bond(i_elmt, k_elmt, i_atom_pos, k_atom_pos + shift_3, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_4 = funcs.form_bond(i_elmt, k_elmt, i_atom_pos, k_atom_pos + shift_4, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_5 = funcs.form_bond(i_elmt, k_elmt, i_atom_pos, k_atom_pos + shift_5, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_6 = funcs.form_bond(i_elmt, k_elmt, i_atom_pos, k_atom_pos + shift_6, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_7 = funcs.form_bond(i_elmt, k_elmt, i_atom_pos, k_atom_pos + shift_7, mode = radius_style, factor = radius_scale_factor) 
+                        bonding_8 = funcs.form_bond(i_elmt, k_elmt, i_atom_pos, k_atom_pos + shift_8, mode = radius_style, factor = radius_scale_factor) 
+                        bonding = any([bonding_0, bonding_1, bonding_2, bonding_3, bonding_4, bonding_5 ,bonding_6, bonding_7 ,bonding_8])
                         ik_atom_bonding_list.append(bonding)
                         if bonding == True:
                             ik_layer_bonding = True
@@ -1408,6 +1909,7 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
         #
         # in the above description, "left" deontes "bottom" and "right" denotes "top"
         ########################################################################################################
+        ##print(poscar_layer_dict['bond_status_list'])
         if 0 not in poscar_layer_dict['bond_status_list']:
             for i_layer_indx in range(0, poscar_layer_dict['num_layers']):
                 for n_indx in range(2, n_indx_max):
@@ -1434,29 +1936,51 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
             # Treating model with  all layers bonded, but with a vacuum layer
             # Bond status cannot be solely used to treat this situation.
             # if the layer separation between the i-th and the k-th layer is larger than
-            # the thresold_vacuum_width, the vacuum exists. And the i-th item and the k-th items of 
+            # the thresold_vacuum_width, the vacuum exists. And the i-th layer and the k-th layer of 
             # the bond_status_list take the values of 1 and -1
             ########################################################################################
             thresold_vacuum_width = 5.0
             if len(set(poscar_layer_dict['bond_status_list'])) == 1 and len(poscar_layer_dict['bond_status_list']) != 1 and 2 in poscar_layer_dict['bond_status_list']:
                 top_layer_indx = poscar_layer_dict['num_layers'] - 1
                 bottom_layer_indx = 0
-                top_width = poscar_direction_dict['box_len_ortho'] - poscar_layer_dict['layer_coord_list'][top_layer_indx]
-                bottom_width = poscar_layer_dict['layer_coord_list'][bottom_layer_indx]
+                ##top_width = poscar_direction_dict['box_len_ortho'] - poscar_layer_dict['layer_coord_list'][top_layer_indx]
+                ##bottom_width = poscar_layer_dict['layer_coord_list'][bottom_layer_indx]
+                top_width = poscar_direction_dict['box_len_ortho'] - np.max([item for sublist in poscar_layer_dict['layer_coord_list'] for item in sublist])
+                bottom_width = np.min([item for sublist in poscar_layer_dict['layer_coord_list'] for item in sublist])
                 top_plus_bottom_width = top_width + bottom_width
+                ##print('box_len_ortho=',poscar_direction_dict['box_len_ortho'],poscar_layer_dict['layer_coord_list'])
+                ##print('top=',top_width,'bottom=',bottom_width,'top+bottom=',top_plus_bottom_width)
                 if top_plus_bottom_width > thresold_vacuum_width:
                     poscar_layer_dict['bond_status_list'][top_layer_indx] = 1
                     poscar_layer_dict['bond_status_list'][bottom_layer_indx] = -1
-                # Get layer spearation between the i-th and the k-th (k-th layer is the next layer to i-th layer)
+                # Get layer spearation between the i-th and the k-th layers (the k-th layer is the next layer to the i-th layer)
                 ik_layer_separation_list = []
                 n_indx = 1
                 for i_layer_indx in range(0, poscar_layer_dict['num_layers']):
                     k_layer_indx_temp = i_layer_indx + n_indx
                     base_k = math.floor(k_layer_indx_temp / poscar_layer_dict['num_layers'])
                     k_layer_indx = k_layer_indx_temp - base_k * poscar_layer_dict['num_layers']
-                    ik_layer_separation = abs(poscar_layer_dict['layer_coord_list'][k_layer_indx] - poscar_layer_dict['layer_coord_list'][i_layer_indx])
+                    # find the minimum separation between the i-th and the k-th layers
+                    if i_layer_indx == 0 or k_layer_indx == 0: 
+                        temp_separation_list = []
+                        i_layer_pos_min = np.min(poscar_layer_dict['layer_coord_list'][i_layer_indx])
+                        i_layer_pos_max = np.max(poscar_layer_dict['layer_coord_list'][i_layer_indx])
+                        k_layer_pos_min = np.min(poscar_layer_dict['layer_coord_list'][k_layer_indx])
+                        k_layer_pos_max = np.max(poscar_layer_dict['layer_coord_list'][k_layer_indx])
+                        for i_pos in [i_layer_pos_min, i_layer_pos_max]:
+                            for k_pos in [k_layer_pos_min, k_layer_pos_max]:
+                                temp_separation_list.append(abs(i_pos - k_pos))
+                        ##ik_layer_separation = abs(poscar_layer_dict['layer_coord_list'][k_layer_indx] - poscar_layer_dict['layer_coord_list'][i_layer_indx])
+                        dis_1 = abs((i_pos - k_pos) + poscar_direction_dict['box_len_ortho'])
+                        dis_2 = abs((i_pos - k_pos) - poscar_direction_dict['box_len_ortho'])
+                        dis_3 = abs(-(i_pos - k_pos) + poscar_direction_dict['box_len_ortho'])
+                        dis_4 = abs(-(i_pos - k_pos) - poscar_direction_dict['box_len_ortho'])
+                        ik_layer_separation = np.min([np.min(temp_separation_list), dis_1, dis_2, dis_3, dis_4])
+                    else:
+                        ik_layer_separation = abs(np.min(poscar_layer_dict['layer_coord_list'][k_layer_indx]) - np.min(poscar_layer_dict['layer_coord_list'][i_layer_indx]))
                     ik_layer_separation_list.append(ik_layer_separation)
 
+                    #print('ik_layer_separation=',ik_layer_separation, 'k=', k_layer_indx,poscar_layer_dict['layer_coord_list'][k_layer_indx], 'i=',i_layer_indx, poscar_layer_dict['layer_coord_list'][i_layer_indx])
                     if ik_layer_separation > thresold_vacuum_width and i_layer_indx != top_layer_indx:
                         poscar_layer_dict['bond_status_list'][i_layer_indx] = 1
                         poscar_layer_dict['bond_status_list'][k_layer_indx] = -1
@@ -1472,7 +1996,8 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
                             if top_plus_bottom_width > mean_layer_separation * 2:
                                 poscar_layer_dict['bond_status_list'][i_layer_indx] = 1
                                 poscar_layer_dict['bond_status_list'][k_layer_indx] = -1
-
+        ##if write_layer_info == True:
+        ##    print('bond_status_list = ',poscar_layer_dict['bond_status_list'])
         ######################################################################
         # Get vacuum width and crystal_width
         ######################################################################
@@ -1508,6 +2033,7 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
                     elif np.min(i_layer_atom_pos_list) > np.min(k_layer_atom_pos_list):
                         poscar_layer_dict['crystal_width'] = abs(np.max(i_layer_atom_pos_list) - np.min(k_layer_atom_pos_list))
                         poscar_layer_dict['vacuum_width'] = poscar_direction_dict['box_len_ortho'] - poscar_layer_dict['crystal_width']
+                    break
                 elif len(poscar_layer_dict['bond_status_list']) > 1 and poscar_layer_dict['bond_status_list'][i_layer_indx] == 0:
                     poscar_layer_dict['vacuum_exist'] = True
                     for i_atom_indx in poscar_layer_dict['atoms_indx_list'][i_layer_indx]:
@@ -1520,9 +2046,10 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
                     elif i_layer_indx == (poscar_layer_dict['num_layers'] - 1): 
                         poscar_layer_dict['crystal_width'] = abs(np.max(i_layer_atom_pos_list) - np.min(k_layer_atom_pos_list))
                         poscar_layer_dict['vacuum_width'] = poscar_direction_dict['box_len_ortho'] - poscar_layer_dict['crystal_width']
+                    break
 
         #########################################
-        # check periodicity status of layers
+        # Get periodicity status of layers
         #########################################
         #poscar_direction_dict = poscar_direction_params(poscar_dict = poscar_dict, direction = direction)
         atom_dist_tolerance = 0.05 
@@ -1538,7 +2065,7 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
             i_layer_atom_indx_list = poscar_layer_dict['atoms_indx_list'][i_layer_indx] 
             i_layer_coord = poscar_layer_dict['layer_coord_list'][i_layer_indx]
             for j_layer_indx in range(i_layer_indx + 1, poscar_layer_dict['num_layers']):
-                if poscar_layer_dict['periodicity_status_list'][j_layer_indx] != None:
+                if not poscar_layer_dict['periodicity_status_list'][j_layer_indx] is None:
                     continue
                 j_layer_atom_indx_list = poscar_layer_dict['atoms_indx_list'][j_layer_indx] 
                 j_layer_coord = poscar_layer_dict['layer_coord_list'][j_layer_indx]
@@ -1556,16 +2083,18 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
 
                         ortho_layer_direct_dist = poscar_dict['pos_arr'][j_atom_indx, poscar_direction_dict['pos_arr_direct_column']] - poscar_dict['pos_arr'][i_atom_indx, poscar_direction_dict['pos_arr_direct_column']]
                         disp_direct_vec = ortho_layer_direct_dist * poscar_direction_dict['ortho_vector']
+
                         ij_atom_direct_vec = j_atom_pos_direct - (i_atom_pos_direct + disp_direct_vec)
                         ij_atom_cartesian_vec = np.array([None] * 3)
-                        ij_atom_cartesian_vec[0] = np.dot(ij_atom_direct_vec, poscar_dict['l_arr'][:,[0]])
-                        ij_atom_cartesian_vec[1] = np.dot(ij_atom_direct_vec, poscar_dict['l_arr'][:,[1]])
-                        ij_atom_cartesian_vec[2] = np.dot(ij_atom_direct_vec, poscar_dict['l_arr'][:,[2]])
+                        ij_atom_cartesian_vec[0:3] = np.dot(ij_atom_direct_vec, poscar_dict['l_arr'])
                         ij_atom_cartesian_dist = np.linalg.norm(ij_atom_cartesian_vec) 
 
                         if i_elmt == j_elmt and ij_atom_cartesian_dist <= atom_dist_tolerance:
                             identical_atoms_list2.append(True)
-                        elif i_elmt != j_elmt and ij_atom_cartesian_dist > atom_dist_tolerance:
+                        #elif i_elmt != j_elmt and ij_atom_cartesian_dist > atom_dist_tolerance:
+                        elif i_elmt == j_elmt and ij_atom_cartesian_dist > atom_dist_tolerance:
+                            identical_atoms_list2.append(False)
+                        else:
                             identical_atoms_list2.append(False)
                     if True in identical_atoms_list2:
                         identical_atoms_list1.append(True)
@@ -1575,37 +2104,106 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
                     pass
                 else:
                     poscar_layer_dict['periodicity_status_list'][j_layer_indx] = original_periodicity_number 
-        ##################################
-        # print atoms in each layer
-        ##################################
-        if write_layer_info == True:
+            #print('layer ', i_layer_indx + 1, identical_atoms_list2)
+            #print(i_layer_indx, poscar_layer_dict['periodicity_status_list'][i_layer_indx])
+
+        ################################################################################################################
+        # Get cell periodicity based on bond_status_list and periodicity_status_list, each layer is labeled with the cell periodicity number
+        ################################################################################################################
+        cell_by_periodicity_number = 0
+        # Each layer is labeled by a number , so find out the elements with the value of 0 or 1 in the periodicity status list
+        layer_indices_0_list = [i for i, x in enumerate(poscar_layer_dict['periodicity_status_list']) if x == 0]
+        layer_indices_1_list = [i for i, x in enumerate(poscar_layer_dict['periodicity_status_list']) if x == 1]
+        # characteristic_periodicity_indx denotes the characteristic index for identifying the new layers. When checking the layer index from layer to layer, if the characteristic_periodicithy_indx is met, a new periodicity is identified. 
+        # Due to the periodic boundary condition, in some model, the first layer (layer index =0) may be the same layer in the other end of the model, The program starts to screen atoms from the first layer, but in this case the first layer only contains part of the atoms of the actual layer,  thus in this case, in searching for the new layers, better set the second layer (layer index = 1) as the starting layer.
+        characteristic_periodicity_indx = 0
+        if len(layer_indices_0_list) == 1:
+            # this situation corresponds to a model with only one layer
+            characteristic_periodicity_indx = 0
+        if len(layer_indices_0_list) > 1 and len(layer_indices_1_list) > 1:
+            delta_indices_0 = layer_indices_0_list[1] - layer_indices_0_list[0]
+            delta_indices_1 = layer_indices_1_list[1] - layer_indices_1_list[0]
+            ##if delta_indices_0 > delta_indices_1:
+            ##    characteristic_periodicity_indx = 1
+            ##else:
+            ##    characteristic_periodicity_indx = 0
+            characteristic_periodicity_indx = 0
+        # get the layer index of the layer with the maximum periodicity status index
+        # Only when the maximum periodicity index is exceeded, and when the characteristic_periodicity_indx is met, the new period is admitted.
+        max_periodicity_indx = np.max([x for x in poscar_layer_dict['periodicity_status_list'] if x is not None])
+        max_p_layer_indx_list = np.argwhere(poscar_layer_dict['periodicity_status_list'] == max_periodicity_indx)
+        max_p_layer_indx_list = list(itertools.chain.from_iterable(max_p_layer_indx_list))
+
+        cell_by_bond_number = 0
+        cell_by_periodicity_number = 0
+        admit_new_period = True
+        for i_layer_indx in range(0, poscar_layer_dict['num_layers']):
+           # Deal with bond_status_list
+           if poscar_layer_dict['bond_status_list'][i_layer_indx] == -1:
+               cell_by_bond_number = cell_by_bond_number + 1
+           poscar_layer_dict['cell_by_bond_list'][i_layer_indx] = cell_by_bond_number
+
+           # Deal with periodicity_status_list
+           if i_layer_indx in max_p_layer_indx_list:
+               # once the maximum periodicity index is found, the new period will be admitted when the characteristic_periodicity_indx is met.
+               admit_new_period = True
+           if (poscar_layer_dict['periodicity_status_list'][i_layer_indx] == characteristic_periodicity_indx) and admit_new_period == True:
+               cell_by_periodicity_number = cell_by_periodicity_number + 1
+               admit_new_period = False
+           poscar_layer_dict['cell_by_periodicity_list'][i_layer_indx] = cell_by_periodicity_number
+        # If the layers can be distinguished by bonding criterion, then modify the cell period number with value 0 to a resonable value
+        max_b_layer_number = np.max(poscar_layer_dict['cell_by_bond_list'])
+        for i_layer_indx in range(0, poscar_layer_dict['num_layers']):
+            if poscar_layer_dict['cell_by_bond_list'][i_layer_indx] == 0:
+                poscar_layer_dict['cell_by_bond_list'][i_layer_indx] = max_b_layer_number
+
+        def get_layer_info_str(poscar_dict, poscar_layer_dict):
+
+            '''
+            Get a string of layer information
+            '''
             layer_info_str = ''
             layer_info_str = layer_info_str + '# ' + poscar_dict['file_path'] + '\n'
-            if poscar_direction_dict['number_order_text'] == 'z':
+            #if poscar_direction_dict['number_order_text'] == 'z':
+            if poscar_layer_dict['direction'] == 'z':
                 layer_info_str = layer_info_str + 'direction: c' + '\n'
-            elif poscar_direction_dict['number_order_text'] == 'y':
+            #elif poscar_direction_dict['number_order_text'] == 'y':
+            elif poscar_layer_dict['direction'] == 'y':
                 layer_info_str = layer_info_str + 'direction: b' + '\n'
-            elif poscar_direction_dict['number_order_text'] == 'x':
+            #elif poscar_direction_dict['number_order_text'] == 'x':
+            elif poscar_layer_dict['direction'] == 'x':
                 layer_info_str = layer_info_str + 'direction: a' + '\n'
             layer_info_str = layer_info_str + ( 
                     funcs.str_format('layer', 7, ' ') + 
                     funcs.str_format('bonding', 9, ' ') + 
                     funcs.str_format('periodicity', 13, ' ') + 
+                    funcs.str_format('cell_bond', 11, ' ') + 
+                    funcs.str_format('cell_period', 13, ' ') + 
                     funcs.str_format('atoms in layer', 25, ' ') + 
                     'bonded atoms list' + '\n')
             for i_layer_indx in reversed(range(poscar_layer_dict['num_layers'])): 
                 i_layer_indx_str = str(i_layer_indx + 1)
                 i_bond_status_str = str(poscar_layer_dict['bond_status_list'][i_layer_indx])
                 i_periodicity_status_str = str(poscar_layer_dict['periodicity_status_list'][i_layer_indx])
+                i_cell_bond_str = str(poscar_layer_dict['cell_by_bond_list'][i_layer_indx])
+                i_cell_period_str = str(poscar_layer_dict['cell_by_periodicity_list'][i_layer_indx])
                 i_atom_name_list_str = str(poscar_layer_dict['atom_name_list'][i_layer_indx])
                 i_bonded_atom_name_list_str = str(poscar_layer_dict['layer_bonding_atom_name_list'][i_layer_indx])
                 layer_info_str = layer_info_str + ( 
                     funcs.str_format(i_layer_indx_str, 7, ' ') + 
                     funcs.str_format(i_bond_status_str, 9, ' ') + 
                     funcs.str_format(i_periodicity_status_str, 13, ' ') + 
+                    funcs.str_format(i_cell_bond_str, 11, ' ') + 
+                    funcs.str_format(i_cell_period_str, 13, ' ') + 
                     funcs.str_format(i_atom_name_list_str, 25, ' ') +
                     i_bonded_atom_name_list_str + '\n')
-            print(layer_info_str)
+            return layer_info_str
+        poscar_layer_dict['layer_info_str'] = get_layer_info_str(poscar_dict, poscar_layer_dict)
+        ##################################
+        # print atoms in each layer
+        ##################################
+        if write_layer_info == True:
+            print(poscar_layer_dict['layer_info_str'])
         return poscar_layer_dict
 
     temp_poscar_layer_dict = poscar_layer_dict
@@ -1621,11 +2219,12 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
     temp_poscar_layer_dict = poscar_layer_dict
     condition_1 = len(poscar_layer_dict['bond_status_list']) > 1
     condition_2 = 0 in poscar_layer_dict['bond_status_list']
+    condition_a1 = (poscar_layer_dict['bond_status_list'].count(1) > 1) and (poscar_layer_dict['bond_status_list'].count(-1) > 1)
 
     num_iter = 10
     radius_scale_factor_list = radius_scale_factor + 0.05 * np.array([sum(np.arange(1, x)) for x in np.arange(2, num_iter + 2)])
 
-    if condition_1 and condition_2:
+    if (condition_1 and condition_2) or condition_a1:
         for radius_scale_factor in radius_scale_factor_list:
             if suppress_warning == False:
                 print('# WARNING #2104121511 (from vasp_tools): radius_scale_factor too small. Set radius_scale_factor = ', '{:.4f}'.format(radius_scale_factor))
@@ -1711,4 +2310,85 @@ def poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'auto', d
 
     poscar_layer_dict['bond_status_list'] = poscar_layer_dict['bond_status_list']
     poscar_layer_dict['periodicity_status_list'] = poscar_layer_dict['periodicity_status_list']
+
+    ###############################################################
+    #find the reasonable interlayer distance 
+    ###############################################################
+    if radius_style in ['csd', 'CSD']:
+        csd_covalent_radius_list = [periodic_table_dict['csd_covalent_radius'][i_elmt] for i_elmt in poscar_dict['elmt_species_arr']]
+        csd_covalent_radius_list.sort()
+        smallest_atom_radius = csd_covalent_radius_list[0]
+        largest_atom_radius = csd_covalent_radius_list[-1]
+        min_atom_bonding_len = smallest_atom_radius * 2 / 100 * radius_scale_factor
+        max_atom_bonding_len = largest_atom_radius * 2 / 100 * radius_scale_factor
+    low_interlayer_dist = poscar_layer_dict['delta']
+    high_interlayer_dist = max_atom_bonding_len 
+    normal_interlayer_dist_arr = np.array([x for x in abs_ordered_atom_dist_arr if x > low_interlayer_dist and x < high_interlayer_dist])
+    #normal_interlayer_dist_arr = np.array([x for x in normal_interlayer_dist_arr if abs(x - low_interlayer_dist) > delta])    
+    #print('normal_interalyer_dist_arr=',normal_interlayer_dist_arr)
+    if len(normal_interlayer_dist_arr) != 0:
+        poscar_layer_dict['corrected_layer_dist_tolerance'] = np.min(normal_interlayer_dist_arr) - delta_layer_dist
+    else:
+        poscar_layer_dict['corrected_layer_dist_tolerance'] = max_ordered_atom_dist - delta_layer_dist
+
+    # Set criteria
+    if layer_dist_tolerance >= max_ordered_atom_dist:
+        ##print('WARNING #2103202201 (from vasp_build.exfoliation): layer_dist_tolerance = ' + str(layer_dist_tolerance) + ' is too large for model ' + str(poscar_dict['file_path']) + '. It is automatically set to layer_dist_tolerance = ' + str(poscar_layer_dict['corrected_layer_dist_tolerance']))
+        layer_dist_tolerance = poscar_layer_dict['corrected_layer_dist_tolerance']
+        if criteria == 'auto':
+            criteria = 'periodicity'
+        elif criteria == 'bonding':
+            if suppress_warning == False:
+                print('# WARNING #2103211849 (from vasp_tools): Layers are connected by atom bonds. It is recommended to use the \'periodicity\' criterion to exfoliate the 2D material.')
+    elif layer_dist_tolerance < max_ordered_atom_dist:
+        layer_dist_tolerance = poscar_layer_dict['corrected_layer_dist_tolerance']
+        if criteria == 'auto':
+            criteria = 'bonding'
+        elif criteria == 'periodicity':
+            if suppress_warning == False:
+                print('There are atomic layers without interlayer atom bonding. It is recommended to use the \'bonding\' criterion to exfoliate the 2D material.')
+    poscar_layer_dict['criteria'] = criteria
+    #print('******',original_layer_dist_tolerance, layer_dist_tolerance)
+    # Use user-defined or automatically generated layer_dist_tolerance
+    if original_layer_dist_tolerance == 'auto':
+        pass
+    else:
+        # use user-defined value 
+        layer_dist_tolerance = original_layer_dist_tolerance
+    poscar_layer_dict['layer_dist_tolerance'] = layer_dist_tolerance
+    ##print('layer_dist_tolerance=================',layer_dist_tolerance)
+
+    ##if layer_dist_tolerance < recommended_layer_dist_tolerance:
+    ##    print('WARNING #2012301056 (from vasp_build.exfoliation): layer_dist_tolerance is smaller than ' + str(recommended_layer_dist_tolerance) + '(Default value of layer_dist_tolerance is (1.15 * 2 * (CSD_covalent_radius of He)) + arbitrary_delta = 1.15 * 2 * 0.28 + 0.02 = 0.664 Angstrom), It is recommended to be larger than this value.')
+    ##def poscar_layer_status(poscar_dict, poscar_direction_dict, poscar_layer_dict, radius_style = 'csd', radius_scale_factor = 1.15, write_layer_info = False, suppress_warning = True):
     return poscar_layer_dict
+
+def kpoint_rec2car(vec_rec, reciprocal_arr):
+    '''
+    vec_rec: vector of kpoint in reciprocal coordinate
+    vec_car: vector of kpoint in Cartesian coordinate
+    reciprocal_arr: an array (3x3) of the reciprocal lattice
+    '''
+    args_dict = locals()
+    import numpy as np
+    b_1 = reciprocal_arr[0,:]
+    b_2 = reciprocal_arr[1,:]
+    b_3 = reciprocal_arr[2,:]
+    vec_car = np.array([None]*3)    
+    vec_car[0] = (vec_rec[0] * b_1 + vec_rec[1] * b_2  + vec_rec[2] * b_3)[0]
+    vec_car[1] = (vec_rec[0] * b_1 + vec_rec[1] * b_2  + vec_rec[2] * b_3)[1]
+    vec_car[2] = (vec_rec[0] * b_1 + vec_rec[1] * b_2  + vec_rec[2] * b_3)[2]
+    return vec_car
+
+def get_vacuum_status(poscar_file_path):
+    '''Check whether vacuum exists in x/y/z directions'''
+    from . import vasp_read
+    vacuum_in_xyz = [False, False, False]
+    for direction in ['x','y','z']:
+        poscar_dict = vasp_read.read_poscar(poscar_file_path)
+        poscar_direction_dict = poscar_direction_params(poscar_dict, direction = direction)
+        delta = 0.05
+        radius_scale_factor = 2.0 
+        write_layer_info = False
+        suppress_warning = True
+        poscar_layer_dict = poscar_layer_params(poscar_dict, poscar_direction_dict, criteria = 'bonding', delta = delta, layer_dist_tolerance = 'auto', radius_style = 'csd', radius_scale_factor = radius_scale_factor, write_layer_info = write_layer_info, suppress_warning = suppress_warning)

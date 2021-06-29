@@ -4,6 +4,7 @@ def write_poscar(output_poscar_file_path, poscar_dict, coord_system = 'Direct', 
     
     added_atom_data can be a 1-dimensional list, it can also be a 1-dimensional or 2-dimensional np.array
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -37,13 +38,16 @@ def write_poscar(output_poscar_file_path, poscar_dict, coord_system = 'Direct', 
             added_atom_property_columns_str = ' '.join(funcs.split_line(line = added_atom_property_columns_str, separator = ' '))
 
     temp_str = ''
-    added_atom_data_str = ''
     coord_str = ''
     fix_str = ''
+    added_atom_data_str = ''
+    coord_str_arr = np.array([None] * poscar_dict['n_atoms'])
+    fix_str_arr = np.array([None] * poscar_dict['n_atoms'])
+    added_atom_data_str_arr = np.array([None] * poscar_dict['n_atoms'])
 
-    if coord_system == 'Cartesian':
+    if (coord_system.startswith('C') or coord_system.startswith('c')):
         column_span = slice(3,6)
-    elif coord_system == 'Direct':
+    elif (coord_system.startswith('D') or coord_system.startswith('d')):
         column_span = slice(0,3)
     float_format1 = '{:17.9f}'
 
@@ -77,34 +81,38 @@ def write_poscar(output_poscar_file_path, poscar_dict, coord_system = 'Direct', 
     for i_atom in range(n_atoms):
         if not added_atom_data is None:
             temp_arr = added_atom_data[i_atom,:]
-            added_atom_data_str = added_atom_data_str + ' '.join([str(temp_arr[indx]) + (' '*(max([len(str(x)) for x in added_atom_data[:, indx]]) - len(str(temp_arr[indx])))) for indx in range(0, len(temp_arr))]) + '\n'
-        coord_str = coord_str + ' '.join(float_format1.format(x) for x in poscar_dict['pos_arr'][i_atom, column_span]) + '\n'
-        ##coord_str = coord_str + ('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,0]) + ' ' + (' '*(formatted_len1-len('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,0])))) + ' ' + 
-        ##    '{:.6f}'.format(poscar_dict['coord_arr'][i_atom,1]) + ' ' + (' '*(formatted_len1-len('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,1])))) + ' ' + 
-        ##    '{:.6f}'.format(poscar_dict['coord_arr'][i_atom,2]) + ' ' + (' '*(formatted_len1-len('{:.6f}'.format(poscar_dict['coord_arr'][i_atom,2])))) + ' ' + '\n')
+            added_atom_data_str = ' '.join([str(temp_arr[indx]) + (' '*(max([len(str(x)) for x in added_atom_data[:, indx]]) - len(str(temp_arr[indx])))) for indx in range(0, len(temp_arr))]) + ' ' 
+            added_atom_data_str_arr[i_atom] = added_atom_data_str
+        coord_str = ' '.join(float_format1.format(x) for x in poscar_dict['pos_arr'][i_atom, column_span]) + ' '
+        coord_str_arr[i_atom] = coord_str
 
-        fix_str = fix_str + (poscar_dict['fix_arr'][i_atom,0] + ' ' +
+        fix_str = (poscar_dict['fix_arr'][i_atom,0] + ' ' +
             poscar_dict['fix_arr'][i_atom,1] + ' ' +
-            poscar_dict['fix_arr'][i_atom,2] + ' ' + '\n')
+            poscar_dict['fix_arr'][i_atom,2] + ' ')
+        fix_str_arr[i_atom] = fix_str
 
     if added_atom_data is None:
         if poscar_dict['slet_dyn_on'] == True:
-            temp_str = temp_str + (coord_str +
-                     fix_str +
-                     '\n')
+            for i_atom in range(n_atoms):
+                temp_str = temp_str + (coord_str_arr[i_atom] +
+                         fix_str_arr[i_atom] +
+                         '\n')
         elif poscar_dict['slet_dyn_on'] == False:
-            temp_str = temp_str + (coord_str +
-                     '\n')
+            for i_atom in range(n_atoms):
+                temp_str = temp_str + (coord_str_arr[i_atom] +
+                         '\n')
     elif not added_atom_data is None:
         if poscar_dict['slet_dyn_on'] == True:
-            temp_str = temp_str + (coord_str +
-                     fix_str +
-                     added_atom_data_str +
-                     '\n')
+            for i_atom in range(n_atoms):
+                temp_str = temp_str + (coord_str_arr[i_atom] +
+                         fix_str_arr[i_atom] +
+                         added_atom_data_str_arr[i_atom] +
+                         '\n')
         elif poscar_dict['slet_dyn_on'] == False:
-            temp_str = temp_str + (coord_str +
-                     added_atom_data_str +
-                     '\n')
+            for i_atom in range(n_atoms):
+                temp_str = temp_str + (coord_str_arr[i_atom] +
+                         added_atom_data_str_arr[i_atom] +
+                         '\n')
     with open(output_poscar_file_path,'w') as f:
         f.write(temp_str)
     output_poscar_dict = {}
@@ -119,6 +127,7 @@ def write_poscar_with_force(outcar_file_path, ionic_step = 'last', output_poscar
     '''
     write poscar file with ionic force
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from . import vasp_read
@@ -163,13 +172,30 @@ def write_poscar_with_force(outcar_file_path, ionic_step = 'last', output_poscar
         added_atom_property_str = added_atom_property_str2,
         added_atom_property_columns_str = added_atom_property_columns_str2)
     ionic_step_list = [ionic_step]
-    funcs.write_log(
-        logfile,
-        'vasp_write.write_poscar_with_force(' + '\n' +
-        '    outcar_file_path=' + 'r\'' + str(outcar_file_path) + '\'' + ',\n' +
-        '    ionic_step=' + str(ionic_step_list).strip('[').strip(']') + ',\n' +
-        '    output_poscar_file_name=' + '\'' + str(output_poscar_file_name) + '\'' + ')\n' +
-        '###############################\n')
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    func_name = 'vasp_write.write_poscar_with_force'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'outcar_file_path':
+            arg_value_str = 'r\'' + str(outcar_file_path) + '\''
+        if i_arg == 'ionic_step':
+            arg_value_str = str(ionic_step_list).strip('[').strip(']')
+        if i_arg == 'output_poscar_file_name':
+            arg_value_str = '\'' + str(output_poscar_file_name) + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return 0
 
 def write_potcar(poscar_path, elmt_potcar_dir):
@@ -184,6 +210,7 @@ def write_potcar(poscar_path, elmt_potcar_dir):
         ...
         ...
     '''
+    args_dict = locals()
     import os
     from . import vasp_read
     from .. import funcs
@@ -300,6 +327,7 @@ def write_incar(incar_file_path, incar_dict = None, mode = 'w'):
     mode: 'w', 'a', 's'. They denotes 'write', 'append', and 'substitute', respectively
     for the mode 's', if the input tag exists, the new tag will substitute the old tag. If the input tag is not in the INCAR, the new tag will be appended to the INCAR file.
     '''
+    args_dict = locals()
     import os
     from collections import OrderedDict
     from . import vasp_read
@@ -354,6 +382,7 @@ def write_kpoints(kpoints_file_path, kpoints_dict = None, poscar_file_path = Non
     prepare the KPOINTS for a calculation
     mode: 'w', 'a', 's'. They denotes 'write', 'append', and 'substitute', respectively
     '''
+    args_dict = locals()
     import os
     from . import vasp_read
     from . import vasp_default
@@ -419,31 +448,52 @@ def write_kpoints(kpoints_file_path, kpoints_dict = None, poscar_file_path = Non
             f.writelines(line)
     return 0
 
-def write_band_data(eigenval_or_procar_dict, e_fermi = 0):
+def write_band_data(eigenval_or_procar_dict, e_fermi = 0, header = None):
     '''
     write band data into a file
     eigenval_or_procar_dict: the dictionary of EIGENVAL or PROCAR
     e_fermi: the value of E-fermi in OUTCAR
     '''
+    args_dict = locals()
     import os
+    import numpy as np
     file_path, filename = os.path.split(eigenval_or_procar_dict['file_path'])
+    # Determine the output format of integers and floats
+    int_len = len(str(eigenval_or_procar_dict['num_kpoints']))
+    kpt_format = '{:' + str(int_len) + 'd}'
+    eig_format = '{:15.6f}'
     #band_eigs_XXX.txt is the file containing information of the band structure
+    kpt_number_arr = np.array(range(1, eigenval_or_procar_dict['num_kpoints'] + 1))
     if eigenval_or_procar_dict['ispin'] == 1:
-        band_data_txt = ''
-        for i_kpt in range(0, eigenval_or_procar_dict['num_kpoints']):
-            band_data_txt = band_data_txt + str(i_kpt + 1) + ' ' + ' '.join([str(x) for x in (eigenval_or_procar_dict['eigs'] - e_fermi)[i_kpt,:]]) + '\n'
+        band_arr = np.concatenate((kpt_number_arr.reshape(-1,1), (eigenval_or_procar_dict['eigs'] - e_fermi)), axis = 1)
         band_data_file = os.path.join(file_path, 'band_eigs.txt')
-        with open(band_data_file, 'w') as f:
-            f.write(band_data_txt)
+        np.savetxt(band_data_file, band_arr, fmt = '%' + str(int_len) + 'i ' + '%15.6f ' * len(eigenval_or_procar_dict['eigs'][0,:]), delimiter = ',', header = header)
+        band_data_file_1 = os.path.join(file_path, 'band.dat')
+        with open(band_data_file_1, 'w') as f: 
+            f.write('# ' + header + '\n')
+        with open(band_data_file_1, 'a') as f: 
+            for i_col in range(len(eigenval_or_procar_dict['eigs'][0,:])):
+                temp_band_arr = np.concatenate((np.array(eigenval_or_procar_dict['kpath_len_list']).reshape(-1,1), (eigenval_or_procar_dict['eigs'] - e_fermi)[:, i_col].reshape(-1,1)), axis = 1)
+                np.savetxt(f, temp_band_arr, fmt = '%11.6f %11.8e', delimiter = ',')
+                f.write('\n')
     elif eigenval_or_procar_dict['ispin'] == 2:
-        band_data_txt_up = ''
-        band_data_txt_dw = ''
-        for i_kpt in range(0, eigenval_or_procar_dict['num_kpoints']):
-            band_data_txt_up = band_data_txt_up + str(i_kpt + 1) + ' ' + ' '.join([str(x) for x in (eigenval_or_procar_dict['eigs_up'] - e_fermi)[i_kpt,:]]) + '\n'
-            band_data_txt_dw = band_data_txt_up + str(i_kpt + 1) + ' ' + ' '.join([str(x) for x in (eigenval_or_procar_dict['eigs_dw'] - e_fermi)[i_kpt,:]]) + '\n'
+        band_arr_up = np.concatenate((kpt_number_arr.reshape(-1,1), (eigenval_or_procar_dict['eigs_up'] - e_fermi)), axis = 1)
+        band_arr_dn = np.concatenate((kpt_number_arr.reshape(-1,1), (eigenval_or_procar_dict['eigs_dn'] - e_fermi)), axis = 1)
         band_data_file_up = os.path.join(file_path, 'band_eigs_up.txt')
-        band_data_file_dw = os.path.join(file_path, 'band_eigs_dw.txt')
-        with open(band_data_file_up, 'w') as f1, open(band_data_file_dw, 'w') as f2:
-            f1.write(band_data_txt_up)
-            f2.write(band_data_txt_dw)
+        band_data_file_dn = os.path.join(file_path, 'band_eigs_dn.txt')
+        np.savetxt(band_data_file_up, band_arr_up, fmt = '%' + str(int_len) + 'i ' + '%15.6f ' * len(eigenval_or_procar_dict['eigs_up'][0,:]), delimiter = ',', header = header)
+        np.savetxt(band_data_file_dn, band_arr_dn, fmt = '%' + str(int_len) + 'i ' + '%15.6f ' * len(eigenval_or_procar_dict['eigs_dn'][0,:]), delimiter = ',', header = header)
+        band_data_file_1_up = os.path.join(file_path, 'band_up.dat')
+        band_data_file_1_dn = os.path.join(file_path, 'band_dn.dat')
+        with open(band_data_file_1_up, 'w') as f_up, open(band_data_file_1_dn, 'w') as f_dn: 
+            f_up.write('# ' + header + '\n')
+            f_dn.write('# ' + header + '\n')
+        with open(band_data_file_1_up, 'a') as f_up,  open(band_data_file_1_dn, 'w') as f_dn: 
+            for i_col in range(len(eigenval_or_procar_dict['eigs_up'][0,:])):
+                temp_band_arr_up = np.concatenate((np.array(eigenval_or_procar_dict['kpath_len_list']).reshape(-1,1), (eigenval_or_procar_dict['eigs_up'] - e_fermi)[:, i_col].reshape(-1,1)), axis = 1)
+                temp_band_arr_dn = np.concatenate((np.array(eigenval_or_procar_dict['kpath_len_list']).reshape(-1,1), (eigenval_or_procar_dict['eigs_dn'] - e_fermi)[:, i_col].reshape(-1,1)), axis = 1)
+                np.savetxt(f_up, temp_band_arr_up, fmt = '%11.6f %11.8e', delimiter = ',')
+                np.savetxt(f_dn, temp_band_arr_dn, fmt = '%11.6f %11.8e', delimiter = ',')
+                f_up.write('\n')
+                f_dn.write('\n')
     return 0

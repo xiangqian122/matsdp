@@ -8,6 +8,7 @@ def gen_submit_script(project_dir, submit_script_path_dict = None, queue_system 
     generate submit script for the specified project
     submit_script_path_dict: the keyword 'universal' must exist in submit_script_path_dict, if no submit files are provided for other calculations, the submit file in submit_script_path_dict['universal'] will be used. 
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import default_params
@@ -101,6 +102,7 @@ def queue_management(project_dir, max_num_running_jobs = 2,
     queuing system management tool
     debug_mode: under the debug mode, the jobs won't be submitted, but the programmer can see the job submission command.
     '''
+    args_dict = locals()
     import os
     import time
     from .. import funcs
@@ -318,6 +320,7 @@ def get_num_running_jobs(queue_system, job_kwd):
     get number of running jobs
     Note that the queuing jobs is also counted
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import default_params
@@ -342,6 +345,7 @@ def test_job_finished(test_job_dir):
     '''
     whether the test job (test_encut or test_kpoints) has been finishied or not
     '''
+    args_dict = locals()
     import os
     from ..vasp import vasp_analyze
     job_finished = True
@@ -376,6 +380,7 @@ def job_monitor(project_dir, max_num_running_jobs = 3,
     execute code repeately
     units of job_check_frequency and max_monitor_time are all in min.
     ''' 
+    args_dict = locals()
     import os
     import time
     from .. import convert
@@ -480,6 +485,8 @@ def job_monitor(project_dir, max_num_running_jobs = 3,
     return 0 
 
 def write_project_summary(project_dir, task_type = 'VASP', plot_fatband = False, band_struct_ylim = [-2, 2]):
+    '''write project summary'''
+    args_dict = locals()
     import os
     from . import task_manager
     project_dir = os.path.abspath(project_dir)

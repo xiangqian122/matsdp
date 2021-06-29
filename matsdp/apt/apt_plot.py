@@ -3,6 +3,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 def plot_proxigram_csv(proxigram_csv_file_path, sysname, visible_elmt_list, interplation_on = False, fig_width=6, fig_height=5, fig_dpi = 600, fig_format = 'png'):
+    args_dict = locals()
     import os
     import numpy as np
     import matplotlib.pyplot as plt

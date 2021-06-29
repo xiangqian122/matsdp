@@ -57,7 +57,7 @@ formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time_start))
 funcs.write_log(logfile,'## matsdp(GUI) started at ' + formatted_time)
 
 program_name = 'matsdp'
-version = '0.2.3'
+version = '0.2.4'
 authors = 'dianwuwang@163.com'
 manual_url = 'https://github.com/dianwdw/matsdp/blob/master/doc/matsdp_manual.pdf'
 program_url = 'https://github.com/dianwdw/matsdp'

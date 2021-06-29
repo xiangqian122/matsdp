@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-def mp_query(api_key_str = None, query_output_dir_name = None, criteria='*PS3', properties=['material_id', 'pretty_formula', 'cif'], final = True, elect_struct_type_list = ['bs'], save_bs_data = False, bs_data_format = 'json', save_bs_fig = True, timeout = 120):
+def mp_query(api_key_str = None, query_output_dir_name = None, criteria='*PS3', properties=['material_id', 'pretty_formula', 'cif'], final = True, elect_struct_type_list = ['bs'], save_bs_data = False, bs_data_format = 'json', save_bs_fig = False, timeout = 120):
     '''
     Query materials by some criteria and properties from Materials Project.
     '''
@@ -316,6 +316,20 @@ def mp_get_structure_by_material_id(api_key_str = None, material_id = 'mp-1234',
     primitive_structure.to(filename = os.path.join(output_dir, 'POSCAR_primitive_' + material_id))
     conventional_structure.to(filename = os.path.join(output_dir, 'POSCAR_conentional' + material_id))
     return structure
+
+def mp_cif2poscar(cif_file_path, poscar_file_path):
+    import os
+    from pymatgen.io.cif import CifParser
+    try:
+        cif_file_path = os.path.abspath(cif_file_path)
+        poscar_file_path = os.path.abspath(poscar_file_path)
+        parser = CifParser(cif_file_path)
+        structure = parser.get_structures()[0]
+        structure.to(filename=poscar_file_path)
+        return 0
+    except:
+        print('# WARNING #2104252136 (from external_program): cif2poscar failed: ' + str(cif_file_path))
+        return 1
 
 #mp_id_str = 'mp-3342'
 #get_structure_by_material_id(api_key_str = api_key_str, material_id = mp_id_str, final = True, conventional_unit_cell = False)

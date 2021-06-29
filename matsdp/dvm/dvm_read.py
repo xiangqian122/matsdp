@@ -3,6 +3,7 @@ def read_ind(ind_file_path):
     read the *.ind file of the DVM program
     ind_file_path: the file path of the IND.DAT file
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -27,6 +28,7 @@ def read_incar(incar_file_path):
     read the *.incar file of the DVM program
     incar_file_path: the file path of the *.incar file
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -85,6 +87,7 @@ def read_otput(otput_file_path):
     read the *.otput file of the DVM program
     otput_file_path: the file path of the *.otput file
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -170,6 +173,7 @@ def read_input(input_file_path):
     read the *.incar file of the DVM program
     incar_file_path: the file path of the *.incar file
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs

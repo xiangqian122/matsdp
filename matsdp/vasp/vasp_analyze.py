@@ -10,6 +10,7 @@ def nn_map(poscar_file_path, a0, n_shell = 1, elmt_selector_list = None, atom_la
      * elmt_selector_list. Determines which type of elements are printed out in the nearest neighbor list. if the value is None, then all the elements are selected.
      * atom_label: defines which kind of atom label is used, choices are: 'elmtname', 'atomname', 'n_xyz', 'n_yzx', 'n_zxy', 'n_xzy', 'n_yxz', 'n_zyx' ,None or 'None'.
     '''
+    args_dict = locals()
     import os
     import sys
     import math
@@ -425,22 +426,33 @@ def nn_map(poscar_file_path, a0, n_shell = 1, elmt_selector_list = None, atom_la
             f2.write(temp_text_2)
 
 #    print(atom_number_ortho_nn_text_arr[argsort_indx_arr])
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    func_name = 'vasp_analyze.nn_map'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
 
-    funcs.write_log(
-        logfile,
-        'vasp_analyze.nn_map(' + '\n' +
-        '    poscar_file_path = ' + 'r\'' + str(poscar_file_path) + '\'' + ',\n' +
-        '    a0 = ' + str(a0) + ',\n' +
-        '    n_shell = ' + str(n_shell) + ',\n' +
-        '    elmt_selector_list = ' + str(elmt_selector_list) + ',\n' +
-        '    atom_label = ' + str(atom_label) + ')\n' +
-        '###############################\n')
+        if i_arg == 'poscar_file_path':
+            arg_value_str = 'r\'' + str(poscar_file_path) + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return nn_atom_ishell_dict
 
 def simple_cna(poscar_file_path, a0, common_neighbor_elmt_list = [], atom_label = None):
     '''
     simple common neighbor analysis (CNA)
     '''
+    args_dict = locals()
     import os
     import re
     import itertools
@@ -634,14 +646,26 @@ def simple_cna(poscar_file_path, a0, common_neighbor_elmt_list = [], atom_label 
     funcs.rm_empty_lines_in_file(simple_common_neighbor_file)
     funcs.rm_empty_lines_in_file(simple_common_neighbor_file_with_atom_indx)
     funcs.rm_empty_lines_in_file(simple_common_neighbor_file_with_atomspecies_atom_number_ortho)
-    funcs.write_log(
-        logfile,
-        'vasp_analyze.simple_cna(' + '\n' +
-        '    poscar_file_path = ' + 'r\'' + str(poscar_file_path) + '\'' + ',\n' +
-        '    a0 = ' + str(a0) + ',\n' +
-        '    common_neighbor_elmt_list = ' + str(common_neighbor_elmt_list) + ',\n' +
-        '    atom_label = ' + str(atom_label) + ')\n' +
-        '###############################\n')
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    func_name = 'vasp_analyze.simple_cna'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'poscar_file_path':
+            arg_value_str = 'r\'' + str(poscar_file_path) + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return common_neighbor_dict
 
 def estruct(doscar_file_path, sysname = ''):
@@ -654,6 +678,7 @@ def estruct(doscar_file_path, sysname = ''):
      * doscar_file_path: String format. It specifies the directory of the DOSCAR
      * sysname: String format. User defined system name
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -799,12 +824,26 @@ def estruct(doscar_file_path, sysname = ''):
     funcs.write_log(logfile, '## Calculated number of valence electrons=' + '{:.2f}'.format(ne1) + '\n')
     funcs.write_log(logfile, '## Actual number of valence electrons=' + str(valence_electron_num_sum) + '\n')
     funcs.write_log(logfile, '## eband=' + '{:.2f}'.format(eband) + ' eV' + '\n')
-    funcs.write_log(
-        logfile,
-        'vasp_analyze.estruct(' + '\n' +
-        '    doscar_file_path=' + 'r\'' + str(doscar_file_path) + '\'' + ',\n' +
-        '    sysname=' + '\'' + str(sysname) + '\'' + ')\n' +
-        '###############################\n')
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    func_name = 'vasp_analyze.estruct'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'doscar_file_path':
+            arg_value_str = 'r\'' + str(doscar_file_path) + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
 ##        NonZeroEiFound = False
 ##        for j in range(0,NEDOS):
 ##            for i in range(0, atom_num):
@@ -845,6 +884,7 @@ def label_peaks(energy, sample_dos_arr):
     Roughly label the peaks
     sample_dos_arr is the DOS array which is to be labeled, for example, Sampledos_arr=d, or Sampledos_arr=dxy, or Sampledos_arr=s, etc.
     '''
+    args_dict = locals()
     import numpy as np
     from scipy.signal import find_peaks
     def find_noise_baseline(interval_states_num, dos_arr_1d):
@@ -993,80 +1033,80 @@ def get_orbit_dos_peak_list(dos_arr, orbits, energy):
     elif dos_arr.shape[1] == 19 or dos_arr.shape[1] == 33:
         #Spin polarized calculation
         s_up = dos_arr[:,[1]] 
-        s_dw = dos_arr[:,[2]]
-        s = s_up - s_dw
+        s_dn = dos_arr[:,[2]]
+        s = s_up - s_dn
         py_up = dos_arr[:,[3]] 
-        py_dw = dos_arr[:,[4]]
+        py_dn = dos_arr[:,[4]]
         pz_up = dos_arr[:,[5]]
-        pz_dw = dos_arr[:,[6]]
+        pz_dn = dos_arr[:,[6]]
         px_up = dos_arr[:,[7]]
-        px_dw = dos_arr[:,[8]]
+        px_dn = dos_arr[:,[8]]
         dxy_up = dos_arr[:,[9]]
-        dxy_dw = dos_arr[:,[10]] 
+        dxy_dn = dos_arr[:,[10]] 
         dyz_up = dos_arr[:,[11]] 
-        dyz_dw = dos_arr[:,[12]]
+        dyz_dn = dos_arr[:,[12]]
         dz2_up = dos_arr[:,[13]]
-        dz2_dw = dos_arr[:,[14]]
+        dz2_dn = dos_arr[:,[14]]
         dxz_up = dos_arr[:,[15]]
-        dxz_dw = dos_arr[:,[16]]
+        dxz_dn = dos_arr[:,[16]]
         dx2_up = dos_arr[:,[17]]
-        dx2_dw = dos_arr[:,[18]]
+        dx2_dn = dos_arr[:,[18]]
         p_up = py_up + pz_up + px_up
-        p_dw = py_dw + pz_dw + px_dw
-        p = p_up - p_dw
+        p_dn = py_dn + pz_dn + px_dn
+        p = p_up - p_dn
         d_up = dxy_up + dyz_up + dz2_up + dxz_up + dx2_up
-        d_dw = dxy_dw + dyz_dw + dz2_dw + dxz_dw + dx2_dw
-        d = d_up - d_dw
+        d_dn = dxy_dn + dyz_dn + dz2_dn + dxz_dn + dx2_dn
+        d = d_up - d_dn
         ldos_up = s_up + p_up + d_up
-        ldos_dw = s_dw + p_dw + d_dw
+        ldos_dn = s_dn + p_dn + d_dn
         ldos = s + p + d
         if 'd' in orbits:
-            dos_temp_arr = np.concatenate((dos_temp_arr, d_up, d_dw),axis = 0)
+            dos_temp_arr = np.concatenate((dos_temp_arr, d_up, d_dn),axis = 0)
         if 'dxy' in orbits:
-            dos_temp_arr = np.concatenate((dos_temp_arr, dxy_up, dxy_dw),axis = 0)
+            dos_temp_arr = np.concatenate((dos_temp_arr, dxy_up, dxy_dn),axis = 0)
         if 'dyz' in orbits:
-            dos_temp_arr = np.concatenate((dos_temp_arr, dyz_up, dyz_dw),axis = 0)
+            dos_temp_arr = np.concatenate((dos_temp_arr, dyz_up, dyz_dn),axis = 0)
         if 'dz2' in orbits:
-            dos_temp_arr = np.concatenate((dos_temp_arr, dz2_up, dz2_dw),axis = 0)
+            dos_temp_arr = np.concatenate((dos_temp_arr, dz2_up, dz2_dn),axis = 0)
         if 'dxz' in orbits:
-            dos_temp_arr = np.concatenate((dos_temp_arr, dxz_up, dxz_dw),axis = 0)
+            dos_temp_arr = np.concatenate((dos_temp_arr, dxz_up, dxz_dn),axis = 0)
         if 'dx2' in orbits:
-            dos_temp_arr = np.concatenate((dos_temp_arr, dx2_up, dx2_dw),axis = 0)
+            dos_temp_arr = np.concatenate((dos_temp_arr, dx2_up, dx2_dn),axis = 0)
         if 'p' in orbits:
-            dos_temp_arr = np.concatenate((dos_temp_arr, p_up, p_dw),axis = 0)
+            dos_temp_arr = np.concatenate((dos_temp_arr, p_up, p_dn),axis = 0)
         if 'py' in orbits:
-            dos_temp_arr = np.concatenate((dos_temp_arr, py_up, py_dw),axis = 0)
+            dos_temp_arr = np.concatenate((dos_temp_arr, py_up, py_dn),axis = 0)
         if 'pz' in orbits:
-            dos_temp_arr = np.concatenate((dos_temp_arr, pz_up, pz_dw),axis = 0)
+            dos_temp_arr = np.concatenate((dos_temp_arr, pz_up, pz_dn),axis = 0)
         if 'px' in orbits:
-            dos_temp_arr = np.concatenate((dos_temp_arr, px_up, px_dw),axis = 0)
+            dos_temp_arr = np.concatenate((dos_temp_arr, px_up, px_dn),axis = 0)
         if 's' in orbits:
-            dos_temp_arr = np.concatenate((dos_temp_arr, s_up, s_dw),axis = 0)
+            dos_temp_arr = np.concatenate((dos_temp_arr, s_up, s_dn),axis = 0)
         if dos_arr.shape[1] == 17:
             fm3_up = dos_arr[:,[19]]
-            fm3_dw = dos_arr[:,[20]]
+            fm3_dn = dos_arr[:,[20]]
             fm2_up = dos_arr[:,[21]]
-            fm2_dw = dos_arr[:,[22]]
+            fm2_dn = dos_arr[:,[22]]
             fm1_up = dos_arr[:,[23]]
-            fm1_dw = dos_arr[:,[24]]
+            fm1_dn = dos_arr[:,[24]]
             f0_up = dos_arr[:,[25]]
-            f0_dw = dos_arr[:,[26]]
+            f0_dn = dos_arr[:,[26]]
             f1_up = dos_arr[:,[27]]
-            f1_dw = dos_arr[:,[28]]
+            f1_dn = dos_arr[:,[28]]
             f2_up = dos_arr[:,[29]] 
-            f2_dw = dos_arr[:,[30]]
+            f2_dn = dos_arr[:,[30]]
             f3_up = dos_arr[:,[31]]
-            f3_dw = dos_arr[:,[32]]
+            f3_dn = dos_arr[:,[32]]
             f_up = fm3_up + fm2_up + fm1_up + f0_up + f1_up + f2_up + f3_up
-            f_dw = fm3_dw + fm2_dw + fm1_dw + f0_dw + f1_dw + f2_dw + f3_dw
-            f = f_up - f_dw
+            f_dn = fm3_dn + fm2_dn + fm1_dn + f0_dn + f1_dn + f2_dn + f3_dn
+            f = f_up - f_dn
             ldos_up = ldos_up + f_up
-            ldos_dw = ldos_dw + f_dw
+            ldos_dn = ldos_dn + f_dn
             ldos = ldos + f
             if 'f' in orbits:
-                dos_temp_arr = np.concatenate((dos_temp_arr, f_up, f_dw),axis = 0)
+                dos_temp_arr = np.concatenate((dos_temp_arr, f_up, f_dn),axis = 0)
         if 'LDOS' in orbits:
-            dos_temp_arr = np.concatenate((dos_temp_arr, ldos_up, ldos_dw),axis = 0)
+            dos_temp_arr = np.concatenate((dos_temp_arr, ldos_up, ldos_dn),axis = 0)
         dos_temp_arr = dos_temp_arr[len(dos_arr[:,[0]]):,0]
 
         if 'LDOS' in orbits:
@@ -1074,118 +1114,118 @@ def get_orbit_dos_peak_list(dos_arr, orbits, energy):
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('ldos_up')
-            energy_peaks, peaks_val = label_peaks(energy, ldos_dw)
+            energy_peaks, peaks_val = label_peaks(energy, ldos_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('ldos_dw')
+            orbitname_list.append('ldos_dn')
         if 'f' in orbits:
             energy_peaks, peaks_val = label_peaks(energy, f_up)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('f_up')
-            energy_peaks, peaks_val = label_peaks(energy, f_dw)
+            energy_peaks, peaks_val = label_peaks(energy, f_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('f_dw')
+            orbitname_list.append('f_dn')
         if 'd' in orbits:
             energy_peaks, peaks_val = label_peaks(energy, d_up)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('d_up')
-            energy_peaks, peaks_val = label_peaks(energy, d_dw)
+            energy_peaks, peaks_val = label_peaks(energy, d_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('d_dw')
+            orbitname_list.append('d_dn')
         if 'dxy' in orbits:
             energy_peaks, peaks_val = label_peaks(energy, dxy_up)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('dxy_up')
-            energy_peaks, peaks_val = label_peaks(energy, dxy_dw)
+            energy_peaks, peaks_val = label_peaks(energy, dxy_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('dxy_dw')
+            orbitname_list.append('dxy_dn')
         if 'dyz' in orbits:
             energy_peaks, peaks_val = label_peaks(energy, dyz_up)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('dyz_up')
-            energy_peaks, peaks_val = label_peaks(energy, dyz_dw)
+            energy_peaks, peaks_val = label_peaks(energy, dyz_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('dyz_dw')
+            orbitname_list.append('dyz_dn')
         if 'dz2' in orbits:
             energy_peaks, peaks_val = label_peaks(energy, dz2_up)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('dz2_up')
-            energy_peaks, peaks_val = label_peaks(energy, dz2_dw)
+            energy_peaks, peaks_val = label_peaks(energy, dz2_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('dz2_dw')
+            orbitname_list.append('dz2_dn')
         if 'dxz' in orbits:
             energy_peaks, peaks_val = label_peaks(energy, dxz_up)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('dxz_up')
-            energy_peaks, peaks_val = label_peaks(energy, dxz_dw)
+            energy_peaks, peaks_val = label_peaks(energy, dxz_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('dxz_dw')
+            orbitname_list.append('dxz_dn')
         if 'dx2' in orbits:
             energy_peaks, peaks_val = label_peaks(energy, dx2_up)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('dx2_up')
-            energy_peaks, peaks_val = label_peaks(energy, dx2_dw)
+            energy_peaks, peaks_val = label_peaks(energy, dx2_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('dx2_dw')
+            orbitname_list.append('dx2_dn')
         if 'p' in orbits:
             energy_peaks, peaks_val = label_peaks(energy, p_up)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('p_up')
-            energy_peaks, peaks_val = label_peaks(energy, p_dw)
+            energy_peaks, peaks_val = label_peaks(energy, p_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('p_dw')
+            orbitname_list.append('p_dn')
         if 'py' in orbits:
             energy_peaks, peaks_val = label_peaks(energy, py_up)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('py_up')
-            energy_peaks, peaks_val = label_peaks(energy, py_dw)
+            energy_peaks, peaks_val = label_peaks(energy, py_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('py_dw')
+            orbitname_list.append('py_dn')
         if 'pz' in orbits:
             energy_peaks, peaks_val = label_peaks(energy, pz_up)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('pz_up')
-            energy_peaks, peaks_val = label_peaks(energy, pz_dw)
+            energy_peaks, peaks_val = label_peaks(energy, pz_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('pz_dw')
+            orbitname_list.append('pz_dn')
         if 'px' in orbits:
             energy_peaks, peaks_val = label_peaks(energy, px_up)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('px_up')
-            energy_peaks, peaks_val = label_peaks(energy, px_dw)
+            energy_peaks, peaks_val = label_peaks(energy, px_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('px_dw')
+            orbitname_list.append('px_dn')
         if 's' in orbits:
             energy_peaks, peaks_val = label_peaks(energy, s_up)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
             orbitname_list.append('s_up')
-            energy_peaks, peaks_val = label_peaks(energy, s_dw)
+            energy_peaks, peaks_val = label_peaks(energy, s_dn)
             energy_peak_list.append(energy_peaks.reshape((1, len(energy_peaks)))[0])
             peak_val_list.append(peaks_val.reshape((1, len(peaks_val)))[0])
-            orbitname_list.append('s_dw')
+            orbitname_list.append('s_dn')
     return energy_peak_list, peak_val_list, orbitname_list
 
 def overlap_peak_analyzer(doscar_file_path, sysname, atom_indx_list,n_shell,a0, dos_mode = None, fermi_shift_zero = True):
@@ -1211,6 +1251,7 @@ def overlap_peak_analyzer(doscar_file_path, sysname, atom_indx_list,n_shell,a0, 
      * dos_mode: dictionary format. Determins which orbital will be considered, f, d, p, s, dxy, dyz, ... can be used
      * fermi_shift_zero: A logical value determining whether the energy levels of the DOS will be shifted to zero
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -1332,24 +1373,38 @@ def overlap_peak_analyzer(doscar_file_path, sysname, atom_indx_list,n_shell,a0, 
     with open(overlap_peak_file,'w') as f, open(eff_overlap_energy_file,'w') as f1:
         f.write(overlap_peak_str)
         f1.write(eff_overlap_energy_str)
-    funcs.write_log(
-        logfile,
-        'dos_mode=' + str(dos_mode) + '\n' +
-        'vasp_analyze.overlap_peak_analyzer(' + '\n' +
-        '    doscar_file_path=' + 'r\'' + str(doscar_file_path) + '\'' + ',\n' +
-        '    sysname=' + '\'' + str(sysname) + '\'' + ',\n' +
-        '    atom_indx_list=' + str(atom_indx_list) + ',\n' +
-        '    n_shell=' + str(n_shell) + ',\n' +
-        '    a0=' + str(a0) + ',\n' +
-        '    dos_mode=dos_mode' + ',\n' +
-        '    fermi_shift_zero=' + str(fermi_shift_zero) + ')\n' +
-        '###############################\n')
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    log_str += 'dos_mode=' + str(dos_mode) + '\n'
+    func_name = 'vasp_analyze.overlap_peak_analyzer'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'doscar_file_path':
+            arg_value_str = 'r\'' + str(doscar_file_path) + '\''
+        if i_arg == 'sysname':
+            arg_value_str = '\'' + str(sysname) + '\''
+        if i_arg == 'dos_mode':
+            arg_value_str = 'dos_mode'
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return 0
 
 def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, fermi_shift_zero = True, suppress_warning = True):
     '''
     Get the band_gap, CBM and CVM
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -1375,10 +1430,10 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
     band_gap_dict['CBM_up'] = None
     band_gap_dict['VBM_up'] = None
 
-    band_gap_dict['band_gap_dw'] = None
-    band_gap_dict['gap_type_dw'] = None
-    band_gap_dict['CBM_dw'] = None
-    band_gap_dict['VBM_dw'] = None
+    band_gap_dict['band_gap_dn'] = None
+    band_gap_dict['gap_type_dn'] = None
+    band_gap_dict['CBM_dn'] = None
+    band_gap_dict['VBM_dn'] = None
 
     band_gap_dict['file_path'] = eigenval_or_procar_dict['file_path'] 
     #get E_fermi
@@ -1396,12 +1451,8 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
             valid_outcar_par = False
             print('WARNING #2103311558 (from vasp_analyze). outcar_params_dict[\'' + str(i_par) + '\'] has an invalid value, please check the OUTCAR file ' + outcar_params_dict['file_path'] + '\n')
 
-    if kpoints_scheme not in ['L', 'l']:
-        if suppress_warning == True:
-            pass
-        elif suppress_warning ==False:
-            print('WARNING #20120302 (from get_band_gap): KPOINTS file is not in line mode, this may not be a band structure calculation. File directory is : ' + kpoints_dict['file_path'])
-    elif kpoints_scheme in ['L', 'l'] and valid_outcar_par:
+    explicit_kpoints_mode = kpoints_dict['scheme'] in ['g', 'G', 'm', 'M', 'c', 'C', 'k', 'K'] and kpoints_dict['num_kpoints'] != 0
+    if (kpoints_scheme in ['L', 'l'] or explicit_kpoints_mode) and valid_outcar_par:
         kpoints_arr = kpoints_dict['kpoints_xaxis_arr']
         kpath_num_intersections_interval = kpoints_dict['num_intersections_interval']
         kpath_num_intersections = kpoints_dict['num_intersections']
@@ -1421,9 +1472,9 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                 band_gap_dict['eigs'] = eigs
             elif ispin == 2:
                 eigs_up = eigenval_or_procar_dict['eigs_up'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
-                eigs_dw = eigenval_or_procar_dict['eigs_dw'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
+                eigs_dn = eigenval_or_procar_dict['eigs_dn'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
                 band_gap_dict['eigs_up'] = eigs_up
-                band_gap_dict['eigs_dw'] = eigs_dw
+                band_gap_dict['eigs_dn'] = eigs_dn
         elif eigenval_or_procar_dict['dict_type'] == 'procar':
             ispin = eigenval_or_procar_dict['ispin']
             num_kpoints = eigenval_or_procar_dict['num_kpoints']
@@ -1435,9 +1486,9 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                 band_gap_dict['eigs'] = eigs
             elif ispin == 2:
                 eigs_up = eigenval_or_procar_dict['eigs_up'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
-                eigs_dw = eigenval_or_procar_dict['eigs_dw'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
+                eigs_dn = eigenval_or_procar_dict['eigs_dn'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
                 band_gap_dict['eigs_up'] = eigs_up
-                band_gap_dict['eigs_dw'] = eigs_dw
+                band_gap_dict['eigs_dn'] = eigs_dn
 
         # band gap, CBM, VBM parameter initialization
         cbm_optimum = 9999999      #ispin = 1
@@ -1445,30 +1496,30 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
         cbm = 9999999
         vbm = -9999999
         cbm_up = 9999999
-        cbm_dw = 9999999
+        cbm_dn = 9999999
         vbm_up = -9999999
-        vbm_dw = -9999999
+        vbm_dn = -9999999
         cbm_up_optimum = 9999999
-        cbm_dw_optimum = 9999999
+        cbm_dn_optimum = 9999999
         vbm_up_optimum = -9999999
-        vbm_dw_optimum = -9999999
+        vbm_dn_optimum = -9999999
 
         cbm_k_optimum = None   #ispin =1
         vbm_k_optimum = None   #ispin =1
         cbm_k = None
         vbm_k = None 
         cbm_k_up = None
-        cbm_k_dw = None
+        cbm_k_dn = None
         vbm_k_up = None
-        vbm_k_dw = None
+        vbm_k_dn = None
         cbm_k_up_optimum = None
-        cbm_k_dw_optimum = None
+        cbm_k_dn_optimum = None
         vbm_k_up_optimum = None
-        vbm_k_dw_optimum = None
+        vbm_k_dn_optimum = None
 
         band_gap = None
         band_gap_up = None
-        band_gap_dw = None
+        band_gap_dn = None
         # get the current Fermi energy
         current_ef = e_fermi_mod - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
         # band indices of the valence band and the conduction band that are closest to the Fermi level
@@ -1476,18 +1527,18 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
         lo_band_indx = 0
         hi_band_indx_up = 0
         lo_band_indx_up = 0
-        hi_band_indx_dw = 0
-        lo_band_indx_dw = 0
+        hi_band_indx_dn = 0
+        lo_band_indx_dn = 0
 
         max_eig = -9999999
         min_eig = 9999999
         max_eig_up = -9999999
         min_eig_up = 9999999
-        max_eig_dw = -9999999
-        min_eig_dw = 9999999
+        max_eig_dn = -9999999
+        min_eig_dn = 9999999
 
         for i_band in range(0, num_bands):
-            if ispin ==1:
+            if ispin ==1 and explicit_kpoints_mode == False:
                 band_arr = eigs[:, i_band]
                 max_e = np.max(band_arr) 
                 min_e = np.min(band_arr)
@@ -1506,7 +1557,7 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                 if len(kpoints_arr) != len(band_arr):
                     print('WARNING #2103311540 (from vasp_analyze.get_band_gap): length of kpoints_arr and band_arr are not identical. Please check EIGENVAL or PROCAR file in the directory: ' + outcar_params_dict['work_dir'])
                     break
-                for i_interval in range(0, kpath_num_intersections_interval):
+                for i_interval in range(0, kpoints_dict['num_intersections_interval']):
                     ##print('---------------------------')
                     ##print('i_interval=',i_interval)
                     ##print('kpath_num_intersections=', kpath_num_intersections)
@@ -1554,19 +1605,19 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                     temp_arg = np.argmin([vbm, cbm_optimum])
                     if temp_arg == 0:
                         vbm_k_optimum = vbm_k
-            elif ispin == 2:
+            elif ispin == 2 and explicit_kpoints_mode == False:
                 band_arr_up = eigs_up[:, i_band]
-                band_arr_dw = eigs_dw[:, i_band]
+                band_arr_dn = eigs_dn[:, i_band]
                 max_up = np.max(band_arr_up) 
                 min_up = np.min(band_arr_up)
-                max_dw = np.max(band_arr_dw) 
-                min_dw = np.min(band_arr_dw)
+                max_dn = np.max(band_arr_dn) 
+                min_dn = np.min(band_arr_dn)
                 if max_up >= current_ef and min_up <= current_ef:
                     hi_band_indx_up = i_band
                     lo_band_indx_up = i_band
-                if max_dw >= current_ef and min_dw <= current_ef:
-                    hi_band_indx_dw = i_band
-                    lo_band_indx_dw = i_band
+                if max_dn >= current_ef and min_dn <= current_ef:
+                    hi_band_indx_dn = i_band
+                    lo_band_indx_dn = i_band
                 if max_up > current_ef and min_up > current_ef:
                     if min_up < min_eig_up:
                         min_eig_up = min_up
@@ -1575,44 +1626,44 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                     if max_up > max_eig_up:
                         max_eig_up = max_up
                         lo_band_indx_up = i_band
-                if max_dw > current_ef and min_dw > current_ef:
-                    if min_dw < min_eig_dw:
-                        min_eig_dw = min_dw
-                        hi_band_indx_dw = i_band
-                if max_dw < current_ef and min_dw < current_ef:
-                    if max_dw > max_eig_dw:
-                        max_eig_dw = max_dw
-                        lo_band_indx_dw = i_band
+                if max_dn > current_ef and min_dn > current_ef:
+                    if min_dn < min_eig_dn:
+                        min_eig_dn = min_dn
+                        hi_band_indx_dn = i_band
+                if max_dn < current_ef and min_dn < current_ef:
+                    if max_dn > max_eig_dn:
+                        max_eig_dn = max_dn
+                        lo_band_indx_dn = i_band
                 
-                for i_interval in range(0, kpath_num_intersections_interval):
+                for i_interval in range(0, kpoints_dict['num_intersections_interval']):
                     start_indx = i_interval * kpath_num_intersections
                     end_indx = start_indx + kpath_num_intersections
                     kpoints_slice_arr = kpoints_arr[start_indx:end_indx]
                     eigs_slice_arr_up = band_arr_up[start_indx:end_indx]
-                    eigs_slice_arr_dw = band_arr_dw[start_indx:end_indx]
+                    eigs_slice_arr_dn = band_arr_dn[start_indx:end_indx]
                     kpoints_dense_arr = np.linspace(min(kpoints_slice_arr),max(kpoints_slice_arr),num = num_kpoints * 5,endpoint = True)
                     if len(kpoints_slice_arr) != len(eigs_slice_arr_up):
                         #print('WARNING #2012131927 (from vasp_analyze.get_band_gap): length of kpoints_slice_arr and eigs_slice_arr_up do not conform. Please check EIGENVAL or PROCAR file.')
                         break
                     interp_up = interp1d(kpoints_slice_arr, eigs_slice_arr_up, kind='cubic')
-                    interp_dw = interp1d(kpoints_slice_arr, eigs_slice_arr_dw, kind='cubic')
+                    interp_dn = interp1d(kpoints_slice_arr, eigs_slice_arr_dn, kind='cubic')
 
                     max_val_up = np.max(interp_up(kpoints_dense_arr))
                     min_val_up = np.min(interp_up(kpoints_dense_arr))
-                    max_val_dw = np.max(interp_dw(kpoints_dense_arr))
-                    min_val_dw = np.min(interp_dw(kpoints_dense_arr))
+                    max_val_dn = np.max(interp_dn(kpoints_dense_arr))
+                    min_val_dn = np.min(interp_dn(kpoints_dense_arr))
 
                     max_k_up = kpoints_dense_arr[np.argmax(interp_up(kpoints_dense_arr))]  
                     min_k_up = kpoints_dense_arr[np.argmin(interp_up(kpoints_dense_arr))]
-                    max_k_dw = kpoints_dense_arr[np.argmax(interp_dw(kpoints_dense_arr))]
-                    min_k_dw = kpoints_dense_arr[np.argmin(interp_dw(kpoints_dense_arr))]
+                    max_k_dn = kpoints_dense_arr[np.argmax(interp_dn(kpoints_dense_arr))]
+                    min_k_dn = kpoints_dense_arr[np.argmin(interp_dn(kpoints_dense_arr))]
 
                     # check if the band crosses the Fermi level
                     if max_val_up >= current_ef and min_val_up <= current_ef:
                         band_gap_up = 0                        
                         band_gap = 0
-                    if max_val_dw >= current_ef and min_val_dw <= current_ef:
-                        band_gap_dw = 0                        
+                    if max_val_dn >= current_ef and min_val_dn <= current_ef:
+                        band_gap_dn = 0                        
                         band_gap = 0
                     # for spin up channel
                     if max_val_up > current_ef and min_val_up > current_ef:
@@ -1624,33 +1675,33 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                         vbm_up = max_val_up
                         vbm_k_up = max_k_up
                     # for spin down channel
-                    if max_val_dw > current_ef and min_val_dw > current_ef:
+                    if max_val_dn > current_ef and min_val_dn > current_ef:
                         #bands above the Fermi level
-                        cbm_dw = min_val_dw
-                        cbm_k_dw = min_k_dw
-                    elif max_val_dw < current_ef and min_val_dw < current_ef:
+                        cbm_dn = min_val_dn
+                        cbm_k_dn = min_k_dn
+                    elif max_val_dn < current_ef and min_val_dn < current_ef:
                         #bands below the Fermi level
-                        vbm_dw = max_val_dw
-                        vbm_k_dw = max_k_dw
+                        vbm_dn = max_val_dn
+                        vbm_k_dn = max_k_dn
 
-                    cbm = np.min([cbm_up, cbm_dw, cbm])
-                    vbm = np.max([vbm_up, vbm_dw, vbm])
+                    cbm = np.min([cbm_up, cbm_dn, cbm])
+                    vbm = np.max([vbm_up, vbm_dn, vbm])
                     cbm_up_optimum = np.min([cbm_up, cbm_up_optimum])
                     vbm_up_optimum = np.max([vbm_up, vbm_up_optimum])
-                    cbm_dw_optimum = np.min([cbm_dw, cbm_dw_optimum])
-                    vbm_dw_optimum = np.max([vbm_dw, vbm_dw_optimum])
+                    cbm_dn_optimum = np.min([cbm_dn, cbm_dn_optimum])
+                    vbm_dn_optimum = np.max([vbm_dn, vbm_dn_optimum])
 
                     # consider both spin up and spin down channel
-                    temp_arg = np.argmin([cbm_up, cbm_dw, cbm])
+                    temp_arg = np.argmin([cbm_up, cbm_dn, cbm])
                     if temp_arg == 0:
                         cbm_k = cbm_k_up
                     elif temp_arg == 1:
-                        cbm_k = cbm_k_dw
-                    temp_arg = np.argmax([vbm_up, vbm_dw, vbm])
+                        cbm_k = cbm_k_dn
+                    temp_arg = np.argmax([vbm_up, vbm_dn, vbm])
                     if temp_arg == 0:
                         vbm_k = vbm_k_up
                     elif temp_arg == 1:
-                        vbm_k = vbm_k_dw
+                        vbm_k = vbm_k_dn
                     #only consider spin up channel 
                     temp_arg_up = np.argmin([cbm_up, cbm_up_optimum])
                     if temp_arg_up == 0:
@@ -1659,12 +1710,12 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                     if temp_arg_up == 0:
                         vbm_k_up_optimum = vbm_k_up
                     #only consider spin down channel 
-                    temp_arg_dw = np.argmin([cbm_dw, cbm_dw_optimum])
-                    if temp_arg_dw == 0:
-                        cbm_k_dw_optimum = cbm_k_dw
-                    temp_arg_dw = np.argmax([vbm_dw, vbm_dw_optimum])
-                    if temp_arg_dw == 0:
-                        vbm_k_dw_optimum = vbm_k_dw
+                    temp_arg_dn = np.argmin([cbm_dn, cbm_dn_optimum])
+                    if temp_arg_dn == 0:
+                        cbm_k_dn_optimum = cbm_k_dn
+                    temp_arg_dn = np.argmax([vbm_dn, vbm_dn_optimum])
+                    if temp_arg_dn == 0:
+                        vbm_k_dn_optimum = vbm_k_dn
         #band gap information
         if ispin == 1:
             if band_gap == 0:
@@ -1688,6 +1739,8 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
             band_gap_dict['CBM_band_indx'] = hi_band_indx
             band_gap_dict['VBM_band_indx'] = lo_band_indx
             #print('---',band_gap_dict['VBM_band_indx'], band_gap_dict['CBM_band_indx'])
+            if band_gap_dict['band_gap'] is None:
+                band_gap_dict['band_gap'] = 9999
         elif ispin == 2:
             if band_gap == 0:
                 # band gap does not exists
@@ -1699,11 +1752,11 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                 gap_type_up = None
                 cbm_up_optimum = None
                 vbm_up_optimum = None
-            if band_gap_dw == 0:
+            if band_gap_dn == 0:
                 # band gap for spin down channel does not exists
-                gap_type_dw = None
-                cbm_dw_optimum = None
-                vbm_dw_optimum = None
+                gap_type_dn = None
+                cbm_dn_optimum = None
+                vbm_dn_optimum = None
             if band_gap != 0:
                 # band gap exists
                 band_gap = cbm - vbm
@@ -1718,13 +1771,13 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
                     gap_type_up = 'direct'
                 elif cbm_k_up_optimum != vbm_k_up_optimum:
                     gap_type_up = 'indirect'
-            if band_gap_dw != 0:
+            if band_gap_dn != 0:
                 # band gap exists for spin down channel
-                band_gap_dw = cbm_dw_optimum - vbm_dw_optimum
-                if cbm_k_dw_optimum == vbm_k_dw_optimum:
-                    gap_type_dw = 'direct'
-                elif cbm_k_dw_optimum != vbm_k_dw_optimum:
-                    gap_type_dw = 'indirect'
+                band_gap_dn = cbm_dn_optimum - vbm_dn_optimum
+                if cbm_k_dn_optimum == vbm_k_dn_optimum:
+                    gap_type_dn = 'direct'
+                elif cbm_k_dn_optimum != vbm_k_dn_optimum:
+                    gap_type_dn = 'indirect'
             band_gap_dict['band_gap'] = band_gap
             band_gap_dict['gap_type'] = gap_type
             band_gap_dict['CBM'] = cbm
@@ -1732,21 +1785,30 @@ def get_band_gap(eigenval_or_procar_dict, outcar_params_dict, kpoints_dict, ferm
             band_gap_dict['kpoint_CBM'] = cbm_k
             band_gap_dict['kpoint_VBM'] = vbm_k
             band_gap_dict['band_gap_up'] = band_gap_up
-            band_gap_dict['band_gap_dw'] = band_gap_dw
+            band_gap_dict['band_gap_dn'] = band_gap_dn
             band_gap_dict['gap_type'] = gap_type
             band_gap_dict['gap_type_up'] = gap_type_up
-            band_gap_dict['gap_type_dw'] = gap_type_dw
+            band_gap_dict['gap_type_dn'] = gap_type_dn
             band_gap_dict['CBM_up'] = cbm_up_optimum
             band_gap_dict['VBM_up'] = vbm_up_optimum
-            band_gap_dict['CBM_dw'] = cbm_dw_optimum
-            band_gap_dict['VBM_dw'] = vbm_dw_optimum
+            band_gap_dict['CBM_dn'] = cbm_dn_optimum
+            band_gap_dict['VBM_dn'] = vbm_dn_optimum
             band_gap_dict['kpoint_CBM_up'] = cbm_k_up_optimum
             band_gap_dict['kpoint_VBM_up'] = vbm_k_up_optimum
-            band_gap_dict['kpoint_CBM_dw'] = cbm_k_dw_optimum
-            band_gap_dict['kpoint_VBM_dw'] = vbm_k_dw_optimum
+            band_gap_dict['kpoint_CBM_dn'] = cbm_k_dn_optimum
+            band_gap_dict['kpoint_VBM_dn'] = vbm_k_dn_optimum
             band_gap_dict['CBM_band_indx_up'] = hi_band_indx_up
             band_gap_dict['VBM_band_indx_up'] = lo_band_indx_up
-            band_gap_dict['CBM_band_indx_dw'] = hi_band_indx_dw
-            band_gap_dict['VBM_band_indx_dw'] = lo_band_indx_dw
+            band_gap_dict['CBM_band_indx_dn'] = hi_band_indx_dn
+            band_gap_dict['VBM_band_indx_dn'] = lo_band_indx_dn
             #print('---',band_gap_dict['VBM_band_indx_up'], band_gap_dict['CBM_band_indx_up'])
+            if band_gap_dict['band_gap_up'] is None:
+                band_gap_dict['band_gap_up'] = 9999
+            if band_gap_dict['band_gap_dn'] is None:
+                band_gap_dict['band_gap_dn'] = 9999
+    else:
+        if suppress_warning == True:
+            pass
+        elif suppress_warning ==False:
+            print('WARNING #20120302 (from get_band_gap): KPOINTS file is not in line mode or explicit kpoints mode, this may not be a band structure calculation. File directory is : ' + kpoints_dict['file_path'])
     return band_gap_dict

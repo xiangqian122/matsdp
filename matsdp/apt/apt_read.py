@@ -3,6 +3,7 @@ def read_proxigram_csv(proxigram_csv_file_path):
     '''
     read the proxigram csv file.
     '''
+    args_dict = locals()
     import numpy as np
     from .. import funcs
     with open(proxigram_csv_file_path,'r') as f:

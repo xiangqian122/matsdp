@@ -63,6 +63,20 @@ def periodic_tab_gen():
                 periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = '_' + str(funcs.split_line(lines[i + 1],',')[col_indx])
             else:
                 periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = '_GW'
+        # valence electron configuration. Also refer to the recommended PAW POTCAR of VASP
+        col_indx = property_list.index('valence_elec')
+        for i in range(0, line_num -1):
+            if funcs.split_line(lines[i + 1],',')[col_indx] != 'None':
+                periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = str(funcs.split_line(lines[i + 1],',')[col_indx])
+            else:
+                periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = None
+        # number of valence electrons
+        col_indx = property_list.index('num_valence_elec')
+        for i in range(0, line_num -1):
+            if funcs.split_line(lines[i + 1],',')[col_indx] != 'None':
+                periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = int(funcs.split_line(lines[i + 1],',')[col_indx])
+            else:
+                periodic_table_dict[property_list[col_indx]][elmt_symbol_list[i]] = None
         ##########################
         # for all float type data
         ###########################
@@ -118,6 +132,8 @@ def periodic_tab_gen():
                 '  periodic_table_dict[\'vasppot_paw\']=' + str(periodic_table_dict['vasppot_paw']) + '\n' + 
                 '  periodic_table_dict[\'vasppot_gw\']=' + str(periodic_table_dict['vasppot_gw']) + '\n' + 
                 '  periodic_table_dict[\'dos_mode\']=' + str(periodic_table_dict['dos_mode']) + '\n' +
+                '  periodic_table_dict[\'valence_elec\']=' + str(periodic_table_dict['valence_elec']) + '\n' +
+                '  periodic_table_dict[\'num_valence_elec\']=' + str(periodic_table_dict['num_valence_elec']) + '\n' +
                 '  return periodic_table_dict'
                 )
     return periodic_table_dict

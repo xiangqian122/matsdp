@@ -216,3 +216,6 @@ def time_converter(hour, minute, second, unit = 'hour'):
     elif unit in ['hour', 'h', 'hours', 'Hour', 'Hours', 'HOUR', 'HOURS']:
         return hour + minute / 60 + second /3600
 
+def deg2rad(angle):
+    import math
+    return angle / 180 * math.pi

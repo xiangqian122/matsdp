@@ -102,16 +102,22 @@ def mkdir(path):
         #print(path + ' already exists')
         return False
 
-def mv(src_filedir,dst_filedir):
+def mv(src_dir, dst_dir):
+    '''
+    Move directory from A to B. If destination directory does not exist, then create it.
+    This function applies to files and folders
+    '''
     import os
     import shutil
-    if not os.path.isfile(src_filedir):
-        print(src_filedir + ' does not exist!')
+    #src_exist = os.path.isfile(src_dir)
+    src_exists = os.path.exists(src_dir)
+    if not src_exists:
+        print(src_dir + ' does not exist!')
     else:
-        fpath,fname=os.path.split(dst_filedir)
+        fpath,fname=os.path.split(dst_dir)
         if not os.path.exists(fpath):
             os.makedirs(fpath)
-        shutil.move(src_filedir,dst_filedir)
+        shutil.move(src_dir,dst_dir)
     return 0
 
 def write_log(logfile,output_str):
@@ -120,6 +126,7 @@ def write_log(logfile,output_str):
        If the log file doesn't exist, then create it and write output to log file.
        Note that output_str must be string format'''
     import os
+    import sys
     import time
     from . import default_params
     defaults_dict = default_params.default_params()
@@ -127,18 +134,28 @@ def write_log(logfile,output_str):
 
     current_time = time.time()
     formatted_time = time.strftime('## time: %Y%m%d %H:%M:%S',time.localtime(current_time))
-    if os.path.exists(logfile) == False or (os.path.exists(logfile) and os.path.getsize(logfile) == 0):
-        # write header to the log file
-        with open(logfile,'w') as logfile_object:
-            logfile_object.write(
+    log_str = ''
+    log_str += (
                 '################log file###############\n' +
                 '########version: matsdp-' + version + '##########\n' +
-                '# -*- coding: utf-8 -*-' + '\n' +
-                '##possible imports:' + '\n' +
+                '# -*- coding: utf-8 -*-' + '\n')
+    ###########################
+    # set the package path
+    ###########################
+    log_str += (
+                '#Set package path\n' +
+                'import os; import sys\n' +
+                'package_path = r\'' + sys.path[0] + '\'\n' +
+                'if package_path not in sys.path:\n'
+                '    sys.path.insert(0, os.path.abspath(package_path))\n'
+               )
+    log_str += ( 
+                '#possible imports:' + '\n' +
                 'import matsdp' + '\n' +
                 'from matsdp import convert' + '\n' +
                 'from matsdp import funcs' + '\n' +
                 'from matsdp import vasp' + '\n' +
+                'from matsdp import wannier' + '\n' +
                 'from matsdp import apt' + '\n' +
                 'from matsdp import dvm' + '\n' +
                 'from matsdp import pms' + '\n' +
@@ -151,6 +168,8 @@ def write_log(logfile,output_str):
                 'from matsdp.vasp import vasp_tools' + '\n' +
                 'from matsdp.vasp import vasp_default' + '\n' +
                 'from matsdp.vasp import vasp_help' + '\n' +
+                'from matsdp.wannier import wannier_read' + '\n' +
+                'from matsdp.wannier import wannier_plot' + '\n' +
                 'from matsdp.apt import apt_read' + '\n' +
                 'from matsdp.apt import apt_plot' + '\n' +
                 'from matsdp.dvm import dvm_read' + '\n' +
@@ -164,6 +183,10 @@ def write_log(logfile,output_str):
                 '# Hint: "if __name__ == \'__main__\':" is recommended to be added in the top-level script' + '\n' + 
                 '# to avoid errors, e.g. RuntimeError from running multiprocessing in a Windows environment.' + '\n' + 
                 '######################################\n')
+    if os.path.exists(logfile) == False or (os.path.exists(logfile) and os.path.getsize(logfile) == 0):
+        # write header to the log file
+        with open(logfile,'w') as logfile_object:
+            logfile_object.write(log_str)
         with open(logfile,'a') as logfile_object:
             logfile_object.write(
                 formatted_time + '\n' +
@@ -273,6 +296,9 @@ def file_status(file_path, suppress_warning = False):
     '''
     check the status of the file: file exist, file not found, empty file etc.
     return value: the status of the file
+    status = 0: file does not exist
+    status = 1: the file exists and is non-empty
+    status = 2: emtpy file exist
     '''
     import os
     from . import default_params
@@ -339,7 +365,7 @@ def get_files(dir_path, extension = None):
             else:
                 file_path_list.append(file_path)
                 file_name_list.append(ifile)
-    return file_path_list, file_name_list
+    return [file_path_list, file_name_list]
 
 def get_dirs(dir_path):
     '''
@@ -370,14 +396,14 @@ def get_dirs(dir_path):
 def extract_num(input_str):
     '''Extract number from string using regular expression, and put them in a list'''
     import re
-    num = re.findall(r"\d+\.?\d*", input_str)
-    return num
+    num_list = re.findall(r"\d+\.?\d*", input_str)
+    return num_list
 
 def extract_alpha_str(input_str):
     '''Extract english letters from string using regular expression, and put them in a list'''
     import re
-    alpha_str = [x for x in re.split(r'[^A-Za-z]', input_str) if x != '']
-    return alpha_str
+    alpha_str_list = [x for x in re.split(r'[^A-Za-z]', input_str) if x != '']
+    return alpha_str_list
 
 def insert_str(old_str,indx,inserted_str):
     '''Insert a specified string(IndsetedStr) into sepecified location of an input string(old_str)
@@ -440,7 +466,7 @@ def find_kwd_line_indx(kwd, file_path):
         indx = [x for x in range(len(lines)) if kwd in lines[x]]
     return indx
 
-def str_format(input_str, max_len = 13, padding_str = ' '):
+def str_format(input_str, max_len = 13, padding_str = ' ', padding_str_loc = 'r'):
     '''
     get formatted string
     e.g. str_format('aaa', 6) would return 'aaa   '
@@ -451,7 +477,11 @@ def str_format(input_str, max_len = 13, padding_str = ' '):
     input_str = str(input_str)
     if len(input_str) > max_len:
         max_len = len(input_str) + 1
-    formatted_str = input_str + padding_str * (max_len - len(input_str))
+    padding_str = padding_str * (max_len - len(input_str))
+    if padding_str_loc == 'r':
+        formatted_str = input_str + padding_str
+    elif padding_str_loc == 'l':
+        formatted_str = padding_str + input_str
     return formatted_str
     
 def float_format(input_float, max_len = 13, format_str = '{:.2f}', padding_str = ' '):
@@ -980,14 +1010,18 @@ def unit_vec(vector):
     import numpy as np
     return vector / np.linalg.norm(vector)
 
-def basis_vector_info(vec_a, vec_b, vec_c):
+def basis_vector_info(cell_arr):
     '''
     return basis vector information: angle, reciprocal lattices etc.
     vec_a, vec_b, vec_c must be numpy arrays
     '''
     import numpy as np
     basis_vector_dict = {}
-    vec_matrix_arr = np.vstack((vec_a, vec_b, vec_c))
+    #cell_arr = np.vstack((vec_a, vec_b, vec_c))
+    vec_a = cell_arr[0,:]
+    vec_b = cell_arr[1,:]
+    vec_c = cell_arr[2,:]
+    reciprocal_cell_arr = np.linalg.inv(cell_arr).T
     len_vec_a = np.linalg.norm(vec_a)
     len_vec_b = np.linalg.norm(vec_b)
     len_vec_c = np.linalg.norm(vec_c)
@@ -1004,13 +1038,13 @@ def basis_vector_info(vec_a, vec_b, vec_c):
     angle_beta_degree  = angle_beta_radian  * 360 / 2 / np.pi
     angle_gamma_degree = angle_gamma_radian * 360 / 2 / np.pi
     # volume of l_arr
-    box_volume = np.linalg.det(vec_matrix_arr)
-    if box_volume == 0:
+    volume = np.linalg.det(cell_arr)
+    if volume == 0:
         print('WARNING #2012291343 (from funcs): The box volume is zero, please check the inputs.')
     vec_1 = np.cross(vec_b, vec_c)
     vec_2 = np.cross(vec_c, vec_a)
     vec_3 = np.cross(vec_a, vec_b)
-    cte = np.power((2 * np.pi),3) / box_volume
+    cte = np.power((2 * np.pi),3) / volume
     b_1 = cte * vec_1
     b_2 = cte * vec_2
     b_3 = cte * vec_3
@@ -1031,20 +1065,27 @@ def basis_vector_info(vec_a, vec_b, vec_c):
     basis_vector_dict['angle_alpha_degree'] = angle_alpha_degree 
     basis_vector_dict['angle_beta_degree'] = angle_beta_degree
     basis_vector_dict['angle_gamma_degree'] = angle_gamma_degree
-    basis_vector_dict['box_volume'] = box_volume
+    basis_vector_dict['volume'] = volume
 
     # Cartesian and Fractional coordinate conversion matrix
+    # Ref: Int. Tables for Crystallography (2006), vol. B, sec 3.3.1.1.1
+    # (the matrix used is the 2nd form listed) 
+    # Use the following convention
+    # The x axis is along a
+    # The y axis is in the a-b plane
+    # The z axis is along c*
+
     # https://en.wikipedia.org/wiki/Fractional_coordinates
     # WARNING: The conversion is only suited for the 'a along x, b in xy' orientation situation: For simplicity, it is chosen so that edge vector a {\displaystyle \mathbf {a} } \mathbf {a} in the positive x {\displaystyle x} x-axis direction, edge vector b {\displaystyle \mathbf {b} } \mathbf b in the x − y {\displaystyle x-y} x-y plane with positive y {\displaystyle y} y-axis component, edge vector c {\displaystyle \mathbf {c} } \mathbf {c} with positive z {\displaystyle z} z-axis component in the Cartesian-system. Once the coordinate is reoriented, please use this function carefully..
     a11 = 1 / len_vec_a
     a12 = -cos_angle_gamma / len_vec_a / sin_angle_gamma
-    a13 = len_vec_b * len_vec_c * (cos_angle_alpha * cos_angle_gamma - cos_angle_beta) / sin_angle_gamma / box_volume
+    a13 = len_vec_b * len_vec_c * (cos_angle_alpha * cos_angle_gamma - cos_angle_beta) / sin_angle_gamma / volume
     a21 = 0
     a22 = 1 / len_vec_b / sin_angle_gamma
-    a23 = len_vec_a * len_vec_c * (cos_angle_beta * cos_angle_gamma - cos_angle_alpha) / sin_angle_gamma / box_volume
+    a23 = len_vec_a * len_vec_c * (cos_angle_beta * cos_angle_gamma - cos_angle_alpha) / sin_angle_gamma / volume
     a31 = 0
     a32 = 0
-    a33 = len_vec_a * len_vec_b * sin_angle_gamma / box_volume
+    a33 = len_vec_a * len_vec_b * sin_angle_gamma / volume
     car2fra_matrix_arr = np.array(
         [
         [a11, a12, a13],
@@ -1061,7 +1102,7 @@ def basis_vector_info(vec_a, vec_b, vec_c):
     a23 = len_vec_c * (cos_angle_alpha - cos_angle_beta * cos_angle_gamma) / sin_angle_gamma
     a31 = 0
     a32 = 0
-    a33 = box_volume / len_vec_a / len_vec_b / sin_angle_gamma
+    a33 = volume / len_vec_a / len_vec_b / sin_angle_gamma
     fra2car_matrix_arr = np.array(
         [
         [a11, a12, a13],
@@ -1079,11 +1120,12 @@ def basis_vector_info(vec_a, vec_b, vec_c):
     ####################################################################
     reciprocal_arr = np.array([0.0] * 3 * 3,dtype = np.float)
     reciprocal_arr.shape = 3, 3
-    l_arr = vec_matrix_arr
+    l_arr = cell_arr
     reciprocal_arr[0,:] = 2 * np.pi * np.cross(l_arr[1,:], l_arr[2,:])/np.dot(l_arr[0,:], np.cross(l_arr[1,:], l_arr[2,:]))
     reciprocal_arr[1,:] = 2 * np.pi * np.cross(l_arr[2,:], l_arr[0,:])/np.dot(l_arr[1,:], np.cross(l_arr[2,:], l_arr[0,:]))
     reciprocal_arr[2,:] = 2 * np.pi * np.cross(l_arr[0,:], l_arr[1,:])/np.dot(l_arr[2,:], np.cross(l_arr[0,:], l_arr[1,:]))
     basis_vector_dict['reciprocal_arr'] = reciprocal_arr
+    basis_vector_dict['len_reciprocal_arr'] = np.linalg.norm(basis_vector_dict['reciprocal_arr'], axis=1)
     return basis_vector_dict
 
 def form_bond(elmt1, elmt2, pos_arr_1, pos_arr_2, mode = 'csd', factor = 1.15):
@@ -1145,6 +1187,41 @@ def volume_pentahedron_from_points(point1_arr, point2_arr, point3_arr, point4_ar
     volume = volume_tetrahedron_0 + volume_tetrahedron_1
     return volume
 
+def rotation_matrix_around_axis(around = 'z', angle = 180, angle_unit = 'deg'):
+    '''
+    rotation matrix around one axis
+    angle_unit = 'deg' or 'rad'
+    '''
+    import numpy as np
+
+    if angle_unit == 'deg':
+        angle_rad = angle / 180 * np.pi
+    elif angle_unit == 'rad':
+        angle_rad = angle
+    
+    cos_angle = np.cos(angle_rad)
+    sin_angle = np.sin(angle_rad)
+
+    if around == 'x':
+        rot_mat = np.array([
+            [1,         0,          0],
+            [0, cos_angle, -sin_angle],
+            [0, sin_angle,  cos_angle],
+            ])
+    elif around == 'y':
+        rot_mat = np.array([
+            [ cos_angle, 0, sin_angle],
+            [0         , 1,         0],
+            [-sin_angle, 0, cos_angle],
+            ])
+    elif around == 'z':
+        rot_mat = np.array([
+            [cos_angle, -sin_angle, 0],
+            [sin_angle,  cos_angle, 0],
+            [        0,          0, 1],
+            ])
+    return rot_mat
+
 def rotation_matrix_from_vectors(vec1, vec2):
     """ 
     https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d/897677#897677
@@ -1153,14 +1230,36 @@ def rotation_matrix_from_vectors(vec1, vec2):
     :param vec1: A 3d "source" vector
     :param vec2: A 3d "destination" vector
     :return mat: A transform matrix (3x3) which when applied to vec1, aligns it with vec2.
+
+    To rotate one vector so it faces another:
+        normalise it
+        take their dot product to get the cosine of the rotation angle
+        take their cross product to find an orthogonal rotation vector
+        rotate around that new vector by the angle found in #2
+    Step 2 can be omitted if you remember that | A x B | = sin(theta) if A and B are both normalised.
+    
+    Comment:
+        The above formula fails for anti-parallel vectors 
     """
     import numpy as np
     a, b = (vec1 / np.linalg.norm(vec1)).reshape(3), (vec2 / np.linalg.norm(vec2)).reshape(3)
     v = np.cross(a, b)
+    len_vec_a = np.linalg.norm(a)
+    len_vec_b = np.linalg.norm(b)
+    cos_angle = a.dot(b) / (len_vec_a * len_vec_b) 
     c = np.dot(a, b)
     s = np.linalg.norm(v)
     if s == 0:
-        rotation_matrix = np.identity(3)
+        # Treating parallel and anti-parallel vectors 
+        if cos_angle == -1:
+            # two anti-parallel vectors
+            around = 'z'
+            if np.array_equal(a, np.array([0,0,1])) or np.array_equal(a, np.array([0,0,-1])):
+                around = 'x'
+            rotation_matrix = rotation_matrix_around_axis(around = around, angle = 180, angle_unit = 'deg')
+        elif cos_angle == 1:
+            # two parallel vectors
+            rotation_matrix = np.identity(3)
     else:
         kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
         rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
@@ -1212,7 +1311,63 @@ def check_job_type(job_dir):
     if all(x in file_name_list for x in vasp_file_list):
         job_type_dict['VASP'] = True
     return job_type_dict
-     
+
+def points_in_circle(origin, r, n = 100):
+    '''
+    Generate points that is equally spaced on the circle.
+    '''
+    import math
+    import numpy as np
+    x0 = origin[0]
+    y0 = origin[1]
+    pi = math.pi
+    points_arr = np.array([[x0 + math.cos(2*pi/n*x)*r, y0 + math.sin(2*pi/n*x)*r] for x in range(0,n+1)])
+    ##points_arr = np.array([None] * len(points_list) * 2)
+    ##points_arr.shape = (len(points_list) , 2)
+    ##for i in range(len(points_list)):
+    ##    points_arr[i, 0] = points_list[i][0]
+    ##    points_arr[i, 1] = points_list[i][1]
+    return points_arr
+
+def split_formula(formula):
+    '''
+    split the chemical formula into an array of length 2 (array of array). The first item is an array of element names, the second item is an array of number of elements
+    '''
+    import numpy as np
+    import re
+    str_list = extract_alpha_str(formula)
+    num_list = [int(x) for x in extract_num(formula)]
+    elmt_list = []
+    elmtnum_list = []
+    for i_indx in range(0, len(str_list)):
+        split_list = re.findall('[A-Z][^A-Z]*', str_list[i_indx])
+        elmt_list += split_list 
+        if len(split_list) > 1:
+            elmtnum_list += [1] * len(split_list)
+        elif len(split_list) == 1:
+            #print(formula, str_list, num_list, i_indx)
+            if i_indx <= (len(num_list) - 1):
+                elmtnum_list += [num_list[i_indx]]
+            else:
+                elmtnum_list += [1]
+    #str_num = ''
+    #str_num += formula + ',' + ','.join([str_arr[x] + ',' + num_arr[x] for x in range(len(str_arr))]) + '\n'
+    #return splitted_formula_arr
+    return [elmt_list, elmtnum_list]
+
+def set_package_path(package_path):
+    '''
+    set and insert the package path to the PYTHONPATH
+    '''
+    import os
+    import sys
+    #print(sys.path
+    if package_path == None or package_path == '':
+        pass
+    if not package_path is None and package_path != '':
+        sys.path.insert(0, os.path.abspath(package_path))
+    return sys.path
+    
 
 ######################
 #Notes

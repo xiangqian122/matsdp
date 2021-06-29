@@ -1,3 +1,16 @@
+v0.2.4, 2021-06-29
+--------------------------------
+
+- Added new module named wannier, which can deal with the calculations related with the Wannier functions.
+- Added new feature in plotting the orbital projected band structure (fat band). The summed projected orbitals can be plotted, e.g. p_x+p_y. The fatband input file can also be generated automatically. seaborn package is also used to incoporate more colors. The efficiency in plotting band structure is improved.
+- Optimized the codes in pms module.
+- Added new feature in reading density of states, the non-collinear case is condidered.
+- Added new function of splitting the chemical formula.
+- Fixed some bugs in writing the Direct coordinates. The Direct coordinate is coerced to values in the range of [0, 1) 
+- Fixed some bugs in exfoliating 2D materials: fixed the bugs in exfoliation function in vasp_build. Other bugs are also fixed in the align, build_vacuum_layer, orientation functions.
+- Enabled the ability of performing shear deformation in the vasp_build.transform function.
+- Optimized the codes in writing the log file. The package is also be added in the log file.
+
 v0.2.3, 2021-04-20
 --------------------------------
  

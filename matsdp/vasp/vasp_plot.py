@@ -5,7 +5,7 @@ matplotlib.use("Agg")
 def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_list = None, atom_palette_list = None, atom_subplot_arg_list = None,
              subplot_arg_list = None, subplot_xlo_list = None, subplot_xhi_list = None, subplot_ylo_list = None, subplot_yhi_list = None,
              subplot_xtick_list = None, subplot_ytick_list = None, subplot_xlabel_list = None, subplot_ylabel_list = None, subplot_share_xy_list = [False, False] , mainplot_axis_label_list = [False, False], xtick_direction = 'out', ytick_direction = 'out',
-             dos_mode_dict = None, fermi_shift_zero = True, peak_analyzer = False, peak_analyzer_factor = 0.02, smoothing = False, smoothing_factor = 0.05, line_width = 2.0, font_size = 18, fig_format = 'png', fig_size = [15,10], fig_dpi = 600):
+             dos_mode_dict = None, fermi_shift_zero = True, e_fermi_list = None, fermi_mod = False, e_alpha_plus_bet_list = None, peak_analyzer = False, peak_analyzer_factor = 0.02, smoothing = False, smoothing_factor = 0.05, line_width = 2.0, font_size = 18, fig_format = 'png', fig_size = [15,10], fig_dpi = 600):
     '''
     - Descriptions
      * Plot PDOS, LDOS, TDOS, now only availabel for LORBIT = 11.
@@ -44,6 +44,7 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
      * font_size = 18            # Recommended value 18. This value designate the font size for the axis label font size and the legend font size
     - fig_size: set this value to avoid overlapping of subfigures
     '''
+    args_dict = locals()
     import os
     import sys
     import time
@@ -185,7 +186,7 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
         if type(atom_subplot_arg_list[i_atom_subplot]) == str and ',' in atom_subplot_arg_list[i_atom_subplot]:
             #for example '4,4,10'
             pass
-        if type(atom_subplot_arg_list[i_atom_subplot]) == str and ',' not in atom_subplot_arg_list[i_atom_subplot]:
+        elif type(atom_subplot_arg_list[i_atom_subplot]) == str and ',' not in atom_subplot_arg_list[i_atom_subplot]:
             #for example '442'
             temp_str = atom_subplot_arg_list[i_atom_subplot]
             atom_subplot_arg_list[i_atom_subplot] = ','.join([temp_str[0],temp_str[1],temp_str[2]])
@@ -203,7 +204,7 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
         if type(subplot_arg_list[i_subplot]) == str and ',' in subplot_arg_list[i_subplot]:
             #for example '4,4,10'
             pass
-        if type(subplot_arg_list[i_subplot]) == str and ',' not in subplot_arg_list[i_subplot]:
+        elif type(subplot_arg_list[i_subplot]) == str and ',' not in subplot_arg_list[i_subplot]:
             #for example '442'
             temp_str = subplot_arg_list[i_subplot]
             subplot_arg_list[i_subplot] = ','.join([temp_str[0],temp_str[1],temp_str[2]])
@@ -255,6 +256,10 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
 
     #Initialize the gereral paramters list
     general_params_dict = {}
+    if not e_fermi_list is None:
+        general_params_dict['e_fermi_list'] = e_fermi_list.copy()
+    else:
+        general_params_dict['e_fermi_list'] = None
     general_params_dict['mainplot_axis_label_list'] = mainplot_axis_label_list 
     general_params_dict['xtick_direction'] = xtick_direction
     general_params_dict['ytick_direction'] = ytick_direction
@@ -297,7 +302,7 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
         counter_list.append(0)
     sysname_list = []
     dos_atomname_list = []
-    e_fermi_list = []
+    general_params_dict['e_fermi_list'] = []
     initial_peak_analyzer_factor = peak_analyzer_factor
     if general_params_dict['peak_analyzer'] not in [True, False]:
         print('ERROR: vasp_plot input value error. The value of peak_analyzer should be logic value True or False')
@@ -375,12 +380,22 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
     def plot_lines(axes_i, orbits, doscar_dict, energy, atom_dict, dos_lty, subplot_indx, subplot_dict, dos_file_indx, i_elmt_name, orbit_scaling_dict, general_params_dict):
         from .. import funcs
         import matplotlib.pyplot as plt
-        orbitname_list = ['f','d','dxy','dyz','dz2','dxz','dx2','p','py','pz','px','s','LDOS']
-        orbit_label_list = ['-$f$',
+        orbitname_list = ['f','f-3','f-2','f-1','f0','f1','f2','f3','d','dxy','dyz','dz2','dxz','dx2','p','py','pz','px','s','LDOS', 's_mx', 's_my', 's_mz', 'py_mx', 'py_my', 'py_mz', 'pz_mx', 'pz_my', 'pz_mz', 'px_mx', 'px_my', 'px_mz', 'dxy_mx', 'dxy_my', 'dxy_mz', 'dyz_mx', 'dyz_my', 'dyz_mz', 'dz2_mx', 'dz2_my', 'dz2_mz', 'dxz_mx', 'dxz_my', 'dxz_mz', 'dx2_mx', 'dx2_my', 'dx2_mz']
+        orbit_label_list = ['-$f$','$f_{y(3x^{2}-y^{2})}$','$f_{xyz}$','$f_{yz^{2}}$','$f_{z^{3}}$','$f_{xz^{2}}$','$f_{z(x^{2}-y^{2})}$','$f_{x(x^{2}-3y^{2})}$',
                           '-$d$','-$d_{xy}$','-$d_{yz}$','-$d_{z2}$','-$d_{xz}$','-$d_{x^{2}-y^{2}}$',
                           '-$p$','-$p_{y}$','-$p_{z}$','-$p_{x}$',
                           '-$s$',
-                          '']
+                          '',
+                          '-$s(m_{x})$', '-$s(m_{y})$', '-$s(m_{z})$',
+                          '-$py(m_{x})$', '-$py(m_{y})$', '-$py(m_{z})$',
+                          '-$pz(m_{x})$', '-$pz(m_{y})$', '-$pz(m_{z})$',
+                          '-$px(m_{x})$', '-$px(m_{y})$', '-$px(m_{z})$',
+                          '-$dxy(m_{x})$', '-$dxy(m_{y})$', '-$dxy(m_{z})$',
+                          '-$dyz(m_{x})$', '-$dyz(m_{y})$', '-$dyz(m_{z})$',
+                          '-$dz2(m_{x})$', '-$dz2(m_{y})$', '-$dz2(m_{z})$',
+                          '-$dxz(m_{x})$', '-$dxz(m_{y})$', '-$dxz(m_{z})$',
+                          '-$dx2(m_{x})$', '-$dx2(m_{y})$', '-$dx2(m_{z})$',
+                          ]
         if 'LDOS' in orbits and len(orbits) > 1:
             # when LDOS and PDOS are plotted in one figure
             orbit_label_list[-1] = '-LDOS'
@@ -396,24 +411,24 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
                 orbit_scaling_factor = orbit_scaling_dict[orbitname_list[orbitname_indx]]
                 if doscar_dict['num_col'] == 5 or doscar_dict['num_col'] == 19 or doscar_dict['num_col'] == 33:
                     i_dos_arr_original_up = doscar_dict[orbitname_list[orbitname_indx]+'_up']
-                    i_dos_arr_original_dw = doscar_dict[orbitname_list[orbitname_indx]+'_dw']
+                    i_dos_arr_original_dn = doscar_dict[orbitname_list[orbitname_indx]+'_dn']
                     if general_params_dict['smoothing'] == True or general_params_dict['smoothing'] == 'Lorentzian':
                         i_energy_arr, i_dos_arr_up = funcs.lorentzian_broadening(x_arr = energy, y_arr = i_dos_arr_original_up, delta = general_params_dict['smoothing_factor']) 
-                        i_energy_arr, i_dos_arr_dw = funcs.lorentzian_broadening(x_arr = energy, y_arr = i_dos_arr_original_dw, delta = general_params_dict['smoothing_factor'])
+                        i_energy_arr, i_dos_arr_dn = funcs.lorentzian_broadening(x_arr = energy, y_arr = i_dos_arr_original_dn, delta = general_params_dict['smoothing_factor'])
                     else:
                         i_energy_arr = energy
                         i_dos_arr_up = i_dos_arr_original_up 
-                        i_dos_arr_dw = i_dos_arr_original_dw
+                        i_dos_arr_dn = i_dos_arr_original_dn
                         
                     axes_i.plot(i_energy_arr, i_dos_arr_up * orbit_scaling_factor, color = atom_dict['palette_list'][dos_file_indx], linestyle = dos_lty[dos_lty_indx],
                              marker = '', linewidth = general_params_dict['line_width'], label = label_text)
-                    axes_i.plot(i_energy_arr, i_dos_arr_dw * orbit_scaling_factor, color = atom_dict['palette_list'][dos_file_indx], linestyle = dos_lty[dos_lty_indx],
+                    axes_i.plot(i_energy_arr, i_dos_arr_dn * orbit_scaling_factor, color = atom_dict['palette_list'][dos_file_indx], linestyle = dos_lty[dos_lty_indx],
                              marker = '', linewidth = general_params_dict['line_width'])
                     dos_lty_indx += 1                
                     if general_params_dict['peak_analyzer'] == True:
                         label_peaks(axes_i, i_energy_arr, i_dos_arr_up * orbit_scaling_factor, subplot_indx, subplot_dict, general_params_dict['peak_analyzer_factor'])
-                        label_peaks(axes_i, i_energy_arr, i_dos_arr_dw * orbit_scaling_factor, subplot_indx, subplot_dict, general_params_dict['peak_analyzer_factor'])
-                elif doscar_dict['num_col'] == 3 or doscar_dict['num_col'] == 10 or doscar_dict['num_col'] == 17:
+                        label_peaks(axes_i, i_energy_arr, i_dos_arr_dn * orbit_scaling_factor, subplot_indx, subplot_dict, general_params_dict['peak_analyzer_factor'])
+                elif doscar_dict['num_col'] == 3 or doscar_dict['num_col'] == 10 or doscar_dict['num_col'] == 17 or doscar_dict['num_col'] == 37:
                     i_dos_arr_original = doscar_dict[orbitname_list[orbitname_indx]]
                     if general_params_dict['smoothing'] == True or general_params_dict['smoothing'] == 'Lorentzian':
                         i_energy_arr, i_dos_arr = funcs.lorentzian_broadening(x_arr = energy, y_arr = i_dos_arr_original, delta = general_params_dict['smoothing_factor']) 
@@ -455,8 +470,28 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
         poscar_dict = vasp_read.read_poscar(poscar_file_path)
         outcar_params_dict = vasp_read.read_outcar(outcar_file_path)
         LORBIT = outcar_params_dict['LORBIT']
-        e_fermi = outcar_params_dict['e_fermi']
-        e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
+
+        #get E_fermi
+        if e_fermi_list is None:
+            print('WARNING #2105191252 (from vasp_plot); The Fermi energy (e_fermi) is not set by the user. The Fermi energy will be shifted to zero and the program will automatically use the Fermi energy from the OUTCAR in the same directory of ' + atom_dict['doscar_file_path_list'][dos_file_indx] + ' , which may not be accurate enough. Please use at your own risk!')
+            # use the Fermi energy from the OUTCAR
+            e_fermi = outcar_params_dict['e_fermi']
+            e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
+        else:
+            # use the Fermi energy provided by the user.
+            e_fermi = general_params_dict['e_fermi_list'][dos_file_indx]
+        # Modification of E_fermi
+        e_fermi_mod = None
+        if fermi_mod == True:
+            if e_alpha_plus_bet_list is None:
+                print('WARNING #2105191100 (from vasp_plot); The value of e_alpha_plus_bet is not set. We will use the e_fermi and e_alpha_plus_bet from the OUTCAR in the same directory of ' + atom_dict['doscar_file_path_list'][dos_file_indx])
+                e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
+            else:
+                e_fermi_mod = e_fermi + e_alpha_plus_bet_list[dos_file_indx]
+
+        ##e_fermi = outcar_params_dict['e_fermi']
+        ##e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
+
         subplot_indx = subplot_dict['arg_list'].index(atom_dict['subplot_arg_list'][dos_file_indx])
         if atom_indx == 0:
             #TDOS
@@ -479,8 +514,13 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
             counter_list[subplot_indx] += 1
             sysname_list.append(''.join(str(poscar_dict['elmt_species_arr'][i]) + str(poscar_dict['elmt_num_arr'][i]) for i in range(len(poscar_dict['elmt_species_arr'])-1,-1,-1)))
             dos_atomname_list.append('TDOS')
-            e_fermi_list.append(e_fermi_mod)
-            energy = doscar_dict['energy'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
+            if fermi_mod == True:
+                general_params_dict['e_fermi_list'].append(e_fermi_mod)
+                energy = doscar_dict['energy'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
+            elif fermi_mod == False:
+                general_params_dict['e_fermi_list'].append(e_fermi)
+                #energy = doscar_dict['energy'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
+                energy = doscar_dict['energy'] - e_fermi * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
             #Subplot x axis limit
             if subplot_xlo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] in [None,'None','none']:
                 subplot_dict['xlo_list'][subplot_indx] = min(subplot_dict['xlo_list'][subplot_indx],energy.min())
@@ -523,28 +563,28 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
        
             elif doscar_dict['num_col'] == 5:
                 i_dos_arr_original_up = doscar_dict['TDOS_up']
-                i_dos_arr_original_dw = doscar_dict['TDOS_dw']
+                i_dos_arr_original_dn = doscar_dict['TDOS_dn']
                 if general_params_dict['smoothing'] == True or general_params_dict['smoothing'] == 'Lorentzian':
                     i_energy_arr, i_dos_arr_up = funcs.lorentzian_broadening(x_arr = energy, y_arr = i_dos_arr_original_up, delta = general_params_dict['smoothing_factor'])
-                    i_energy_arr, i_dos_arr_dw = funcs.lorentzian_broadening(x_arr = energy, y_arr = i_dos_arr_original_dw, delta = general_params_dict['smoothing_factor'])
+                    i_energy_arr, i_dos_arr_dn = funcs.lorentzian_broadening(x_arr = energy, y_arr = i_dos_arr_original_dn, delta = general_params_dict['smoothing_factor'])
                 else:
                     i_energy_arr = energy
                     i_dos_arr_up = i_dos_arr_original_up
-                    i_dos_arr_dw = i_dos_arr_original_dw
+                    i_dos_arr_dn = i_dos_arr_original_dn
                 active_axes.plot(i_energy_arr,i_dos_arr_up, color = atom_dict['palette_list'][dos_file_indx], marker = '', linewidth = general_params_dict['line_width'],
                          label = atom_dict['sysname_list'][dos_file_indx] + 'TDOS')
-                active_axes.plot(i_energy_arr,i_dos_arr_dw, color = atom_dict['palette_list'][dos_file_indx], marker = '', linewidth = general_params_dict['line_width'])
+                active_axes.plot(i_energy_arr,i_dos_arr_dn, color = atom_dict['palette_list'][dos_file_indx], marker = '', linewidth = general_params_dict['line_width'])
                 if general_params_dict['peak_analyzer'] == True:  
                     label_peaks(axes_i, energy, i_dos_arr_up, subplot_indx, subplot_dict, general_params_dict['peak_analyzer_factor'])
-                    label_peaks(axes_i, energy, i_dos_arr_dw, subplot_indx, subplot_dict, general_params_dict['peak_analyzer_factor'])                  
+                    label_peaks(axes_i, energy, i_dos_arr_dn, subplot_indx, subplot_dict, general_params_dict['peak_analyzer_factor'])                  
                 #Subplot y axis limit
                 if subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] in [None,'None','none']:
-                    subplot_dict['ylo_list'][subplot_indx] = min(subplot_dict['ylo_list'][subplot_indx], min(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
+                    subplot_dict['ylo_list'][subplot_indx] = min(subplot_dict['ylo_list'][subplot_indx], min(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dn[xlo_energy_indx:xhi_energy_indx]))
                 if subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] in [None,'None','none']:
-                    subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], max(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
+                    subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], max(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dn[xlo_energy_indx:xhi_energy_indx]))
                 if subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] not in [None,'None','none'] and subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] not in [None,'None','none'] and subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] >= subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])]:
-                    subplot_dict['ylo_list'][subplot_indx] = min(subplot_dict['ylo_list'][subplot_indx], min(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
-                    subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], max(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
+                    subplot_dict['ylo_list'][subplot_indx] = min(subplot_dict['ylo_list'][subplot_indx], min(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dn[xlo_energy_indx:xhi_energy_indx]))
+                    subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], max(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dn[xlo_energy_indx:xhi_energy_indx]))
 
             #Subplot y axis limit
             subplot_dict['ylo_list'][subplot_indx] = subplot_dict['ylo_list'][subplot_indx] * lower_spine_scale
@@ -588,8 +628,12 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
                 #LDOS for multiple atoms
                 dos_atomname_list.append(i_elmt_name)
 
-            e_fermi_list.append(e_fermi_mod)
-            energy = doscar_dict['energy']  + outcar_params_dict['alpha+bet'] - e_fermi_mod*funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
+            if fermi_mod == True:
+                general_params_dict['e_fermi_list'].append(e_fermi_mod)
+                energy = doscar_dict['energy']  + outcar_params_dict['alpha+bet'] - e_fermi_mod*funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
+            elif fermi_mod == False:
+                general_params_dict['e_fermi_list'].append(e_fermi)
+                energy = doscar_dict['energy'] - e_fermi * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
             if isinstance(atom_indx, int):
                 orbits = dos_mode_dict[str(poscar_dict['atom_species_arr'][atom_indx - 1])]
             elif isinstance(atom_indx, list):
@@ -619,7 +663,7 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
                 xhi_energy_indx = xhi_energy_indx + 1
             #Subplot y axis limit
             #if subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] in [None,'None','none'] or subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] in [None,'None','none']:
-            if doscar_dict['num_col'] == 10 or doscar_dict['num_col'] == 17:
+            if doscar_dict['num_col'] == 10 or doscar_dict['num_col'] == 17 or doscar_dict['num_col'] == 37:
                 #Spin restricted calculation
                 for orbit_indx in range(0,len(orbitname_list)):
                     if orbitname_list[orbit_indx] in orbits:
@@ -641,21 +685,21 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
                 for orbit_indx in range(0,len(orbitname_list)):
                     if orbitname_list[orbit_indx] in orbits:
                         i_dos_arr_original_up = doscar_dict[orbitname_list[orbit_indx]+'_up'] 
-                        i_dos_arr_original_dw = doscar_dict[orbitname_list[orbit_indx]+'_dw']
+                        i_dos_arr_original_dn = doscar_dict[orbitname_list[orbit_indx]+'_dn']
                         if smoothing == True or smoothing == 'Lorentzian':
                             i_energy_arr, i_dos_arr_up = funcs.lorentzian_broadening(x_arr = energy, y_arr = i_dos_arr_original_up, delta = general_params_dict['smoothing_factor'])
-                            i_energy_arr, i_dos_arr_dw = funcs.lorentzian_broadening(x_arr = energy, y_arr = i_dos_arr_original_dw, delta = general_params_dict['smoothing_factor'])
+                            i_energy_arr, i_dos_arr_dn = funcs.lorentzian_broadening(x_arr = energy, y_arr = i_dos_arr_original_dn, delta = general_params_dict['smoothing_factor'])
                         else:
                             i_energy_arr = energy
                             i_dos_arr_up = i_dos_arr_original_up
-                            i_dos_arr_dw = i_dos_arr_original_dw
+                            i_dos_arr_dn = i_dos_arr_original_dn
                         if subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] in [None,'None','none']:
-                            subplot_dict['ylo_list'][subplot_indx] = min(subplot_dict['ylo_list'][subplot_indx], min(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
+                            subplot_dict['ylo_list'][subplot_indx] = min(subplot_dict['ylo_list'][subplot_indx], min(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dn[xlo_energy_indx:xhi_energy_indx]))
                         if subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] in [None,'None','none']:
-                            subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], max(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), max(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
+                            subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], max(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), max(i_dos_arr_dn[xlo_energy_indx:xhi_energy_indx]))
                         if subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] not in [None,'None','none'] and subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] not in [None,'None','none'] and subplot_ylo_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])] >= subplot_yhi_list[subplot_dict['arg_list'].index(subplot_dict['arg_list'][subplot_indx])]:
-                            subplot_dict['ylo_list'][subplot_indx] = min(subplot_dict['ylo_list'][subplot_indx], min(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
-                            subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], max(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), max(i_dos_arr_dw[xlo_energy_indx:xhi_energy_indx]))
+                            subplot_dict['ylo_list'][subplot_indx] = min(subplot_dict['ylo_list'][subplot_indx], min(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), min(i_dos_arr_dn[xlo_energy_indx:xhi_energy_indx]))
+                            subplot_dict['yhi_list'][subplot_indx] = max(subplot_dict['yhi_list'][subplot_indx], max(i_dos_arr_up[xlo_energy_indx:xhi_energy_indx]), max(i_dos_arr_dn[xlo_energy_indx:xhi_energy_indx]))
                             
             subplot_dict['ylo_list'][subplot_indx] = subplot_dict['ylo_list'][subplot_indx] * lower_spine_scale
             subplot_dict['yhi_list'][subplot_indx] = subplot_dict['yhi_list'][subplot_indx] * upper_spine_scale
@@ -665,18 +709,18 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
         fermi_level_linewidth = 1.0
         if len(atom_dict['doscar_file_path_list']) == 1:
             #Figure only contain one subplot, single DOS is plotted or multiple DOS files are plotted onto one subplot        
-            line1 = [(e_fermi_mod * funcs.logic_retn_val(fermi_shift_zero,0,1), subplot_dict['ylo_list'][subplot_indx]), (e_fermi_mod * funcs.logic_retn_val(fermi_shift_zero,0,1), subplot_dict['yhi_list'][subplot_indx])]
+            line1 = [(funcs.logic_retn_val(fermi_mod, e_fermi_mod, e_fermi) * funcs.logic_retn_val(fermi_shift_zero,0,1), subplot_dict['ylo_list'][subplot_indx]), (funcs.logic_retn_val(fermi_mod, e_fermi_mod, e_fermi) * funcs.logic_retn_val(fermi_shift_zero,0,1), subplot_dict['yhi_list'][subplot_indx])]
             (line1_xs, line1_ys) = zip(*line1)
             active_axes.plot(line1_xs, line1_ys, linestyle = '--',linewidth = fermi_level_linewidth, color = 'black')
         elif len(atom_dict['doscar_file_path_list']) != 1 and general_params_dict['fermi_shift_zero'] == True and counter_list[subplot_indx] == subplot_arg_unique_count_list[subplot_indx]:
             #Figure contain multiple subplots, Fermi energy is shifted to zero. Each subplot only plot the Fermi energy level once.
-            line1 = [(e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],0,1), subplot_dict['ylo_list'][subplot_indx]), (e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],0,1), subplot_dict['yhi_list'][subplot_indx])]
+            line1 = [(funcs.logic_retn_val(fermi_mod, e_fermi_mod, e_fermi) * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],0,1), subplot_dict['ylo_list'][subplot_indx]), (funcs.logic_retn_val(fermi_mod, e_fermi_mod, e_fermi) * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],0,1), subplot_dict['yhi_list'][subplot_indx])]
             (line1_xs, line1_ys) = zip(*line1)
             active_axes.plot(line1_xs, line1_ys, linestyle = '--',linewidth = fermi_level_linewidth, color = 'black')
         elif len(atom_dict['doscar_file_path_list']) != 1 and general_params_dict['fermi_shift_zero'] == False:
             #Figure contain multiple subplots, Fermi energy is not shifted to zero.
-            e_fermi = e_fermi_list[dos_file_indx]
-            line1 = [(e_fermi_mod * funcs.logic_retn_val(fermi_shift_zero,0,1), subplot_dict['ylo_list'][subplot_indx]),(e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],0,1), subplot_dict['yhi_list'][subplot_indx])]
+            e_fermi = general_params_dict['e_fermi_list'][dos_file_indx]
+            line1 = [(funcs.logic_retn_val(fermi_mod, e_fermi_mod, e_fermi) * funcs.logic_retn_val(fermi_shift_zero,0,1), subplot_dict['ylo_list'][subplot_indx]),(funcs.logic_retn_val(fermi_mod, e_fermi_mod, e_fermi) * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],0,1), subplot_dict['yhi_list'][subplot_indx])]
             (line1_xs, line1_ys) = zip(*line1)
             active_axes.plot(line1_xs, line1_ys, linestyle = '--',linewidth = fermi_level_linewidth,color = atom_dict['palette_list'][dos_file_indx])
         #axes, ticks, labels and legends
@@ -768,7 +812,7 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
             unique_sysindx_list.append(sysindx)
             unique_atom_doscar_file_path_list.append(idoscar_file_path)
             sysindx_list.append(sysindx)
-            unique_fermi_list.append(e_fermi_list[sysindx - 1])
+            unique_fermi_list.append(general_params_dict['e_fermi_list'][sysindx - 1])
             sysindx += 1
     formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time.time()))
     if general_params_dict['smoothing'] == True or general_params_dict['smoothing'] == 'Lorentzian':
@@ -786,41 +830,37 @@ def plot_dos(atom_doscar_file_path_list, atom_sysname_list = None, atom_indx_lis
     log_str = ''
     for i_unique_sys in range(0,len(unique_atom_doscar_file_path_list)):
         log_str = log_str + ('sys' + str(unique_sysindx_list[i_unique_sys]) + ' = r\'' + str(unique_atom_doscar_file_path_list[i_unique_sys]) + '\'' + '\n' +
-                  'e_fermi_mod = ' + str(e_fermi_list[i_unique_sys]) + '\n')
-    log_str = log_str + (
-        'dos_mode_dict = ' + str(dos_mode_dict) + '\n' +
-        'vasp_plot.plot_dos(' + '\n' +
-        '    atom_doscar_file_path_list = ' + ('[' + ','.join(sys_list) + ']') + ',\n' +
-        '    atom_sysname_list = ' + str(atom_sysname_list) + ',\n' +
-        '    atom_indx_list = ' + str(atom_indx_list) + ',\n' +
-        '    atom_palette_list = ' + str(atom_palette_list) + ',\n' +
-        '    atom_subplot_arg_list = ' + str(atom_subplot_arg_list) + ',\n' +
-        '    subplot_arg_list = ' + str(subplot_arg_list) + ',\n' +
-        '    subplot_xlo_list = ' + str(subplot_xlo_list) + ',\n' +
-        '    subplot_xhi_list = ' + str(subplot_xhi_list) + ',\n' +
-        '    subplot_ylo_list = ' + str(subplot_ylo_list) + ',\n' +
-        '    subplot_yhi_list = ' + str(subplot_yhi_list) + ',\n' +
-        '    subplot_xtick_list = ' + str(subplot_xtick_list) + ',\n' +             
-        '    subplot_ytick_list = ' + str(subplot_ytick_list) + ',\n' +
-        '    subplot_xlabel_list = ' + str(subplot_xlabel_list) + ',\n' +              
-        '    subplot_ylabel_list = ' + str(subplot_ylabel_list) + ',\n' +
-        '    subplot_share_xy_list = ' + str(subplot_share_xy_list) + ',\n' +
-        '    mainplot_axis_label_list = ' + str(mainplot_axis_label_list) + ',\n' +
-        '    xtick_direction = ' + '\'' + str(xtick_direction) + '\'' + ',\n' +
-        '    ytick_direction = ' + '\'' + str(ytick_direction) + '\'' + ',\n' +
-        '    dos_mode_dict = dos_mode_dict' + ',\n' +
-        '    fermi_shift_zero = ' + str(fermi_shift_zero) + ',\n' +
-        '    peak_analyzer = ' + str(peak_analyzer) + ',\n' +
-        '    peak_analyzer_factor = ' + str(initial_peak_analyzer_factor) + ',\n' +
-        '    smoothing = ' + str(smoothing) + ',\n' +
-        '    smoothing_factor = ' + str(smoothing_factor) + ',\n' +
-        '    line_width = ' + str(initial_line_width) + ',\n' +
-        '    font_size = ' + str(initial_font_size) + ',\n' +
-        '    fig_format = ' + '\'' + str(fig_format) + '\'' + ',\n' +
-        '    fig_size = ' + str(fig_size) + ',\n' +
-        '    fig_dpi = ' + str(fig_dpi) + ')\n' +
-        'fig_file = ' + 'r\'' + fig_file + '\'' + '\n' +
-        '################################################\n')
+                  funcs.logic_retn_val(fermi_mod, 'e_fermi_mod = ', 'e_fermi = ') + str(general_params_dict['e_fermi_list'][i_unique_sys]) + '\n')
+
+    log_str += 'dos_mode_dict = ' + str(dos_mode_dict) + '\n'
+
+    ##################################
+    # Determine the args string
+    ##################################
+    func_name = 'vasp_plot.plot_dos'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'atom_doscar_file_path_list':
+            arg_value_str = ('[' + ','.join(sys_list) + ']')
+        if i_arg == 'dos_mode_dict':
+            arg_value_str = 'dos_mode_dict'
+        if i_arg == 'peak_analyzer_factor':
+            arg_value_str = str(initial_peak_analyzer_factor)
+        if i_arg == 'line_width':
+            arg_value_str = str(initial_line_width)
+        if i_arg == 'font_size':
+            arg_value_str = str(initial_font_size)
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+
+    log_str += args_str
     funcs.write_log(fig_log_file, log_str)
     funcs.write_log(logfile, log_str)
     #return subplot_dict
@@ -857,6 +897,7 @@ def plot_poscar(poscar_file_path, euler_angle_type = 'zyx', phi = -3, theta = 5,
      * label_size: label size for the label of each atom, the aixs indicator label, default is label_size=16.
      * fig_format: String format. Figformat is a string that defines output figure format. Supported fig_format: 'png', 'eps', 'pdf', 'tif', 'tiff', 'jpg', 'jpeg', 'svg', 'svgz', 'pgf', 'ps', 'raw', 'rgba'     * fig_dpi: float format. The DPI for non-vector graphics.
     '''
+    args_dict = locals()
     import os
     import time
     import numpy as np
@@ -1379,7 +1420,12 @@ def plot_poscar(poscar_file_path, euler_angle_type = 'zyx', phi = -3, theta = 5,
             else: 
                 original_ball_size = 100
             if len(poscar_dict['added_atom_data'][0,:]) != 0 and not isinstance(poscar_dict['added_atom_data'][0,:], str):
-                if not isinstance(selected_added_atom_data_arr[i], str):
+                try:
+                    temp_value = float(selected_added_atom_data_arr[i])
+                except:
+                    temp_value = selected_added_atom_data_arr[i]
+                #if not isinstance(selected_added_atom_data_arr[i], str):
+                if not isinstance(temp_value, str):
                     colormap_normalized_data, colormap_vmin, colormap_vmax = funcs.data_normalize(input_data_value = float(selected_added_atom_data_arr[i]),
                                                                                               data_list = selected_added_atom_data_arr.astype(float),
                                                                                               colormap_vmin = colormap_vmin,
@@ -1620,34 +1666,35 @@ def plot_poscar(poscar_file_path, euler_angle_type = 'zyx', phi = -3, theta = 5,
         plt.savefig(plot_poscar_dict['fig_file'],dpi = fig_dpi)
         plt.close()
 
+        ##################################
+        # Determine the args string
+        ##################################
         fig_log_file = os.path.splitext(plot_poscar_dict['fig_file'])[0] + '.log'
         log_str = ''
-        log_str = log_str + (
-            'elmt_color = ' + str(elmt_color) + '\n' +
-            'vasp_plot.plot_poscar(' + '\n' +
-            '    poscar_file_path = ' + 'r\'' + str(poscar_file_path) + '\'' + ',\n' +
-            '    euler_angle_type = ' + '\'' + str(euler_angle_type) + '\'' + ',\n' +
-            '    phi = ' + str(phi) + ',\n' +
-            '    theta = ' + str(theta) + ',\n' +
-            '    psi = ' + str(psi) + ',\n' +
-            '    elmt_color = elmt_color' + ',\n' +
-            '    draw_mirror_atom = ' + str(draw_mirror_atom) + ',\n' +
-            '    box_on = ' + str(box_on) + ',\n' +
-            '    axis_indicator = ' + str(axis_indicator) + ',\n' +
-            '    plot_cell_basis_vector_label = ' + str(plot_cell_basis_vector_label) + ',\n' +
-            '    plot_atom_label = \'' + str(plot_atom_label) + '\',\n' +                 
-            '    label_size = ' + str(label_size) + ',\n' +
-            '    fig_format = ' + '\'' + str(fig_format) + '\'' + ',\n' +
-            '    fig_dpi = ' + str(fig_dpi) + ',\n' +                
-            '    draw_colormap = ' + str(draw_colormap) + ',\n' +
-            '    colormap_column_indx = ' + str(colormap_column_indx) + ',\n' +
-            '    colormap_vmin = ' + str(colormap_vmin) + ',\n' +
-            '    colormap_vmax = ' + str(colormap_vmax) + ',\n' +
-            '    vmin_color = ' + '\'' + str(vmin_color) + '\'' + ',\n' +
-            '    vmax_color = ' + '\'' + str(vmax_color) + '\'' + ',\n' +
-            '    colorbar_alignment = ' + '\'' + str(colorbar_alignment) + '\'' + ')\n' +
-            'fig_file = ' + 'r\'' + plot_poscar_dict['fig_file'] + '\'' + '\n')
-        log_str = log_str + ( 
+        log_str += 'elmt_color = ' + str(elmt_color) + '\n'
+
+        func_name = 'vasp_plot.plot_poscar'
+        args_str = func_name + '(' + '\n'
+        for i_arg in args_dict.keys():
+            arg_value = args_dict[i_arg]
+            if isinstance(arg_value,str):
+                arg_value_str = '\'' + arg_value + '\''
+            else:
+                arg_value_str = str(arg_value)
+
+            if i_arg == 'poscar_file_path':
+                arg_value_str = 'r\'' + str(poscar_file_path) + '\''
+            if i_arg == 'euler_angle_type':
+                arg_value_str = '\'' + str(euler_angle_type) + '\''
+            if i_arg == 'elmt_color':
+                arg_value_str = 'elmt_color'
+            if i_arg == 'fig_file':
+                arg_value_str = 'r\'' + plot_poscar_dict['fig_file'] + '\''
+            args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+        args_str += '    )\n'
+        args_str += '################################################\n'
+        log_str += args_str
+        log_str += ( 
             'fig_fileTikZ = ' + 'r\'' + str(tikz_texfile) + '\'' + '\n' +
             '##################################\n')
         #funcs.write_log(fig_log_file, log_str)
@@ -1688,6 +1735,7 @@ def plot_poscar_for_workdir(workdir, euler_angle_type, phi, theta, psi, elmt_col
      * fig_format: String format. Figformat is a string that defines output figure format. Supported fig_format: 'png','eps','pdf','tif','tiff','jpg','jpeg','svg','svgz','pgf','ps','raw','rgba'
      * fig_dpi: float format. The DPI for non-vector graphics.
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import default_params
@@ -1715,32 +1763,34 @@ def plot_poscar_for_workdir(workdir, euler_angle_type, phi, theta, psi, elmt_col
                         fig_format = fig_format, fig_dpi = fig_dpi, draw_colormap = draw_colormap, colormap_column_indx = colormap_column_indx, 
                         colormap_vmin = colormap_vmin, colormap_vmax = colormap_vmax, vmin_color = vmin_color, vmax_color = vmax_color, 
                         colorbar_alignment = colorbar_alignment)
-    funcs.write_log(
-        logfile,
-        'elmt_color = ' + str(elmt_color) + '\n' +
-        'vasp_plot.plot_poscar_for_workdir(' + '\n' +
-        '    workdir=' + 'r\'' + str(workdir) + '\'' + ',\n' +
-        '    euler_angle_type=' + '\'' + str(euler_angle_type) + '\'' + ',\n' +
-        '    phi=' + str(phi) + ',\n' +
-        '    theta=' + str(theta) + ',\n' +
-        '    psi=' + str(psi) + ',\n' +
-        '    elmt_color=elmt_color' + ',\n' +
-        '    draw_mirror_atom=' + str(draw_mirror_atom) + ',\n' +
-        '    box_on=' + str(box_on) + ',\n' +
-        '    axis_indicator=' + str(axis_indicator) + ',\n' +
-        '    plot_cell_basis_vector_label=' + str(plot_cell_basis_vector_label) + ',\n' +
-        '    plot_atom_label=' + str(plot_atom_label) + ',\n' +
-        '    poscar_or_contcar=' + '\'' + str(poscar_or_contcar) + '\'' + ',\n' +
-        '    fig_format=' + '\'' + str(fig_format) + '\'' + ',\n' +
-        '    fig_dpi=' + str(fig_dpi) + ',\n' +               
-        '    draw_colormap=' + str(draw_colormap) + ',\n' +
-        '    colormap_column_indx=' + str(colormap_column_indx) + ',\n' +
-        '    colormap_vmin=' + str(colormap_vmin) + ',\n' +
-        '    colormap_vmax=' + str(colormap_vmax) + ',\n' +
-        '    vmin_color=' + '\'' + str(vmin_color) + '\'' + ',\n' +
-        '    vmax_color=' + '\'' + str(vmax_color) + '\'' + ',\n' +
-        '    colorbar_alignment=' + '\'' + str(colorbar_alignment) + '\'' + ')\n' +
-        '###############################\n')
+
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    log_str += 'elmt_color = ' + str(elmt_color) + '\n'
+    func_name = 'vasp_plot.plot_poscar_for_workdir'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'workdir':
+            arg_value_str = 'r\'' + str(workdir) + '\''
+        if i_arg == 'euler_angle_type':
+            arg_value_str = '\'' + str(euler_angle_type) + '\''
+        if i_arg == 'elmt_color':
+            arg_value_str = 'elmt_color'
+        ##if i_arg == 'fig_file':
+        ##    arg_value_str = 'r\'' + plot_poscar_dict['fig_file'] + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return 0
 
 
@@ -1768,6 +1818,7 @@ def plot_poscar_for_sysname(sysname_file, euler_angle_type = 'zyx', phi = -3, th
         Fig_dpi: dpi for non-vector graphics
         logfile: Runtime output are written to logfile
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import default_params
@@ -1792,43 +1843,54 @@ def plot_poscar_for_sysname(sysname_file, euler_angle_type = 'zyx', phi = -3, th
             poscar_file_path = os.path.join(workdir, 'POSCAR')
             plot_poscar(poscar_file_path, euler_angle_type, phi, theta, psi, elmt_color, draw_mirror_atom, box_on, axis_indicator,
                         plot_cell_basis_vector_label, plot_atom_label, fig_format, fig_dpi)
-    funcs.write_log(
-        logfile,
-        'elmt_color = ' + str(elmt_color) + '\n' +
-        'vasp_plot.plot_poscar_for_workdir(' + '\n' +
-        '    sysname_file=' + 'r\'' + str(sysname_file) + '\'' + ',\n' +
-        '    euler_angle_type=' + '\'' + str(euler_angle_type) + '\'' + ',\n' +
-        '    phi=' + str(phi) + ',\n' +
-        '    theta=' + str(theta) + ',\n' +
-        '    psi=' + str(psi) + ',\n' +
-        '    elmt_color=elmt_color' + ',\n' +
-        '    draw_mirror_atom=' + str(draw_mirror_atom) + ',\n' +
-        '    box_on=' + str(box_on) + ',\n' +
-        '    axis_indicator=' + str(axis_indicator) + ',\n' +
-        '    plot_cell_basis_vector_label=' + str(plot_cell_basis_vector_label) + ',\n' +
-        '    plot_atom_label=' + str(plot_atom_label) + ',\n' +
-        '    fig_format=' + '\'' + str(fig_format) + '\'' + ',\n' +
-        '    fig_dpi=' + str(fig_dpi) + ',\n' +              
-        '    draw_colormap=' + str(draw_colormap) + ',\n' +
-        '    colormap_column_indx=' + str(colormap_column_indx) + ',\n' +
-        '    colormap_vmin=' + str(colormap_vmin) + ',\n' +
-        '    colormap_vmax=' + str(colormap_vmax) + ',\n' +
-        '    vmin_color=' + '\'' + str(vmin_color) + '\'' + ',\n' +
-        '    vmax_color=' + '\'' + str(vmax_color) + '\'' + ',\n' +
-        '    colorbar_alignment=' + '\'' + str(colorbar_alignment) + '\'' + ')\n' +
-        '###############################\n')
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    log_str += 'elmt_color = ' + str(elmt_color) + '\n'
+    func_name = 'vasp_plot.plot_poscar_for_sysname'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'sysname_file':
+            arg_value_str = 'r\'' + str(sysname_file) + '\''
+        if i_arg == 'euler_angle_type':
+            arg_value_str = '\'' + str(euler_angle_type) + '\''
+        if i_arg == 'elmt_color':
+            arg_value_str = 'elmt_color'
+        ##if i_arg == 'fig_file':
+        ##    arg_value_str = 'r\'' + plot_poscar_dict['fig_file'] + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return 0
 
-def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True, band_list = None,
+def plot_bs(infile_path_list, 
+            xlim = None, ylim = None, 
+            fermi_shift_zero = True, e_fermi_list = None, 
+            fermi_mod = False, e_alpha_plus_bet_list = None, 
+            band_list = None,
             interp_on = True, plot_band_data_point = False, plot_line = True,
             band_gap_label = False,
             band_palette_dict = None, band_lty_dict = None, #for single system
             system_color_list = None, system_lty_list = None, #multiple systems
             spd_and_site_projections_file_path_list = None, projections_point_size_factor = 1,
+            spin_resolved_projections = False,
+            solid_marker = True,   
+            alpha = None,
+            clip_on = True,
             legend_on = True, plot_fermi_level = False,
             xtick_direction = 'out', ytick_direction = 'out',
             line_width = 2.0, font_size = 23, fig_format = 'png', fig_size = [15,10], fig_dpi = 600,
             write_band_data = True,
+            band_dat_file = None,
             output_fig_file_path = None,
            ):
     '''
@@ -1837,6 +1899,9 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     - xlim: the limit of the x axis for the band structure plot.
     - ylim: the limit of the y axis for the band structure plot.
     - fermi_shift_zero: whether the energies are shifted to zero or not.
+    - e_fermi_list: the Fermi energy. The user can provide the Fermi energy calculated from the SCF calculation. If the value of e_fermi is not provided, the program will use the fermi energy calculated from the band structure calculation.
+    - e_alpha_plus_bet_list: the energy of alpha+bet in the OUTCAR. The user can provide this value calculated form the SCF calculation. If this tag set to None, this value will be extracted from the OUTCAR of the band structure calculation.
+    - fremi_mod: True or False, whether to modify the Fermi energy or not
     - band_list: Defines which bands are to be plotted. Band number starts from 1 (numbered from 1).
     - interp_on: whether to interpolate the band data pionts or not.
     - plot_band_data_point: this is only valid when interp_on = True. if plot_band_data_point = True, the raw data of the data points will be shown.
@@ -1845,8 +1910,8 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     - band_lty_dict: this is used to define the linestyle of specific band. Dictionary key is the band index (numbered from 1).
     - system_color_list: if multiple infile are to be plotted. the label only label the system index. The line color of different systems, this is used when the band structure for different systems are to be compared.
     - system_lty_list: if multiple infile are to be plotted. the band linestyles are designated for each infile. The line style of different systems, this is used when the band structure for different systems are to be compared.
-    - spd_and_site_projections_file_path_list: The parameter denotes the file which can be used to designate the spd- and site projected wave function character or each orbit. This parameter is only valid when the input file has the PROCAR file format. This file contains five columns: spin, mag, ion, orbit, color.
-        - spin: spin status of the projected contribution.
+    - spd_and_site_projections_file_path_list: The parameter denotes the file which can be used to designate the spd- and site projected wave function character or each orbit. The user can also set this parameter to 'auto' to automatically plotting the spd- and site projected band structure. This parameter is only valid when the input file has the PROCAR file format. This file contains five columns: spin, mag, ion, orbit, color.
+        - spin: spin status of the projected contribution. Choices are None, up, dn, up_dn, in which up and dn are spin resolved, and up_dn is spin unresolved.
         - mag: Magnetization_density. The total and local magnetizations, i.e. rho (orbital-projected contributions to the wavefunctions for each ion) and magnetization density (orbital-projected contributions to the magnetization) in the x(mx), y(my) and z(mz) directions. Please choose from the quadruplet of texts: ['rho', 'mx', 'my', 'mz'] or ['tot', 'mx', 'my', 'mz']. The 'rho' represents 'tot'. The default is ['rho'].
         - ion: the ion name. for example, 'Ni1', 'Al3', 'Te2'.
         - orbit: It contains one of the following orbits: 's', 'py', 'pz', 'px', 'dxy', 'dyz', 'dz2', 'dxz', 'dx2'(or 'dx2-y2'), 'tot'. 
@@ -1864,8 +1929,8 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                spin     ,         mag      ,             ions_list     ,      orbit      ,    color    ,     legend
             None /  0   ,      None / 0    ,    ['tot']       / [4 ]   ,    s   /  0     ,    black    ,     None
             up   /  1   ,      tot  / 0    ,    ['Te2','Li5'] / [2, 7] ,    py  /  1     ,    red      ,     Auto
-            dw   /  2   ,      mx   / 1    ,    ['Se5']       / [4 ]   ,    pz  /  2     ,    blue     ,     'Li'
-                        ,      my   / 2    ,    ['Al3']       / [3 ]   ,    px  /  3     ,    pink     ,     'Li3 py $m_{x}$'
+            dn   /  2   ,      mx   / 1    ,    ['Se5']       / [4 ]   ,    pz  /  2     ,    blue     ,     'Li'
+            up_dn/  3   ,      my   / 2    ,    ['Al3']       / [3 ]   ,    px  /  3     ,    pink     ,     'Li3 py $m_{x}$'
                         ,      mz   / 3    ,    ['Bi3']       / [12]   ,    dxy /  4     ,    green    ,
                         ,                  ,                           ,    dyz /  5     ,             ,   
                         ,                  ,                           ,    dz2 /  6     ,             ,   
@@ -1873,10 +1938,18 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                         ,                  ,                           ,    dx2 /  8     ,             ,     
                         ,                  ,                           ,    tot /  9     ,             , 
     - projections_point_size_factor: the scaling factor for the fat band point size. Default value is 1.
+    - spin resolved projections: whether the spd and site projected band is spin resolved or not.
+    - alpha: opacity of the point or lines. Default: alpha = 1. Note that the default alpha = 0.8 for spd- and site projected bands (fatbands).
     - legend_on: if True, the legend will be shown.
     - plot_fermi_level: if True, the Fermi level will be shown.
     - write_band_data: write band data file or not
+    - band_dat_file: if provided, then the band structure in the band_dat_file will be compared.
+
+    NOTE: 
+        -  When the Fermi energy needs to be shifted to zero. It is recommended to use the Fermi energy from the OUTCAR in the SCF calculation instead of the band structure calculation.
+           To this end, it is recommended to set e_fermi_list by the user.
     '''
+    args_dict = locals()
     import os
     import sys
     import time
@@ -1894,12 +1967,15 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     from . import vasp_analyze
     from .. import default_params
     from .. import periodic_table
+    # import seaborn package to incorporate more colorful figure
+    import seaborn
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
     log_str = ''
     output_dir = os.path.join(os.getcwd(), defaults_dict['output_dir_name'])
     funcs.mkdir(output_dir)
+    periodic_table_dict = periodic_table.periodic_tab()
 
     #initialization
     plot_bs_dict = {}
@@ -1921,17 +1997,10 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     if system_lty_list in [None,'None','none']:
         system_lty_list = default_lty_list
 
-    num_sys = len(infile_path_list)
-    for i_sys in range(0, num_sys):        
-        infile_path_list[i_sys] = os.path.abspath(str(infile_path_list[i_sys]))
-        if os.path.exists(infile_path_list[i_sys]) and os.path.getsize(infile_path_list[i_sys]) > 0:
-            pass
-        else:
-            print('ERROR: vasp_plot error. The file ' + str(infile_path_list[i_sys]) + ' does not exist or is empty')
-            funcs.write_log(logfile, '#' + infile_path_list[i_sys] + " doesn't exist or is empty")
 
     #Initialize the gereral paramters list
     general_params_dict = {}
+    general_params_dict['infile_path_list'] = infile_path_list.copy()
     general_params_dict['xlim'] = xlim
     general_params_dict['ylim'] = ylim
     general_params_dict['fermi_shift_zero'] = fermi_shift_zero
@@ -1944,6 +2013,15 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     general_params_dict['fig_format'] = fig_format
     general_params_dict['fig_size'] = fig_size
     general_params_dict['fig_dpi'] = fig_dpi 
+    general_params_dict['spd_and_site_projections_file_path_list'] = spd_and_site_projections_file_path_list
+    general_params_dict['alpha'] = alpha
+    if general_params_dict['alpha'] is None:
+        if not general_params_dict['spd_and_site_projections_file_path_list'] is None: 
+            general_params_dict['alpha'] = 0.8
+        elif general_params_dict['spd_and_site_projections_file_path_list'] is None: 
+            general_params_dict['alpha'] = 1
+        else:
+            general_params_dict['alpha'] = 1
 
     initial_line_width = general_params_dict['line_width']
     if general_params_dict['line_width'] in [None,'None','none']:
@@ -1966,6 +2044,15 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     plt.rcParams['xtick.minor.size'] = general_params_dict['font_size'] * (1 - golden_ratio) * golden_ratio 
     plt.rcParams['ytick.minor.size'] = general_params_dict['font_size'] * (1 - golden_ratio) * golden_ratio
     plt.rcParams['axes.linewidth'] = axes_line_width
+
+    num_sys = len(general_params_dict['infile_path_list'])
+    for i_sys in range(0, num_sys):        
+        general_params_dict['infile_path_list'][i_sys] = os.path.abspath(general_params_dict['infile_path_list'][i_sys])
+        if os.path.exists(general_params_dict['infile_path_list'][i_sys]) and os.path.getsize(general_params_dict['infile_path_list'][i_sys]) > 0:
+            pass
+        else:
+            print('ERROR: vasp_plot error. The file ' + str(general_params_dict['infile_path_list'][i_sys]) + ' does not exist or is empty')
+            funcs.write_log(logfile, '#' + general_params_dict['infile_path_list'][i_sys] + " doesn't exist or is empty")
 
     fig_bs = plt.figure('fig_bs')
     active_axes = plt.subplot(1,1,1)
@@ -2002,9 +2089,14 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     label_list = []
 
     for i_sys in range(0, num_sys):
-        workdir, infile = funcs.file_path_name(infile_path_list[i_sys])
+        workdir, infile = funcs.file_path_name(general_params_dict['infile_path_list'][i_sys])
+        if (not spd_and_site_projections_file_path_list is None and isinstance(spd_and_site_projections_file_path_list, list)):
+            general_params_dict['infile_path_list'][i_sys] = os.path.join(workdir, 'PROCAR')
+        if (not spd_and_site_projections_file_path_list is None and not isinstance(spd_and_site_projections_file_path_list, list)):
+            if spd_and_site_projections_file_path_list.lower() == 'auto':
+                general_params_dict['infile_path_list'][i_sys] = os.path.join(workdir, 'PROCAR')
         #automatically check the file type. Choices are: EIGENVAL or PROCAR
-        file_type = vasp_tools.check_file_type(infile_path_list[i_sys])
+        file_type = vasp_tools.check_file_type(general_params_dict['infile_path_list'][i_sys])
 
         kpoints_file_path = os.path.join(workdir, 'KPOINTS')
         kpoints_dict = vasp_read.read_kpoints(kpoints_file_path)
@@ -2018,29 +2110,46 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
             print('WARNING #20120307 (from read_kpoints): ' + kpoints_file_path + ' does not exist or is empty!')
         else:
             if 'kpoints_xaxis_arr' not in kpoints_dict.keys():
-                print('Error (from vasp_plot): Please check your KPOINTS file')
+                print('ERROR #2105110939 (from vasp_plot): Please check your KPOINTS file')
                 exit()
             kpoints_arr = kpoints_dict['kpoints_xaxis_arr']
             bs_xaxis_label_list = kpoints_dict['bs_xaxis_label_list']
             bs_xaxis_tick_list = kpoints_dict['bs_xaxis_tick_list']
             kpath_num_intersections = kpoints_dict['num_intersections']
             kpath_num_intersections_interval = kpoints_dict['num_intersections_interval']
+        ##with open('kpoints.txt','a') as f:
+        ##    for i in range(0, len(kpoints_arr)):
+        ##        f.write(str(kpoints_arr[i]) + '\n')
 
         if kpoints_dict['file_status'] != 1 or poscar_dict['file_status'] != 1 or outcar_params_dict['file_status'] != 1:
             print('WARNING #20120308 (from read_kpoints): ' + kpoints_file_path + ' or ' + poscar_file_path + ' or ' + outcar_file_path + ' does not exist or is empty!')
             continue
 
         if file_type != 'EIGENVAL' and 'PROCAR' not in str(file_type):
-            print('WARNING #20120303 (from vasp_plot): Please check the format of the file ' + infile_path_list[i_sys])
+            print('WARNING #20120303 (from vasp_plot): Please check the format of the file ' + general_params_dict['infile_path_list'][i_sys])
             continue
 
         #get E_fermi
-        e_fermi = outcar_params_dict['e_fermi']
-        e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
+        if e_fermi_list is None:
+            print('WARNING #2105191252 (from vasp_plot); The Fermi energy (e_fermi) is not set by the user (If needed, please specify the value of e_fermi_list). The Fermi energy will be shifted to zero and the program will automatically use the Fermi energy from the OUTCAR in the same directory of ' + general_params_dict['infile_path_list'][i_sys] + ' , which may not be accurate enough. Please use at your own risk!')
+            # use the Fermi energy from the OUTCAR
+            e_fermi = outcar_params_dict['e_fermi']
+            e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
+        else:
+            # use the Fermi energy provided by the user.
+            e_fermi = e_fermi_list[i_sys]
+        # Modification of E_fermi
+        e_fermi_mod = None
+        if fermi_mod == True:
+            if e_alpha_plus_bet_list is None:
+                print('WARNING #2105191100 (from vasp_plot); The value of e_alpha_plus_bet is not set. We will use the e_fermi and e_alpha_plus_bet from the OUTCAR in the same directory of ' + general_params_dict['infile_path_list'][i_sys])
+                e_fermi_mod = e_fermi + outcar_params_dict['alpha+bet']
+            else:
+                e_fermi_mod = e_fermi + e_alpha_plus_bet_list[i_sys]
         
         if file_type == 'EIGENVAL': 
             #get information from EIGENVAL
-            eigenval_dict = vasp_read.read_eigenval(infile_path_list[i_sys])
+            eigenval_dict = vasp_read.read_eigenval(general_params_dict['infile_path_list'][i_sys])
             eigenval_or_procar_dict = eigenval_dict
             ispin = eigenval_dict['ispin']
             #ispin = outcar_params_dict['ISPIN']
@@ -2049,14 +2158,21 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
             num_ions = eigenval_dict['num_ions']
             if ispin == 1:
                 #eigs = eigenval_dict['eigs']     
-                eigs = eigenval_dict['eigs'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
+                if fermi_mod == True:
+                    eigs = eigenval_dict['eigs'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
+                elif fermi_mod == False:
+                    eigs = eigenval_dict['eigs'] - e_fermi * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
             elif ispin == 2:
                 #eigs_up = eigenval_dict['eigs_up']     
-                #eigs_dw = eigenval_dict['eigs_dw']
-                eigs_up = eigenval_dict['eigs_up'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
-                eigs_dw = eigenval_dict['eigs_dw'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
+                #eigs_dn = eigenval_dict['eigs_dn']
+                if fermi_mod == True:
+                    eigs_up = eigenval_dict['eigs_up'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
+                    eigs_dn = eigenval_dict['eigs_dn'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
+                elif fermi_mod == False:
+                    eigs_up = eigenval_dict['eigs_up'] - e_fermi * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
+                    eigs_dn = eigenval_dict['eigs_dn'] - e_fermi * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
         elif file_type == 'PROCAR_collinear' or file_type == 'PROCAR_noncollinear':
-            procar_dict = vasp_read.read_procar(infile_path_list[i_sys])
+            procar_dict = vasp_read.read_procar(general_params_dict['infile_path_list'][i_sys])
             eigenval_or_procar_dict = procar_dict
             ispin = procar_dict['ispin']
             num_kpoints = procar_dict['num_kpoints']
@@ -2064,41 +2180,150 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
             num_ions = procar_dict['num_ions']
             if ispin == 1:
                 #eigs = procar_dict['eigs'] 
-                eigs = procar_dict['eigs'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
+                if fermi_mod == True:
+                    eigs = procar_dict['eigs'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
+                elif fermi_mod == False:
+                    eigs = procar_dict['eigs'] - e_fermi * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
                 if file_type == 'PROCAR_collinear':
                     projections = procar_dict['projections']
                 elif file_type == 'PROCAR_noncollinear':
                     projections_noncollinear = procar_dict['projections_noncollinear']
             elif ispin == 2:
                 #eigs_up = procar_dict['eigs_up']     
-                #eigs_dw = procar_dict['eigs_dw']
-                eigs_up = procar_dict['eigs_up'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
-                eigs_dw = procar_dict['eigs_dw'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
+                #eigs_dn = procar_dict['eigs_dn']
+                if fermi_mod == True:
+                    eigs_up = procar_dict['eigs_up'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
+                    eigs_dn = procar_dict['eigs_dn'] + outcar_params_dict['alpha+bet'] - e_fermi_mod * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
+                elif fermi_mod == False:
+                    eigs_up = procar_dict['eigs_up'] - e_fermi * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0) 
+                    eigs_dn = procar_dict['eigs_dn'] - e_fermi * funcs.logic_retn_val(general_params_dict['fermi_shift_zero'],1,0)
                 if file_type == 'PROCAR_collinear':
                     projections_up = procar_dict['projections_up'] 
-                    projections_dw = procar_dict['projections_dw'] 
+                    projections_dn = procar_dict['projections_dn'] 
                 elif file_type == 'PROCAR_noncollinear':
                     projections_up_noncollinear = procar_dict['projections_up_noncollinear']
-                    projections_dw_noncollinear = procar_dict['projections_dw_noncollinear']
+                    projections_dn_noncollinear = procar_dict['projections_dn_noncollinear']
         #write band data to a specific file
         if write_band_data == True:
-            vasp_write.write_band_data(eigenval_or_procar_dict, e_fermi = e_fermi)
+            vasp_write.write_band_data(eigenval_or_procar_dict, e_fermi = e_fermi, header = 'bs_xaxis_label_list = ' + str(kpoints_dict['bs_xaxis_label_list']) + ' bs_xaxis_tick_list = ' + str(kpoints_dict['bs_xaxis_tick_list']))
 
+        #################################################################
         # get information form spd_and_site_projections_file_path
-        if spd_and_site_projections_file_path_list not in [None, 'None', 'none'] and isinstance(spd_and_site_projections_file_path_list, list):
-            if spd_and_site_projections_file_path_list[i_sys] not in [None, 'None', 'none']:
+        #################################################################
+        spd_and_site_projections_file_str = ''
+        if (not spd_and_site_projections_file_path_list is None and not isinstance(spd_and_site_projections_file_path_list, list)):
+            #####################################################################################################################
+            # CASE: 'auto'
+            # if spd_and_site_projections_file_path_list = 'auto', then generate the spd and site projections file automatically.
+            #####################################################################################################################
+            if spd_and_site_projections_file_path_list.lower() == 'auto':
+                projections_list = []
+                projections_txt_list = []
+                #spin_tag = 'None'
+                if ispin == 1:
+                    spin_tag_list = ['None']
+                    spin_tag_label_list = ['']
+                elif ispin == 2:
+                    if spin_resolved_projections == False:
+                        spin_tag_list = ['up_dn']
+                        spin_tag_label_list = ['']
+                    elif spin_resolved_projections == True:
+                        spin_tag_list = ['up', 'dn']
+                        spin_tag_label_list = ['up', 'dn']
+                mag_tag = 'tot'
+                ions_list_tag = None
+                orbit_tag = None
+                color_tag = None
+                legend_tag = None
+                i_color_indx = 0
+                for i_elmt_indx in range(len(poscar_dict['elmt_species_arr'])):
+                    i_elmt = poscar_dict['elmt_species_arr'][i_elmt_indx]
+                    orbit_list = []
+                    orbit_indx_list = []
+                    orbit_list_temp = funcs.extract_alpha_str(periodic_table_dict['valence_elec'][i_elmt])
+                    orbit_list_temp = list(set(orbit_list_temp))
+                    orbit_list_temp = [x for x in ['s','p','d','f'] if x in orbit_list_temp]
+                    # rearrange the order of the orbits
+                    if procar_dict['num_orbits'] == 9:
+                        full_orbit_list = ['s','p','d']
+                    elif procar_dict['num_orbits'] == 16:
+                        full_orbit_list = ['s','p','d','f']
+                    orbit_list_temp = [x for x in full_orbit_list if x in orbit_list_temp]
+                    for item in orbit_list_temp:
+                        if item == 's':
+                            orbit_list.append('s')
+                            orbit_indx_list.append(0)
+                        elif item == 'p':
+                            orbit_list += ['py', 'pz', 'px']
+                            orbit_indx_list += [1,2,3]
+                        elif item == 'd':
+                            orbit_list += ['dxy', 'dyz', 'dz2', 'dxz', 'dx2']
+                            orbit_indx_list += [4,5,6,7,8]
+                        elif item == 'f':
+                            orbit_list += ['f-3', 'f-2', 'f-1', 'f0', 'f1', 'f2', 'f3']
+                            orbit_indx_list += [9,10,11,12,13,14,15]
+                        elif item == 'tot':
+                            orbit_list += ['tot']
+                            orbit_indx_list += [16]
+                    for i_indx in range(len(orbit_list)):
+                        i_orbit = orbit_list[i_indx]
+                        i_orbit_indx = orbit_indx_list[i_indx]
+                        ions_list = [i_elmt]
+                        ions_list_tag = '[\'' + i_elmt + '\']'
+                        orbit_tag = i_orbit
+                        for i_spin_tag_indx in range(len(spin_tag_list)):
+                            spin_tag = spin_tag_list[i_spin_tag_indx]
+                            spin_tag_label = spin_tag_label_list[i_spin_tag_indx]
+                            orbit_tag_latex = '$' + orbit_tag + '$' + ' ' + spin_tag_label
+                            if len(orbit_tag) > 1:
+                                orbit_tag_latex = '$' + orbit_tag[0] + '_{' + orbit_tag[1:] + '}$' + ' ' + spin_tag_label
+                            color_tag = default_palette_list[i_color_indx]
+                            legend_tag = i_elmt + ' ' + orbit_tag_latex
+                            projections_list.append([spin_tag, mag_tag, ions_list, orbit_tag, color_tag, legend_tag])
+                            projections_txt_list.append([','.join([spin_tag, mag_tag, ions_list_tag, orbit_tag, color_tag, legend_tag])])
+                            i_color_indx += 1
+                projections_raw_arr = np.array(projections_list)
+                ##print(projections_txt_list)
+                ##print(projections_raw_arr)
+                projections_arr = np.array([None] * projections_raw_arr.shape[0] * projections_raw_arr.shape[1])
+                projections_arr.shape = (projections_raw_arr.shape[0], projections_raw_arr.shape[1])
+                header_list = ['spin', 'mag', 'ions_list', 'orbit', 'color', 'legend']
+                fatband_file = os.path.join(workdir, 'fatband.txt')
+                np.savetxt(fatband_file, projections_raw_arr, fmt = '%s', delimiter = ',', header = ','.join(header_list))
+                #################################################################
+                # Save fatband.txt file according to the orbits in orbit_list
+                #################################################################
+                for i_orbit in orbit_list:
+                    screened_projections_arr = projections_raw_arr[np.argwhere(projections_raw_arr[:,3] == i_orbit).squeeze()]
+                    fatband_file = os.path.join(workdir, 'fatband_' + i_orbit + '.txt')
+                    ##fatband_up_file = os.path.join(workdir, 'fatband_' + i_orbit + '_up.txt')
+                    ##fatband_dn_file = os.path.join(workdir, 'fatband_' + i_orbit + '_dn.txt')
+                    if (len(screened_projections_arr.shape) == 1):
+                        screened_projections_arr = screened_projections_arr.reshape(1,-1)
+                    ##np.savetxt(fatband_file, screened_projections_arr, fmt = '%s', delimiter = ',', header = ','.join(header_list))
+        elif not spd_and_site_projections_file_path_list is None and isinstance(spd_and_site_projections_file_path_list, list):
+            ############################################
+            # CASE: list
+            ############################################
+            if not spd_and_site_projections_file_path_list[i_sys] is None:
                 spd_and_site_projections_file_path = os.path.abspath(spd_and_site_projections_file_path_list[i_sys])
+                if funcs.file_status(spd_and_site_projections_file_path) != 1:
+                    print('#WARNING #2104281415(from vasp_plot): File does not exist or is empty: ' + spd_and_site_projections_file_path)
+                    continue
                 with open(spd_and_site_projections_file_path, 'r') as f:
                     line = f.readlines()
                     line_0 = funcs.split_line(line = line[0], separator = ',')
                     num_lines_projections_file = len(line)
                     num_columns_projections_file = len(line_0)
+                    ##num_columns_projections_file = len(['spin', 'mag', 'ions_list', 'orbit', 'color', 'legend'])
                     projections_raw_arr = np.array([None] * (num_lines_projections_file - 1) * num_columns_projections_file)
                     projections_raw_arr.shape = (num_lines_projections_file - 1), num_columns_projections_file
                     projections_arr = np.array([None] * (num_lines_projections_file - 1) * num_columns_projections_file)
                     projections_arr.shape = (num_lines_projections_file - 1), num_columns_projections_file
-                    projections_file_header_list = [line_0[0], line_0[1], line_0[2], line_0[3], line_0[4]]
+                    projections_file_header_list = [line_0[0].strip('#').strip(), line_0[1], line_0[2], line_0[3], line_0[4]]
                     for i_line in range(1, num_lines_projections_file):
+                        #if line[i_line].startswith('#'):
+                        #    continue 
                         temp_indx = i_line - 1
                         spin = funcs.split_line(line = line[i_line], separator = ',')[0]
                         if len(funcs.extract_alpha_str(spin)) == 0:
@@ -2131,168 +2356,366 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                         legend = funcs.split_line(line = line[i_line], separator = ',')[-1]
                         projections_raw_arr[temp_indx, 5] = legend  # legend
 
-                    spin_name_list = []
-                    mag_name_list = []
-                    orbit_name_list = []
-                    label_list = []
-                    for i_indx in range(0, num_lines_projections_file - 1):
-                        spin = projections_raw_arr[i_indx, 0]
-                        if spin in [None, 'None', 'none']: # spin unpolarized
-                            projections_arr[i_indx, 0] = 0
-                            spin_name_list.append('')
-                        elif spin in ['up']: # up
-                            projections_arr[i_indx, 0] = 1
-                            mag_name_list.append('up')
-                        elif spin in ['dw', 'down']: # down
-                            projections_arr[i_indx, 0] = 2
-                            mag_name_list.append('dw')
+        if not spd_and_site_projections_file_path_list is None:
+            spin_name_list = []
+            mag_name_list = []
+            orbit_list = []
+            orbit_name_list = []
+            label_list = []
+            #for i_indx in range(0, num_lines_projections_file - 1):
+            for i_indx in range(0, projections_raw_arr.shape[0]):
+                spin = projections_raw_arr[i_indx, 0]
+                if spin in [None, 'None', 'none', 0]: # spin unpolarized
+                    projections_arr[i_indx, 0] = 0
+                    spin_name_list.append('')
+                elif spin in ['up', 1]: # up
+                    projections_arr[i_indx, 0] = 1
+                    mag_name_list.append('up')
+                elif spin in ['dn', 'down', 2]: # down
+                    projections_arr[i_indx, 0] = 2
+                    mag_name_list.append('dn')
+                elif spin in ['up_dn', 'up+dn', 3]: # down
+                    projections_arr[i_indx, 0] = 3
+                    mag_name_list.append('up_dn')
 
-                        mag = projections_raw_arr[i_indx, 1]
-                        if mag in [None, 'None', 'none']:   # tot
-                            projections_arr[i_indx, 1] = 0
-                            mag_name_list.append('')
-                        elif mag in ['tot', 'rho']: # tot
-                            projections_arr[i_indx, 1] = 0
-                            mag_name_list.append('')
-                        elif mag in ['mx', 'Mx']:   # mx
-                            projections_arr[i_indx, 1] = 1
-                            mag_name_list.append('$m_{x}$')
-                        elif mag in ['my', 'My']:   # my
-                            projections_arr[i_indx, 1] = 2
-                            mag_name_list.append('$m_{y}$')
-                        elif mag in ['mz', 'Mz']:   # mz
-                            projections_arr[i_indx, 1] = 3
-                            mag_name_list.append('$m_{z}$')
-                        
-                        ions_list = projections_raw_arr[i_indx, 2]
-                        atom_indx_list = []
-                        for item in ions_list:
-                            string_len = len(''.join(filter(str.isalpha, str(item))))
-                            number_len = len(''.join(filter(str.isdigit, str(item))))
-                            if string_len != 0 and number_len != 0:
-                                item_identifier = 'atomname'
-                            elif string_len != 0 and number_len == 0:
-                                item_identifier = 'elmt_species'
-                            elif string_len == 0 and number_len != 0:
-                                item_identifier = 'atom_indx'
-                            elif string_len == 0 and number_len == 0:
-                                print('ERROR (from vasp.plot): Please check your projections file.')
-                                exit()
-                            
-                            if isinstance(item, str) and item_identifier == 'atomname':
-                                atom_indx = convert.atomname2indx(os.path.join(workdir, 'POSCAR'), item)
-                                atom_indx_list.append(atom_indx)
-                            elif isinstance(item, int):
-                                atom_indx = item
-                                atom_indx_list.append(atom_indx)
-                            elif isinstance(item, str) and item_identifier == 'elmt_species' and item == 'tot':
-                                atom_indx = num_ions + 1
-                                atom_indx_list.append(atom_indx)
-                            elif isinstance(item, str) and item_identifier == 'elmt_species' and item != 'tot':
-                                atom_species_arr = poscar_dict['atom_species_arr']
-                                for i_atom in range(0, len(atom_species_arr)):
-                                    atom_species = atom_species_arr[i_atom]
-                                    if item == atom_species:
-                                        atom_indx_list.append(i_atom + 1)
+                mag = projections_raw_arr[i_indx, 1]
+                if mag in [None, 'None', 'none']:   # tot
+                    projections_arr[i_indx, 1] = 0
+                    mag_name_list.append('')
+                elif mag in ['tot', 'rho']: # tot
+                    projections_arr[i_indx, 1] = 0
+                    mag_name_list.append('')
+                elif mag in ['mx', 'Mx']:   # mx
+                    projections_arr[i_indx, 1] = 1
+                    mag_name_list.append('$m_{x}$')
+                elif mag in ['my', 'My']:   # my
+                    projections_arr[i_indx, 1] = 2
+                    mag_name_list.append('$m_{y}$')
+                elif mag in ['mz', 'Mz']:   # mz
+                    projections_arr[i_indx, 1] = 3
+                    mag_name_list.append('$m_{z}$')
+                
+                ions_list = projections_raw_arr[i_indx, 2]
+                atom_indx_list = []
+                for item in ions_list:
+                    string_len = len(''.join(filter(str.isalpha, str(item))))
+                    number_len = len(''.join(filter(str.isdigit, str(item))))
+                    if string_len != 0 and number_len != 0:
+                        item_identifier = 'atomname'
+                    elif string_len != 0 and number_len == 0:
+                        item_identifier = 'elmt_species'
+                    elif string_len == 0 and number_len != 0:
+                        item_identifier = 'atom_indx'
+                    elif string_len == 0 and number_len == 0:
+                        print('ERROR (from vasp.plot): Please check your projections file.')
+                        exit()
+                    
+                    if isinstance(item, str) and item_identifier == 'atomname':
+                        atom_indx = convert.atomname2indx(os.path.join(workdir, 'POSCAR'), item)
+                        atom_indx_list.append(atom_indx)
+                    elif isinstance(item, int):
+                        atom_indx = item
+                        atom_indx_list.append(atom_indx)
+                    elif isinstance(item, str) and item_identifier == 'elmt_species' and item == 'tot':
+                        atom_indx = num_ions + 1
+                        atom_indx_list.append(atom_indx)
+                    elif isinstance(item, str) and item_identifier == 'elmt_species' and item != 'tot':
+                        atom_species_arr = poscar_dict['atom_species_arr']
+                        for i_atom in range(0, len(atom_species_arr)):
+                            atom_species = atom_species_arr[i_atom]
+                            if item == atom_species:
+                                atom_indx_list.append(i_atom + 1)
 
-                        projections_arr[i_indx, 2] = atom_indx_list
-                        for i_item in range(0, len(atom_indx_list)): 
-                            projections_arr[i_indx, 2][i_item] = projections_arr[i_indx, 2][i_item] - 1
+                projections_arr[i_indx, 2] = atom_indx_list
+                for i_item in range(0, len(atom_indx_list)): 
+                    projections_arr[i_indx, 2][i_item] = projections_arr[i_indx, 2][i_item] - 1
 
-                        orbit = projections_raw_arr[i_indx, -3]
-                        #orbit names: s     py     pz     px    dxy    dyz    dz2    dxz    dx2(or dx2-y2)    tot
-                        if orbit in ['s']:
-                            projections_arr[i_indx, 3] = 0
-                            orbit_name_list.append('$s$')
-                        elif orbit in ['py']:
-                            projections_arr[i_indx, 3] = 1
-                            orbit_name_list.append('$p_{y}$')
-                        elif orbit in ['pz']:
-                            projections_arr[i_indx, 3] = 2
-                            orbit_name_list.append('$p_{z}$')
-                        elif orbit in ['px']:
-                            projections_arr[i_indx, 3] = 3
-                            orbit_name_list.append('$p_{x}$')
-                        elif orbit in ['dxy']:
-                            projections_arr[i_indx, 3] = 4
-                            orbit_name_list.append('$d_{xy}$')
-                        elif orbit in ['dyz']:
-                            projections_arr[i_indx, 3] = 5
-                            orbit_name_list.append('$d_{yz}$')
-                        elif orbit in ['dz2']:
-                            projections_arr[i_indx, 3] = 6
-                            orbit_name_list.append('$d_{z^{2}}$')
-                        elif orbit in ['dxz']:
-                            projections_arr[i_indx, 3] = 7
-                            orbit_name_list.append('$d_{xz}$')
-                        elif orbit in ['dx2', 'dx2-y2']:
-                            projections_arr[i_indx, 3] = 8
-                            orbit_name_list.append('$d_{x^{2}-y^{2}}$')
-                        elif orbit in ['tot']:   # tot
-                            projections_arr[i_indx, 3] = 9
-                            orbit_name_list.append('')
-                        else:                    # tot
-                            projections_arr[i_indx, 3] = 9
-                            orbit_name_list.append('')
-                        
-                        color = projections_raw_arr[i_indx, -2]
-                        projections_arr[i_indx, 4] = color
+                orbit = projections_raw_arr[i_indx, -3]
+                #orbit names: s     py     pz     px    dxy    dyz    dz2    dxz    dx2(or dx2-y2)    tot
+                # YLM(:,1) -> s
+                # YLM(:,2:4) -> p:= y, z, x
+                # YLM(:,5:9) -> d:= xy, yz, z2, xz, x2
+                # YLM(:,10:16) -> f:= y(3x2-y2), xyz, yz2, z3, xz2, z(x2-y2), x(x2-3y2)
+                if orbit in ['s']:
+                    projections_arr[i_indx, 3] = 0
+                    orbit_name_list.append('$s$')
+                    orbit_list.append('s')
+                elif orbit in ['py']:
+                    projections_arr[i_indx, 3] = 1
+                    orbit_name_list.append('$p_{y}$')
+                    orbit_list.append('py')
+                elif orbit in ['pz']:
+                    projections_arr[i_indx, 3] = 2
+                    orbit_name_list.append('$p_{z}$')
+                    orbit_list.append('pz')
+                elif orbit in ['px']:
+                    projections_arr[i_indx, 3] = 3
+                    orbit_name_list.append('$p_{x}$')
+                    orbit_list.append('px')
+                elif orbit in ['dxy']:
+                    projections_arr[i_indx, 3] = 4
+                    orbit_name_list.append('$d_{xy}$')
+                    orbit_list.append('dxy')
+                elif orbit in ['dyz']:
+                    projections_arr[i_indx, 3] = 5
+                    orbit_name_list.append('$d_{yz}$')
+                    orbit_list.append('dyz')
+                elif orbit in ['dz2']:
+                    projections_arr[i_indx, 3] = 6
+                    orbit_name_list.append('$d_{z^{2}}$')
+                    orbit_list.append('dz2')
+                elif orbit in ['dxz']:
+                    projections_arr[i_indx, 3] = 7
+                    orbit_name_list.append('$d_{xz}$')
+                    orbit_list.append('dxz')
+                elif orbit in ['dx2', 'dx2-y2']:
+                    projections_arr[i_indx, 3] = 8
+                    orbit_name_list.append('$d_{x^{2}-y^{2}}$')
+                    orbit_list.append('dx2')
+                    #orbit_list.append('dx2-y2')
+                elif orbit in ['f-3']:
+                    projections_arr[i_indx, 3] = 9
+                    orbit_name_list.append('$f_{y(3x^{2}-y^{2})}$')
+                    orbit_list.append('f-3')
+                elif orbit in ['f-2']:
+                    projections_arr[i_indx, 3] = 10
+                    orbit_name_list.append('$f_{xyz}$')
+                    orbit_list.append('f-2')
+                elif orbit in ['f-1']:
+                    projections_arr[i_indx, 3] = 11
+                    orbit_name_list.append('$f_{yz^{2}}$')
+                    orbit_list.append('f-1')
+                elif orbit in ['f0']:
+                    projections_arr[i_indx, 3] = 12
+                    orbit_name_list.append('$f_{z^{3}}$')
+                    orbit_list.append('f0')
+                elif orbit in ['f1']:
+                    projections_arr[i_indx, 3] = 13
+                    orbit_name_list.append('$f_{xz^{2}}$')
+                    orbit_list.append('f1')
+                elif orbit in ['f2']:
+                    projections_arr[i_indx, 3] = 14
+                    orbit_name_list.append('$f_{z(x^{2}-y^{2})}$')
+                    orbit_list.append('f2')
+                elif orbit in ['f3']:
+                    projections_arr[i_indx, 3] = 15
+                    orbit_name_list.append('$f_{x(x^{2}-3y^{2})}$')
+                    orbit_list.append('f3')
+                elif orbit in ['tot']:   # tot
+                    projections_arr[i_indx, 3] = 16
+                    orbit_name_list.append('')
+                    orbit_list.append('tot')
+                else:                    # tot
+                    projections_arr[i_indx, 3] = 16
+                    orbit_name_list.append('')
+                
+                #color = projections_raw_arr[i_indx, -2]
+                try:
+                    color = projections_raw_arr[i_indx, -2]
+                except:
+                    # seaborn package is included to incorporate more colors
+                    color = seaborn.xkcd_rgb[projections_raw_arr[i_indx, -2]]
+                projections_arr[i_indx, 4] = color
 
-                        legend = projections_raw_arr[i_indx, -1]
-                        projections_arr[i_indx, 5] = legend
+                legend = projections_raw_arr[i_indx, -1]
+                projections_arr[i_indx, 5] = legend
+            spd_and_site_projections_file_str += '_fatband_' + '_'.join(list(set(orbit_list)))
+            if all(projections_arr[:,0] == 1):
+                spd_and_site_projections_file_str += '_up'
+            if all(projections_arr[:,0] == 2):
+                spd_and_site_projections_file_str += '_dn'
+            ##################################################################################
+            # Save fatband.txt file according to projections_arr and orbits in orbit_list
+            ##################################################################################
+            if (not isinstance(spd_and_site_projections_file_path_list, list)):
+                if spd_and_site_projections_file_path_list.lower() == 'auto':
+                    header_list = ['spin', 'mag', 'ions_list', 'orbit', 'color', 'legend']
+                    shell_str_temp = '#!/bin/bash\n'
+                    shell_up_or_dn_str_temp = '#!/bin/bash\n'
+                    # do not consider f orbital
+                    if procar_dict['num_orbits'] == 9:
+                        orbit_list = [x for x in orbit_list if 'f' not in x]
+                    elif procar_dict['num_orbits'] == 16:
+                        pass
+                    for i_orbit in set(orbit_list):
+                        screened_projections_arr = projections_raw_arr[np.argwhere(projections_raw_arr[:,3] == i_orbit).squeeze()]
+                        fatband_file = os.path.join(workdir, 'fatband_' + i_orbit + '.txt')
+                        fatband_up_file = os.path.join(workdir, 'fatband_' + i_orbit + '_up.txt')
+                        fatband_dn_file = os.path.join(workdir, 'fatband_' + i_orbit + '_dn.txt')
+                        if (len(screened_projections_arr.shape) == 1):
+                            screened_projections_arr = screened_projections_arr.reshape(1,-1)
+                        np.savetxt(fatband_file, screened_projections_arr, fmt = '%s', delimiter = ',', header = ','.join(header_list))
 
-                    # convert projections_arr to string
-                    def arr2str(input_arr):
-                        import numpy as np
-                        '''
-                           convert numpy array to string
-                        '''
-                        temp_arr = input_arr
-                        temp_str = 'np.array(['
-                        for i_x in range(0, temp_arr.shape[0]):
-                            temp_str = temp_str + '['
-                            for i_y in range(0, temp_arr.shape[1]):
-                                if isinstance(temp_arr[i_x, i_y], int):
-                                    temp_str = temp_str + str(temp_arr[i_x, i_y]) + ',' 
-                                elif isinstance(temp_arr[i_x, i_y], str):
-                                    temp_str = temp_str + '\'' + temp_arr[i_x, i_y] + '\'' + ','
-                                elif isinstance(temp_arr[i_x, i_y], list):
-                                    temp_str = temp_str + str(temp_arr[i_x, i_y]) + ','
-                            temp_str = temp_str + '],'
-                        temp_str = temp_str + '])'
-                        return temp_str
-                    #log_str = log_str + ('#The columns of the projections_arr are: spin, mag, ions_list, orbit, color, legend.\n') 
-                    log_str = log_str + ('import numpy as np' + '\n')
-                    log_str = log_str + ('import pandas as pd' + '\n')
-                    log_str = log_str + ('projections_raw_arr' + str(i_sys + 1) + ' = ' + arr2str(projections_raw_arr) + '\n')
-                    log_str = log_str + ('projections_arr' + str(i_sys + 1) + ' = ' + arr2str(projections_arr) + '\n')
-                    # write projections array to file
-                    proj_arr = 'projections_raw_arr' + str(i_sys + 1)
-                    csv_file = os.path.join(output_dir, 'projections_raw_arr' + str(i_sys + 1) + '.csv')
-                    #pd.DataFrame(proj_arr).to_csv(csv_file,header=['spin', 'mag', 'ions_list'      , 'orbit', 'color' , 'legend'],index=False,doublequote=False)
-                    log_str = log_str + ('proj_arr' + str(i_sys + 1) + ' = ' + proj_arr + '\n') 
-                    log_str = log_str + ('csv_file' + str(i_sys + 1) + ' = \'' + proj_arr + '.csv' + '\'\n') 
-                    log_str = log_str + ("pd.DataFrame(proj_arr" + str(i_sys + 1) + ").to_csv(csv_file" + str(i_sys + 1) + ",header=['spin', 'mag', 'ions_list'      , 'orbit', 'color' , 'legend'],index=False,doublequote=False)" + '\n') 
+                        if ispin == 2:
+                            # spin resolved fatband.txt file
+                            screened_projections_arr_up_1 = screened_projections_arr[np.where(screened_projections_arr[:,0] == 'up_dn')]
+                            screened_projections_arr_up_1[:,0] = 'up'
+                            screened_projections_arr_up_1[:,-1] = screened_projections_arr_up_1[:,-1] + 'up'
+                            screened_projections_arr_up_2 = screened_projections_arr[np.where(screened_projections_arr[:,0] == 'up')]
+                            screened_projections_arr_up = np.concatenate((screened_projections_arr_up_1, screened_projections_arr_up_2), axis = 0)
 
+                            screened_projections_arr_dn_1 = screened_projections_arr[np.where(screened_projections_arr[:,0] == 'up_dn')]
+                            screened_projections_arr_dn_1[:,0] = 'dn'
+                            screened_projections_arr_dn_1[:,-1] = screened_projections_arr_dn_1[:,-1] + 'dn'
+                            screened_projections_arr_dn_2 = screened_projections_arr[np.where(screened_projections_arr[:,0] == 'dn')]
+                            screened_projections_arr_dn = np.concatenate((screened_projections_arr_dn_1, screened_projections_arr_dn_2), axis = 0)
+
+                            np.savetxt(fatband_up_file, screened_projections_arr_up, fmt = '%s', delimiter = ',', header = ','.join(header_list))
+                            np.savetxt(fatband_dn_file, screened_projections_arr_dn, fmt = '%s', delimiter = ',', header = ','.join(header_list))
+
+                        ##################################
+                        # Write the plot_bs python file
+                        ##################################
+                        log_str_temp = ''
+                        log_str_up_temp = ''
+                        log_str_dn_temp = ''
+
+                        infile_list_temp = []
+                        for i_sys_temp in range(0,len(general_params_dict['infile_path_list'])):
+                            infile_list_temp.append('infile' + str(i_sys_temp + 1))
+                            log_str_temp += ('infile' + str(i_sys_temp + 1) + ' = r\'' + str(infile_path_list[i_sys]) + '\'' + '\n')
+                            log_str_up_temp += ('infile' + str(i_sys_temp + 1) + ' = r\'' + str(infile_path_list[i_sys]) + '\'' + '\n')
+                            log_str_dn_temp += ('infile' + str(i_sys_temp + 1) + ' = r\'' + str(infile_path_list[i_sys]) + '\'' + '\n')
+                        log_str_temp += ('spd_and_site_projections_file_path_list = [r\'' + fatband_file + '\']' + '\n')
+                        pyfile_name = 'fatband_' + i_orbit + '.py'
+                        pyfile_temp = os.path.join(workdir, pyfile_name)
+                        shell_str_temp += 'python ./' + pyfile_name + '\n'
+                        ##shell_up_or_dn_str_temp += 'python ./' + pyfile_up_name + '\n'
+                        ##shell_up_or_dn_str_temp += 'python ./' + pyfile_dn_name + '\n'
+                        if os.path.isfile(pyfile_temp):
+                            os.remove(pyfile_temp)
+                        func_name = 'vasp_plot.plot_bs'
+                        args_str_temp = func_name + '(' + '\n'
+                        for i_arg in args_dict.keys():
+                            arg_value = args_dict[i_arg]
+                            if isinstance(arg_value,str):
+                                arg_value_str = '\'' + arg_value + '\''
+                            else:
+                                arg_value_str = str(arg_value)
+                            if i_arg == 'infile_path_list':
+                                arg_value_str = ('[' + ','.join(infile_list_temp) + ']')
+                            if i_arg == 'spd_and_site_projections_file_path_list':
+                                arg_value_str = 'spd_and_site_projections_file_path_list'
+                            args_str_temp += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+                        args_str_temp += '    )\n'
+                        args_str_temp += '################################################\n'
+                        log_str_temp += args_str_temp
+                        funcs.write_log(pyfile_temp, log_str_temp)
+
+                        if ispin == 2:
+                            log_str_up_temp += ('spd_and_site_projections_file_path_list = [r\'' + fatband_up_file + '\']' + '\n')
+                            log_str_dn_temp += ('spd_and_site_projections_file_path_list = [r\'' + fatband_dn_file + '\']' + '\n')
+                            pyfile_up_name = 'fatband_' + i_orbit + '_up.py'
+                            pyfile_dn_name = 'fatband_' + i_orbit + '_dn.py'
+                            pyfile_up_temp = os.path.join(workdir, pyfile_up_name)
+                            pyfile_dn_temp = os.path.join(workdir, pyfile_dn_name)
+                            shell_up_or_dn_str_temp += 'python ./' + pyfile_up_name + '\n'
+                            shell_up_or_dn_str_temp += 'python ./' + pyfile_dn_name + '\n'
+                            if os.path.isfile(pyfile_up_temp):
+                                os.remove(pyfile_up_temp)
+                            if os.path.isfile(pyfile_dn_temp):
+                                os.remove(pyfile_dn_temp)
+                            log_str_up_temp += args_str_temp
+                            log_str_dn_temp += args_str_temp
+                            funcs.write_log(pyfile_up_temp, log_str_up_temp)
+                            funcs.write_log(pyfile_dn_temp, log_str_dn_temp)
+                    shell_file_temp = os.path.join(workdir, 'run_plot_fatband.sh')
+                    funcs.write_file(shell_str_temp, shell_file_temp)
+                    if ispin == 2:
+                        shell_up_or_dn_file_temp = os.path.join(workdir, 'run_plot_fatband_up_or_dn.sh')
+                        funcs.write_file(shell_up_or_dn_str_temp, shell_up_or_dn_file_temp)
+
+            #######################################
+            # convert projections_arr to string
+            #######################################
+            def arr2str(input_arr):
+                import numpy as np
+                '''
+                convert numpy array to string
+                '''
+                temp_arr = input_arr
+                temp_str = 'np.array(['
+                for i_x in range(0, temp_arr.shape[0]):
+                    temp_str = temp_str + '['
+                    for i_y in range(0, temp_arr.shape[1]):
+                        if isinstance(temp_arr[i_x, i_y], int):
+                            temp_str = temp_str + str(temp_arr[i_x, i_y]) + ',' 
+                        elif isinstance(temp_arr[i_x, i_y], str):
+                            temp_str = temp_str + '\'' + temp_arr[i_x, i_y] + '\'' + ','
+                        elif isinstance(temp_arr[i_x, i_y], list):
+                            temp_str = temp_str + str(temp_arr[i_x, i_y]) + ','
+                    temp_str = temp_str + '],'
+                temp_str = temp_str + '])'
+                return temp_str
+            #log_str = log_str + ('#The columns of the projections_arr are: spin, mag, ions_list, orbit, color, legend.\n') 
+            log_str = log_str + ('import numpy as np' + '\n')
+            log_str = log_str + ('import pandas as pd' + '\n')
+            log_str = log_str + ('projections_raw_arr' + str(i_sys + 1) + ' = ' + arr2str(projections_raw_arr) + '\n')
+            log_str = log_str + ('projections_arr' + str(i_sys + 1) + ' = ' + arr2str(projections_arr) + '\n')
+            # write projections array to file
+            proj_arr = 'projections_raw_arr' + str(i_sys + 1)
+            csv_file = os.path.join(output_dir, 'projections_raw_arr' + str(i_sys + 1) + '.csv')
+            #pd.DataFrame(proj_arr).to_csv(csv_file,header=['spin', 'mag', 'ions_list'      , 'orbit', 'color' , 'legend'],index=False,doublequote=False)
+            log_str = log_str + ('proj_arr' + str(i_sys + 1) + ' = ' + proj_arr + '\n') 
+            log_str = log_str + ('csv_file' + str(i_sys + 1) + ' = \'' + proj_arr + '.csv' + '\'\n') 
+            log_str = log_str + ("pd.DataFrame(proj_arr" + str(i_sys + 1) + ").to_csv(csv_file" + str(i_sys + 1) + ",header=['spin', 'mag', 'ions_list'      , 'orbit', 'color' , 'legend'],index=False,doublequote=False)" + '\n') 
+
+            ###########################
+            # Check the inputs
+            ###########################
+            temp_warning_indx_list = []
+            for i_item in range(0, projections_arr.shape[0]):
+                spin = projections_arr[i_item, 0]
+                if spin == 0:  #spin unpolarized
+                    if ispin == 2:
+                        temp_warning_indx_list.append(0)
+                        spin = 1
+                        projections_arr[i_item, 0] = 1
+                elif spin == 1: #up
+                    if ispin == 1:
+                        temp_warning_indx_list.append(1)
+                        spin = 0
+                        projections_arr[i_item, 0] = 0
+                elif spin == 2: #dn
+                    if ispin == 1:
+                        temp_warning_indx_list.append(2)
+                        spin = 0
+                        projections_arr[i_item, 0] = 0
+                elif spin == 3: #up_dn
+                    if ispin == 1:
+                        temp_warning_indx_list.append(3)
+                        spin = 0
+                        projections_arr[i_item, 0] = 0
+            if 0 in temp_warning_indx_list: 
+                print('WARNING #2104221106 (from vasp_plot.plot_bs): This calculation is spin polarized. (Currently spin = 0 (without spin) is automatically set to spin = 1 (up spin)). Please check the spin tag (the first column) of the file ' + str(spd_and_site_projections_file_path_list[i_sys]))
+            if 1 in temp_warning_indx_list: 
+                print('WARNING #2104221450 (from vasp_plot.plot_bs): This calculation is spin unpolarized. (Currently spin = 1 (up spin) is automatically set to spin = 0 (without spin)). Please check the spin tag (the first column) of the file ' + str(spd_and_site_projections_file_path_list[i_sys]))
+            if 2 in temp_warning_indx_list: 
+                print('WARNING #2104221451 (from vasp_plot.plot_bs): This calculation is spin unpolarized. (Currently spin = 2 (down spin) is automatically set to spin = 0 (without spin)). Please check the spin tag (the first column) of the file ' + str(spd_and_site_projections_file_path_list[i_sys]))
+            if 3 in temp_warning_indx_list: 
+                print('WARNING #2106271611 (from vasp_plot.plot_bs): This calculation is spin unpolarized. (Currently spin = 3 (up and down spin) is automatically set to spin = 0 (without spin)). Please check the spin tag (the first column) of the file ' + str(spd_and_site_projections_file_path_list[i_sys]))
 
         # Define band_palette_dict and band_lty_dict
         band_palette_customize = False
         band_lty_customize = False
-        if band_palette_dict not in [None,'None','none']:
+        if not band_palette_dict is None:
             band_palette_customize = True
             temp_band_palette_dict = band_palette_dict.copy()
-        if band_lty_dict not in [None,'None','none']:
+        if not band_lty_dict is None:
             band_lty_customize = True
             temp_band_lty_dict = band_lty_dict.copy()
         band_palette_dict = {}
         band_lty_dict = {}
         for i_band in range(0, num_bands):
             i_band_indx = i_band + 1
-            if band_list in [None,'None','none']:
+            if band_list is None:
                 pass 
             else:
                 if i_band_indx not in band_list:
                     continue
+                else:
+                    header = 'bs_xaxis_label_list = ' + str(kpoints_dict['bs_xaxis_label_list']) + ' bs_xaxis_tick_list = ' + str(kpoints_dict['bs_xaxis_tick_list'])
+                    np.savetxt(os.path.join(output_dir, 'band_' + str(i_band_indx + 1) + '.txt'), np.concatenate((np.array(eigenval_or_procar_dict['kpath_len_list']).reshape(-1,1), (eigenval_or_procar_dict['eigs'][:, i_band_indx] - e_fermi).reshape(-1,1)), axis = 1), fmt = '%11.6f %11.8e', header = header)
             # line color for each band
             #band_palette_dict[str(i_band_indx)] = 'black'
             # line style for each band
@@ -2319,7 +2742,7 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
         num_added_legend_item = 0
         for i_band in range(0, num_bands):
             i_band_indx = i_band + 1
-            if band_list in [None,'None','none']:
+            if band_list is None:
                 pass
             else:
                 if i_band_indx not in band_list:
@@ -2357,43 +2780,45 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                         interp = interp1d(kpoints_slice_arr, eigs_slice_arr, kind='cubic')
                         kpoints_dense_arr = np.linspace(min(kpoints_slice_arr),max(kpoints_slice_arr),num = num_kpoints * 5,endpoint = True)
                         plot_line, = active_axes.plot(kpoints_dense_arr, interp(kpoints_dense_arr), color = band_color, linestyle = band_lty, linewidth = general_params_dict['line_width'])
-                        if spd_and_site_projections_file_path_list in [None, 'None', 'none'] or spd_and_site_projections_file_path_list[i_sys] in [None, 'None', 'none']:
-                            plot_dot, = plt.plot(kpoints_slice_arr, eigs_slice_arr, color = band_color, linestyle = '', marker = band_marker, label = band_label)
+                        if spd_and_site_projections_file_path_list is None or spd_and_site_projections_file_path_list[i_sys] is None:
+                            plot_dot, = plt.plot(kpoints_slice_arr, eigs_slice_arr, color = band_color, linestyle = '', marker = band_marker, label = band_label, alpha = general_params_dict['alpha'])
                 elif interp_on == False:
-                    if spd_and_site_projections_file_path_list in [None, 'None', 'none'] or spd_and_site_projections_file_path_list[i_sys] in [None, 'None', 'none']:
-                        plot_dot, = plt.plot(kpoints_arr, band_arr, color = band_color, linestyle = band_lty, marker = band_marker, label = band_label)
-                    if spd_and_site_projections_file_path_list not in [None, 'None', 'none'] and spd_and_site_projections_file_path_list[i_sys] not in [None, 'None', 'none']:
+                    if spd_and_site_projections_file_path_list is None or spd_and_site_projections_file_path_list[i_sys] is None:
+                        plot_dot, = plt.plot(kpoints_arr, band_arr, color = band_color, linestyle = band_lty, marker = band_marker, label = band_label, alpha = general_params_dict['alpha'])
+                    if not spd_and_site_projections_file_path_list is None and not spd_and_site_projections_file_path_list[i_sys] is None:
                         plot_dot, = plt.plot(kpoints_arr, band_arr, color = band_color, linestyle = band_lty, marker = '', label = band_label)
             elif ispin == 2:
                 #band plotting
                 band_arr_up = eigs_up[:, i_band]
-                band_arr_dw = eigs_dw[:, i_band]
+                band_arr_dn = eigs_dn[:, i_band]
                 xlo = min(xlo, np.min(kpoints_arr))
                 xhi = max(xhi, np.max(kpoints_arr))
-                ylo = min(ylo, np.min(band_arr_up), np.min(band_arr_dw))
-                yhi = max(yhi, np.max(band_arr_up), np.max(band_arr_dw))
+                ylo = min(ylo, np.min(band_arr_up), np.min(band_arr_dn))
+                yhi = max(yhi, np.max(band_arr_up), np.max(band_arr_dn))
                 if num_sys == 1: #for single system
                     band_color_up = band_palette_dict[str(i_band_indx)][0]
-                    band_color_dw = band_palette_dict[str(i_band_indx)][1]
+                    band_color_dn = band_palette_dict[str(i_band_indx)][1]
                     band_lty_up = band_lty_dict[str(i_band_indx)][0]
-                    band_lty_dw = band_lty_dict[str(i_band_indx)][1]
+                    band_lty_dn = band_lty_dict[str(i_band_indx)][1]
                 elif num_sys > 1: #for multiple systems
                     band_color_up = system_color_list[i_sys] 
-                    band_color_dw = system_color_list[i_sys]
+                    band_color_dn = system_color_list[i_sys]
                     band_lty_up = band_lty_dict[str(i_band_indx)][0]
-                    band_lty_dw = band_lty_dict[str(i_band_indx)][1]
+                    band_lty_dn = band_lty_dict[str(i_band_indx)][1]
                 band_label_up = 'spin up'
-                band_label_dw = 'spin dw'
+                band_label_dn = 'spin dn'
                 if plot_band_data_point == False:
                     band_marker = ''
                 elif plot_band_data_point == True:
                     band_marker = '.'
+                if not spd_and_site_projections_file_path_list is None and not spd_and_site_projections_file_path_list[i_sys] is None:
+                    band_marker = ''
                 if plot_line == False:
                     band_lty_up = ''
-                    band_lty_dw = ''
+                    band_lty_dn = ''
                 elif plot_line == True:
                     band_lty_up = band_lty_dict[str(i_band_indx)][0]
-                    band_lty_dw = band_lty_dict[str(i_band_indx)][1]
+                    band_lty_dn = band_lty_dict[str(i_band_indx)][1]
                 if interp_on == True:
                     #interpolation of bands
                     for i_interval in range(0, kpath_num_intersections_interval):
@@ -2401,31 +2826,43 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                         end_indx = start_indx + kpath_num_intersections
                         kpoints_slice_arr = kpoints_arr[start_indx:end_indx]
                         eigs_slice_arr_up = band_arr_up[start_indx:end_indx]
-                        eigs_slice_arr_dw = band_arr_dw[start_indx:end_indx]
+                        eigs_slice_arr_dn = band_arr_dn[start_indx:end_indx]
                         kpoints_dense_arr = np.linspace(min(kpoints_slice_arr),max(kpoints_slice_arr),num = num_kpoints * 5,endpoint = True)
                         interp_up = interp1d(kpoints_slice_arr, eigs_slice_arr_up, kind='cubic')
-                        interp_dw = interp1d(kpoints_slice_arr, eigs_slice_arr_dw, kind='cubic')
+                        interp_dn = interp1d(kpoints_slice_arr, eigs_slice_arr_dn, kind='cubic')
+                        plot_line_dn, = active_axes.plot(kpoints_dense_arr, interp_dn(kpoints_dense_arr), color = band_color_dn, linestyle = band_lty_dn, linewidth = general_params_dict['line_width'])
                         plot_line_up, = active_axes.plot(kpoints_dense_arr, interp_up(kpoints_dense_arr), color = band_color_up, linestyle = band_lty_up, linewidth = general_params_dict['line_width'])
-                        plot_line_dw, = active_axes.plot(kpoints_dense_arr, interp_dw(kpoints_dense_arr), color = band_color_dw, linestyle = band_lty_dw, linewidth = general_params_dict['line_width'])
-                        #plot_line_up, = plt.plot(kpoints_slice_arr, eigs_slice_arr_up, color = band_color_up, linestyle = '-', marker = band_marker, label = band_label_up)
-                        #plot_line_dw, = plt.plot(kpoints_slice_arr, eigs_slice_arr_dw, color = band_color_dw, linestyle = '-', marker = band_marker, label = band_label_dw)
-                        plot_dot_up, = plt.plot(kpoints_slice_arr, eigs_slice_arr_up, color = band_color_up, linestyle = '', marker = band_marker, label = band_label_up)
-                        plot_dot_dw, = plt.plot(kpoints_slice_arr, eigs_slice_arr_dw, color = band_color_dw, linestyle = '', marker = band_marker, label = band_label_dw)
+                        plot_dot_dn, = plt.plot(kpoints_slice_arr, eigs_slice_arr_dn, color = band_color_dn, linestyle = '', marker = band_marker, label = band_label_dn, alpha = general_params_dict['alpha'])
+                        plot_dot_up, = plt.plot(kpoints_slice_arr, eigs_slice_arr_up, color = band_color_up, linestyle = '', marker = band_marker, label = band_label_up, alpha = general_params_dict['alpha'])
                         
                 elif interp_on == False:
-                    if spd_and_site_projections_file_path_list in [None, 'None', 'none'] or spd_and_site_projections_file_path_list[i_sys] in [None, 'None', 'none']:
-                        plot_dot_up, = plt.plot(kpoints_arr, band_arr_up, color = band_color_up, linestyle = band_lty_up, marker = band_marker)
-                        plot_dot_dw, = plt.plot(kpoints_arr, band_arr_dw, color = band_color_dw, linestyle = band_lty_dw, marker = band_marker, mfc='none')
-                    if spd_and_site_projections_file_path_list not in [None, 'None', 'none'] and spd_and_site_projections_file_path_list[i_sys] not in [None, 'None', 'none']:
-                        plot_dot_up, = plt.plot(kpoints_arr, band_arr_up, color = band_color_up, linestyle = band_lty_up, marker = '')
-                        plot_dot_dw, = plt.plot(kpoints_arr, band_arr_dw, color = band_color_dw, linestyle = band_lty_dw, marker = '', mfc='none')
+                    if spd_and_site_projections_file_path_list is None or spd_and_site_projections_file_path_list[i_sys] is None:
+                        plot_dot_dn, = plt.plot(kpoints_arr, band_arr_dn, color = band_color_dn, linestyle = band_lty_dn, marker = band_marker, alpha = general_params_dict['alpha'])
+                        plot_dot_up, = plt.plot(kpoints_arr, band_arr_up, color = band_color_up, linestyle = band_lty_up, marker = band_marker, alpha = general_params_dict['alpha'], mfc = 'none')
+                    if not spd_and_site_projections_file_path_list is None and not spd_and_site_projections_file_path_list[i_sys] is None:
+                        plot_dot_dn, = plt.plot(kpoints_arr, band_arr_dn, color = band_color_dn, linestyle = band_lty_dn, marker = '')
+                        plot_dot_up, = plt.plot(kpoints_arr, band_arr_up, color = band_color_up, linestyle = band_lty_up, marker = '', mfc = 'none')
+            ##########################################################################################
             # plot the spd- and site projected wave function character of each band (fat band)
-            if spd_and_site_projections_file_path_list not in [None, 'None', 'none'] and spd_and_site_projections_file_path_list[i_sys] not in [None, 'None', 'none']:
-                # first, the file in infile_path_list should be the PROCAR file, not EIGENVAL. Codes needs to be added to avoid loading the EIGNEVAL file here!!!!! Or an ERROR would occur.
-                markersize_scale = 200
+            ##########################################################################################
+
+            # Read data and plot band
+            if (not spd_and_site_projections_file_path_list is None and not spd_and_site_projections_file_path_list[i_sys] is None):
+                # first, the file in general_params_dict['infile_path_list'] should be the PROCAR file, not EIGENVAL
+                ##markersize_scale = 200
+                markersize_scale = 1000
                 markersize_scale = markersize_scale * projections_point_size_factor
                 poscar_dict = vasp_read.read_poscar(os.path.join(workdir, 'POSCAR'))
+
                 for i_item in range(0, projections_arr.shape[0]):
+                    # scatter plot parameters
+                    c_list = []
+                    s_list = []
+                    c_up_list = []
+                    s_up_list = []
+                    c_dn_list = []
+                    s_dn_list = []
+
                     if ispin == 1:
                         num_added_legend_item = num_added_legend_item + 1
                     elif ispin == 2:
@@ -2437,21 +2874,11 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                     orbit = projections_arr[i_item, 3]
                     color = projections_arr[i_item, 4]
                     legend = projections_arr[i_item, 5]
-                    if spin == 0:  #spin unpolarized
-                        if ispin == 2:
-                            print('ERROR (from vasp_plot.plot_bs): This calculation is spin polarized. Please check the spin tag (the first column) of the file ' + str(spd_and_site_projections_file_path_list[i_sys]))
-                            exit()
-                        band_color = color
-                    elif spin == 1: #up
-                        if ispin == 1:
-                            print('ERROR (from vasp_plot.plot_bs): This calculation is spin unpolarized. Please check the spin tag (the first column) of the file ' + str(spd_and_site_projections_file_path_list[i_sys]))
-                            exit()
-                        band_color_up = color
-                    elif spin == 2: #dw
-                        if ispin == 1:
-                            print('ERROR (from vasp_plot.plot_bs): This calculation is spin unpolarized. Please check the spin tag (the first column) of the file ' + str(spd_and_site_projections_file_path_list[i_sys]))
-                            exit()
-                        band_color_dw = color
+
+                    band_color = color
+                    band_color_up = color
+                    band_color_dn = color
+
                     # define the ionic informations of the projected band structure
                     if len(ions_list) == 1:
                         string_len = len(''.join(filter(str.isalpha, str(ions_raw_list[0]))))
@@ -2488,7 +2915,7 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                             ions_txt = str(i_item + 1)
                     if file_type == 'PROCAR_collinear':
                         if ispin == 1:
-                            if legend in [None, 'None', 'none']:
+                            if legend is None:
                                 band_label = ''
                             elif legend in ['Auto', 'auto']:
                                 band_label = ions_txt + ' ' + str(orbit_name_list[i_item])
@@ -2499,38 +2926,55 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                                 markersize = 0
                                 for i_ion in ions_list: #sum of the projection contributions for designated atoms
                                     markersize = markersize + projections[i_kpoint, i_band, i_ion, orbit] 
-                                plot_dot, = plt.plot(kpoints_arr[i_kpoint], band_arr[i_kpoint], color = band_color, linestyle = '', marker = '.', markersize = markersize * markersize_scale, markeredgecolor = 'None', label = band_label)
+                                c_list.append(band_color)
+                                s_list.append(markersize * markersize_scale)
                         elif ispin == 2:
-                            if legend in [None, 'None', 'none']:
+                            if legend is None:
                                 band_label = ''
                             elif legend in ['Auto', 'auto']:
                                 if spin == 1:
                                     band_label_up = ions_txt + ' ' + str(orbit_name_list[i_item]) + ' up'
                                 elif spin == 2:
-                                    band_label_dw = ions_txt + ' ' + str(orbit_name_list[i_item]) + ' dw'
+                                    band_label_dn = ions_txt + ' ' + str(orbit_name_list[i_item]) + ' dn'
+                                elif spin == 3:
+                                    band_label_up = ions_txt + ' ' + str(orbit_name_list[i_item]) + ' up'
+                                    band_label_dn = ions_txt + ' ' + str(orbit_name_list[i_item]) + ' dn'
                             else:
                                 if spin == 1:
                                     band_label_up = legend
                                 elif spin == 2:
-                                    band_label_dw = legend
+                                    band_label_dn = legend
+                                elif spin == 3:
+                                    band_label_up = legend
+                                    band_label_dn = legend
                             projections_up = procar_dict['projections_up']
-                            projections_dw = procar_dict['projections_dw']
+                            projections_dn = procar_dict['projections_dn']
 
                             for i_kpoint in range(0, num_kpoints):
                                 markersize_up = 0
-                                markersize_dw = 0
+                                markersize_dn = 0
                                 for i_ion in ions_list:  #sum of the projection contributions for designated atoms
                                     if spin == 1:
                                         markersize_up = markersize_up + projections_up[i_kpoint, i_band, i_ion, orbit]
                                     elif spin == 2:
-                                        markersize_dw = markersize_dw + projections_dw[i_kpoint, i_band, i_ion, orbit]
+                                        markersize_dn = markersize_dn + projections_dn[i_kpoint, i_band, i_ion, orbit]
+                                    elif spin == 3:
+                                        markersize_up = markersize_up + projections_up[i_kpoint, i_band, i_ion, orbit]
+                                        markersize_dn = markersize_dn + projections_dn[i_kpoint, i_band, i_ion, orbit]
                                 if spin == 1:
-                                    plot_dot_up, = plt.plot(kpoints_arr[i_kpoint], band_arr_up[i_kpoint], color = band_color_up, linestyle = '', marker = '.', markersize = markersize_up * markersize_scale, markeredgecolor = 'None', label = band_label_up)
+                                    c_up_list.append(band_color_up)
+                                    s_up_list.append(markersize_up * markersize_scale)
                                 elif spin == 2:
-                                    plot_dot_dw, = plt.plot(kpoints_arr[i_kpoint], band_arr_dw[i_kpoint], color = band_color_dw, linestyle = '', marker = '.', markersize = markersize_dw * markersize_scale, markeredgecolor = 'None', label = band_label_dw)
+                                    c_dn_list.append(band_color_dn)
+                                    s_dn_list.append(markersize_dn * markersize_scale)
+                                elif spin == 3:
+                                    c_up_list.append(band_color_up)
+                                    s_up_list.append(markersize_up * markersize_scale)
+                                    c_dn_list.append(band_color_dn)
+                                    s_dn_list.append(markersize_dn * markersize_scale)
                     elif file_type == 'PROCAR_noncollinear':
                         if ispin == 1:
-                            if legend in [None, 'None', 'none']:
+                            if legend is None:
                                 band_label = ''
                             elif legend in ['Auto', 'auto']:
                                 band_label = ions_txt + ' ' + str(orbit_name_list[i_item]) + ' ' + str(mag_name_list[mag])
@@ -2541,46 +2985,107 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                                 markersize = 0
                                 for i_ion in ions_list:  #sum of the projection contributions for designated atoms
                                     markersize = markersize + projections_noncollinear[i_kpoint, i_band, i_ion, mag, orbit]
-                                plot_dot, = plt.plot(kpoints_arr[i_kpoint], band_arr[i_kpoint], color = band_color, linestyle = '', marker = '.', markersize = markersize * markersize_scale, markeredgecolor = 'None', label = band_label)
+                                c_list.append(band_color)
+                                s_list.append(markersize * markersize_scale)
                         elif ispin == 2:
-                            if legend in [None, 'None', 'none']:
+                            if legend is None:
                                 band_label = ''
                             elif legend in ['Auto', 'auto']:
                                 if spin == 1:
                                     band_label_up = ions_txt + ' ' + str(orbit_name_list[i_item]) + ' ' + str(mag_name_list[mag]) + ' up'
                                 elif spin == 2:
-                                    band_label_dw = ions_txt + ' ' + str(orbit_name_list[i_item]) + ' ' + str(mag_name_list[mag]) + ' dw'
+                                    band_label_dn = ions_txt + ' ' + str(orbit_name_list[i_item]) + ' ' + str(mag_name_list[mag]) + ' dn'
+                                elif spin == 3:
+                                    band_label_up = ions_txt + ' ' + str(orbit_name_list[i_item]) + ' ' + str(mag_name_list[mag]) + ' up'
+                                    band_label_dn = ions_txt + ' ' + str(orbit_name_list[i_item]) + ' ' + str(mag_name_list[mag]) + ' dn'
                             else:
                                 if spin == 1:
                                     band_label_up = legend
                                 elif spin == 2:
-                                    band_label_dw = legend
+                                    band_label_dn = legend
+                                elif spin == 3:
+                                    band_label_up = legend
+                                    band_label_dn = legend
                             projections_up_noncollinear = procar_dict['projections_up_noncollinear']
-                            projections_dw_noncollinear = procar_dict['projections_dw_noncollinear']
+                            projections_dn_noncollinear = procar_dict['projections_dn_noncollinear']
                             for i_kpoint in range(0, num_kpoints):
                                 markersize_up = 0
-                                markersize_dw = 0
+                                markersize_dn = 0
                                 for i_ion in ions_list:  #sum of the projection contributions for designated atoms
                                     if spin == 1:
                                         markersize_up = markersize_up + projections_noncollinear[i_kpoint, i_band, i_ion, mag, orbit]
                                     elif spin == 2:
-                                        markersize_dw = markersize_dw + projections_noncollinear[i_kpoint, i_band, i_ion, mag, orbit]
+                                        markersize_dn = markersize_dn + projections_noncollinear[i_kpoint, i_band, i_ion, mag, orbit]
+                                    elif spin == 3:
+                                        markersize_up = markersize_up + projections_noncollinear[i_kpoint, i_band, i_ion, mag, orbit]
+                                        markersize_dn = markersize_dn + projections_noncollinear[i_kpoint, i_band, i_ion, mag, orbit]
                                 if spin == 1:
-                                    plot_dot_up, = plt.plot(kpoints_arr[i_kpoint], band_arr_up[i_kpoint], color = band_color_up, linestyle = '', marker = '.', markersize = markersize_up * markersize_scale, markeredgecolor = 'None', label = band_label_up)
+                                    c_up_list.append(band_color_up)
+                                    s_up_list.append(markersize_up * markersize_scale)
                                 elif spin == 2:
-                                    plot_dot_dw, = plt.plot(kpoints_arr[i_kpoint], band_arr_dw[i_kpoint], color = band_color_dw, linestyle = '', marker = '.', markersize = markersize_dw * markersize_scale, markeredgecolor = 'None', label = band_label_dw)
+                                    c_dn_list.append(band_color_dn)
+                                    s_dn_list.append(markersize_dn * markersize_scale)
+                                elif spin == 3:
+                                    c_up_list.append(band_color_up)
+                                    s_up_list.append(markersize_up * markersize_scale)
+                                    c_dn_list.append(band_color_dn)
+                                    s_dn_list.append(markersize_dn * markersize_scale)
                     if ispin == 1:
+                        if solid_marker == True:
+                            # difference between None and 'None'. The first means 'do the default thing', the later means "I don't want a color".
+                            c_colors = c_list
+                            facecolors = None
+                            edgecolor = 'None'
+                        elif solid_marker == False:
+                            c_colors = 'None'
+                            facecolors = 'None'
+                            edgecolor = c_list
+                        plot_dot = plt.scatter(kpoints_arr, band_arr, c = c_colors, s = s_list, label = band_label, facecolors = facecolors, edgecolor = edgecolor, alpha = general_params_dict['alpha'], linewidths = general_params_dict['line_width'], clip_on = clip_on)
                         if num_added_legend_item <= projections_arr.shape[0]:
                             handle_list.append(plot_dot)
                             label_list.append(band_label)
                     elif ispin == 2:
+                        if spin == 1:
+                            if solid_marker == True:
+                                c_colors = c_up_list
+                                facecolors = None
+                                edgecolor = 'None'
+                            elif solid_marker == False:
+                                c_colors = 'None'
+                                facecolors = 'None'
+                                edgecolor = c_up_list
+                            plot_dot_up = plt.scatter(kpoints_arr, band_arr_up, c = c_colors, s = s_up_list, label = band_label_up, facecolors = facecolors, edgecolor = edgecolor, alpha = general_params_dict['alpha'], linewidths = general_params_dict['line_width'], clip_on = clip_on)
+                        elif spin == 2:
+                            if solid_marker == True:
+                                c_colors = c_dn_list
+                                facecolors = None
+                                edgecolor = 'None'
+                            elif solid_marker == False:
+                                c_colors = 'None'
+                                facecolors = 'None'
+                                edgecolor = c_dn_list
+                            plot_dot_dn = plt.scatter(kpoints_arr, band_arr_dn, c = c_colors, s = s_dn_list, label = band_label_dn, facecolors = facecolors, edgecolor = edgecolor, alpha = general_params_dict['alpha'], linewidths = general_params_dict['line_width'], clip_on = clip_on)
+                        elif spin == 3:
+                            if solid_marker == True:
+                                c_colors = c_dn_list
+                                facecolors = None
+                                edgecolor = 'None'
+                            elif solid_marker == False:
+                                c_colors = 'None'
+                                facecolors = 'None'
+                                edgecolor = c_dn_list
+                            plot_dot_up = plt.scatter(kpoints_arr, band_arr_up, c = c_colors, s = s_up_list, label = band_label_up, facecolors = facecolors, edgecolor = edgecolor, alpha = general_params_dict['alpha'], linewidths = general_params_dict['line_width'], clip_on = clip_on)
+                            plot_dot_dn = plt.scatter(kpoints_arr, band_arr_dn, c = c_colors, s = s_dn_list, label = band_label_dn, facecolors = facecolors, edgecolor = edgecolor, alpha = general_params_dict['alpha'], linewidths = general_params_dict['line_width'], clip_on = clip_on)
                         if num_added_legend_item <= (projections_arr.shape[0] * 2):
                             if spin == 1:
                                 handle_list.append(plot_dot_up)
                                 label_list.append(band_label_up)
                             elif spin == 2:
-                                handle_list.append(plot_dot_dw)
-                                label_list.append(band_label_dw)
+                                handle_list.append(plot_dot_dn)
+                                label_list.append(band_label_dn)
+                            elif spin == 3:
+                                handle_list.append(plot_dot_dn)
+                                label_list.append(band_label_dn)
         #############################
         # get band gap information
         #############################
@@ -2606,12 +3111,12 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
             if band_gap_dict['VBM_up'] not in [None, 'None', 'none']:   
                 log_str = log_str + ('# VBM(up) = ' + '{:.6f}'.format(band_gap_dict['VBM_up']) + ' (eV)' + '\n')
             # spin down channel
-            log_str = log_str + ('# Egap(dw)= ' + '{:.6f}'.format(band_gap_dict['band_gap_dw']) + ' (eV)' + '\n') 
-            log_str = log_str + ('# Gap Type(dw)= ' + str(band_gap_dict['gap_type_dw']) + '\n') 
-            if band_gap_dict['CBM_dw'] not in [None, 'None', 'none']:   
-                log_str = log_str + ('# CBM(dw) = ' + '{:.6f}'.format(band_gap_dict['CBM_dw']) + ' (eV)' + '\n')
-            if band_gap_dict['VBM_dw'] not in [None, 'None', 'none']:   
-                log_str = log_str + ('# VBM(dw) = ' + '{:.6f}'.format(band_gap_dict['VBM_dw']) + ' (eV)' + '\n')
+            log_str = log_str + ('# Egap(dn)= ' + '{:.6f}'.format(band_gap_dict['band_gap_dn']) + ' (eV)' + '\n') 
+            log_str = log_str + ('# Gap Type(dn)= ' + str(band_gap_dict['gap_type_dn']) + '\n') 
+            if band_gap_dict['CBM_dn'] not in [None, 'None', 'none']:   
+                log_str = log_str + ('# CBM(dn) = ' + '{:.6f}'.format(band_gap_dict['CBM_dn']) + ' (eV)' + '\n')
+            if band_gap_dict['VBM_dn'] not in [None, 'None', 'none']:   
+                log_str = log_str + ('# VBM(dn) = ' + '{:.6f}'.format(band_gap_dict['VBM_dn']) + ' (eV)' + '\n')
 
         # Band gap label
         cbm_vbm_text_label = False
@@ -2624,24 +3129,24 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                     plt.text(band_gap_dict['kpoint_CBM'], band_gap_dict['CBM'], '{:.6f}'.format(band_gap_dict['CBM']) + ' eV', color = 'blue', fontsize = font_size * golden_ratio)
                     plt.text(band_gap_dict['kpoint_VBM'], band_gap_dict['VBM'], '{:.6f}'.format(band_gap_dict['VBM']) + ' eV', color = 'blue', fontsize = font_size * golden_ratio)
             if ispin == 2:
+                if band_gap_dict['band_gap_dn'] != 0 and band_gap_dict['band_gap_dn'] < 999 and band_gap_dict['band_gap_dn'] != None:
+                    plt.plot(band_gap_dict['kpoint_CBM_dn'], band_gap_dict['CBM_dn'], marker = 'v', color = 'red', markersize = cbm_vbm_markersize)
+                    plt.plot(band_gap_dict['kpoint_VBM_dn'], band_gap_dict['VBM_dn'], marker = 'v', color = 'red', markersize = cbm_vbm_markersize)
+                    if cbm_vbm_text_label == True:
+                        plt.text(band_gap_dict['kpoint_CBM_dn'], band_gap_dict['CBM_dn'], '{:.6f}'.format(band_gap_dict['CBM_dn']) + ' eV', color = 'red', fontsize = font_size * golden_ratio)
+                        plt.text(band_gap_dict['kpoint_VBM_dn'], band_gap_dict['VBM_dn'], '{:.6f}'.format(band_gap_dict['VBM_dn']) + ' eV', color = 'red', fontsize = font_size * golden_ratio)
                 if band_gap_dict['band_gap_up'] != 0 and band_gap_dict['band_gap_up'] < 999 and band_gap_dict['band_gap_up'] != None:
                     plt.plot(band_gap_dict['kpoint_CBM_up'], band_gap_dict['CBM_up'], marker = '^', color = 'black', markersize = cbm_vbm_markersize)
                     plt.plot(band_gap_dict['kpoint_VBM_up'], band_gap_dict['VBM_up'], marker = '^', color = 'black', markersize = cbm_vbm_markersize)
                     if cbm_vbm_text_label == True:
                         plt.text(band_gap_dict['kpoint_CBM_up'], band_gap_dict['CBM_up'], '{:.6f}'.format(band_gap_dict['CBM_up']) + ' eV', color = 'black', fontsize = font_size * golden_ratio)
                         plt.text(band_gap_dict['kpoint_VBM_up'], band_gap_dict['VBM_up'], '{:.6f}'.format(band_gap_dict['VBM_up']) + ' eV', color = 'black', fontsize = font_size * golden_ratio)
-                if band_gap_dict['band_gap_dw'] != 0 and band_gap_dict['band_gap_dw'] < 999 and band_gap_dict['band_gap_dw'] != None:
-                    plt.plot(band_gap_dict['kpoint_CBM_dw'], band_gap_dict['CBM_dw'], marker = 'v', color = 'red', markersize = cbm_vbm_markersize)
-                    plt.plot(band_gap_dict['kpoint_VBM_dw'], band_gap_dict['VBM_dw'], marker = 'v', color = 'red', markersize = cbm_vbm_markersize)
-                    if cbm_vbm_text_label == True:
-                        plt.text(band_gap_dict['kpoint_CBM_dw'], band_gap_dict['CBM_dw'], '{:.6f}'.format(band_gap_dict['CBM_dw']) + ' eV', color = 'red', fontsize = font_size * golden_ratio)
-                        plt.text(band_gap_dict['kpoint_VBM_dw'], band_gap_dict['VBM_dw'], '{:.6f}'.format(band_gap_dict['VBM_dw']) + ' eV', color = 'red', fontsize = font_size * golden_ratio)
 
         ###################
         #legend setting
         ###################
         if ispin == 1:
-            if spd_and_site_projections_file_path_list in [None, 'None', 'none'] or spd_and_site_projections_file_path_list[i_sys] in [None, 'None', 'none']:
+            if spd_and_site_projections_file_path_list is None or spd_and_site_projections_file_path_list[i_sys] is None:
                 if interp_on == True:
                     handle_list.append((plot_line, plot_dot))
                     label_list.append(band_label)
@@ -2649,23 +3154,23 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                     handle_list.append((plot_dot))
                     label_list.append(band_label)
         elif ispin == 2:
-            if spd_and_site_projections_file_path_list in [None, 'None', 'none'] or spd_and_site_projections_file_path_list[i_sys] in [None, 'None', 'none']:
+            if spd_and_site_projections_file_path_list is None or spd_and_site_projections_file_path_list[i_sys] is None:
                 if interp_on == True:
                     handle_list.append((plot_line_up, plot_dot_up))
-                    handle_list.append((plot_line_dw, plot_dot_dw))
+                    handle_list.append((plot_line_dn, plot_dot_dn))
                     label_list.append(band_label_up)
-                    label_list.append(band_label_dw)
+                    label_list.append(band_label_dn)
                 elif interp_on == False:
                     handle_list.append((plot_dot_up))
-                    handle_list.append((plot_dot_dw))
+                    handle_list.append((plot_dot_dn))
                     label_list.append(band_label_up)
-                    label_list.append(band_label_dw)
+                    label_list.append(band_label_dn)
         # reinitialize the parameters to avoid them affecting the next loop
         band_palette_dict = None
         band_lty_dict = None
         #plot Fermi level
         if plot_fermi_level == True:
-            line1 = [(xlo, (e_fermi_mod * funcs.logic_retn_val(fermi_shift_zero,0,1))), (xhi,(e_fermi_mod * funcs.logic_retn_val(fermi_shift_zero,0,1)))]
+            line1 = [(xlo, (funcs.logic_retn_val(fermi_mod, e_fermi_mod, e_fermi) * funcs.logic_retn_val(fermi_shift_zero,0,1))), (xhi,(funcs.logic_retn_val(fermi_mod, e_fermi_mod, e_fermi) * funcs.logic_retn_val(fermi_shift_zero,0,1)))]
             (line1_xs, line1_ys) = zip(*line1)
             horizontal_linewidth_scale = golden_ratio
             plt.plot(line1_xs, line1_ys, linestyle = '--',linewidth = general_params_dict['line_width'] * horizontal_linewidth_scale, color = 'black')
@@ -2694,67 +3199,95 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
     plt.ylabel('E-E$_{f}$ (eV)', fontsize = general_params_dict['font_size'])
     if legend_on == True:
         #add legend
+        uniform_legend_marker_size = font_size * 5
+
         ncol = 1
         legend_fontsize_scale = golden_ratio
-        if len(handle_list) <= 10:
+        #handle_len_list = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+        handle_len_list = [8, 16, 24, 32, 40, 48, 56, 64, 72]
+        if len(handle_list) <= handle_len_list[0]:
             ncol = 1
-        elif len(handle_list) > 10:
+        elif len(handle_list) > handle_len_list[0]:
             ncol = 2
-        elif len(handle_list) > 20:
+        elif len(handle_list) > handle_len_list[1]:
             ncol = 3
-        elif len(handle_list) > 30:
+        elif len(handle_list) > handle_len_list[2]:
             ncol = 4
-        elif len(handle_list) > 40:
+        elif len(handle_list) > handle_len_list[3]:
             ncol = 5
-        else:
+        elif len(handle_list) > handle_len_list[4]:
             ncol = 6
-        if spd_and_site_projections_file_path_list not in [None, 'None', 'none']:
+        elif len(handle_list) > handle_len_list[5]:
+            ncol = 7
+        else:
+            ncol = 8
+        if not spd_and_site_projections_file_path_list is None:
             lgnd = plt.legend(handles = handle_list, labels = label_list, loc = 'best', frameon = True, fontsize = general_params_dict['font_size'] * legend_fontsize_scale, ncol = ncol)
+            for lgnd_handle in lgnd.legendHandles:
+                #lgnd_handle._legmarker.set_markersize(120)
+                lgnd_handle._sizes = [uniform_legend_marker_size]
         if num_sys != 1:
             lgnd = plt.legend(handles = handle_list, labels = label_list, loc = 'best', frameon = True, fontsize = general_params_dict['font_size'] * legend_fontsize_scale, ncol = ncol)
             # rescale the legend marker sizes to ensure all the marker sizes are the same.
-            if spd_and_site_projections_file_path_list not in [None, 'None', 'none']:
-                uniform_legend_marker_size = font_size
+            if not spd_and_site_projections_file_path_list is None:
                 for lgnd_handle in lgnd.legendHandles:
-                    #lgnd_handle._legmarker.set_markersize(120)
-                    lgnd_handle._legmarker.set_markersize(uniform_legend_marker_size)
+                    #lgnd_handle._legmarker.set_markersize(uniform_legend_marker_size)
+                    lgnd_handle._sizes = [uniform_legend_marker_size]
     active_axes.set(title='')
     #plt.set_xlim(xlim[0], xlim[1])
-    if xlim not in [None,'None','none']:
+    if not xlim is None:
         plt.xlim(xlim[0], xlim[1])
-    if ylim not in [None,'None','none']:
+        ##active_axes.set_xlim(xlim[0], xlim[1])
+    if not ylim is None:
         plt.ylim(ylim[0], ylim[1])
+        ##active_axes.set_ylim(ylim[0], ylim[1])
     plt.margins(x=0.0, y=0.0)
+    ###########################################################################################
+    # Seems that there is a problem in plotting scatter point on the x axis boundary
+    # The scatter point on the boundary won't be clipped when setting clip_on = True
+    # This seems to be a problem of the python program waiting to be resolved in the future.
+    ###########################################################################################
+    active_axes.set_clip_on(clip_on)
     #plt.xaxis.set_major_locator(plt.MaxNLocator(5))
     #plt.yaxis.set_major_locator(plt.MaxNLocator(5))
     #plt.xaxis.set_minor_locator(AutoMinorLocator(5))
     #plt.yaxis.set_minor_locator(AutoMinorLocator(5))
     formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time.time()))
 
-    plot_bs_dict['fig_file'] = os.path.join(output_dir, 'fig_' + str(formatted_time) + '_band.' + general_params_dict['fig_format'])
+    if len(spd_and_site_projections_file_str) != 0:
+        plot_bs_dict['fig_file'] = os.path.join(output_dir, 'fig_' + str(formatted_time) + spd_and_site_projections_file_str + '.' + general_params_dict['fig_format'])
+    else:
+        plot_bs_dict['fig_file'] = os.path.join(output_dir, 'fig_' + str(formatted_time) + '_band' + spd_and_site_projections_file_str + '.' + general_params_dict['fig_format'])
     if output_fig_file_path not in [None, 'None', 'none']:
         plot_bs_dict['fig_file'] = output_fig_file_path
     plt.savefig(plot_bs_dict['fig_file'], dpi = general_params_dict['fig_dpi'])
     plt.close()
+
+    #######################################################
     #Write Figure information into logfile
+    #######################################################
     plot_bs_dict['fig_log_file'] = os.path.splitext(plot_bs_dict['fig_file'])[0] + '.log'
     infile_list = []
+    for i_sys in range(0,len(general_params_dict['infile_path_list'])):
+        infile_list.append('infile' + str(i_sys + 1))
+        log_str = log_str + ('infile' + str(i_sys + 1) + ' = r\'' + str(infile_path_list[i_sys]) + '\'' + '\n')
+
+    funcs.write_log(logfile, '## plot_bs() ')
     projections_file_list = []
     for i_sys in range(0,len(infile_path_list)):
-        infile_list.append('infile' + str(i_sys + 1))
         projections_file_list.append('projections_file' + str(i_sys + 1))
-    #funcs.write_log(logfile, '## The infile directories and parameters are given below:')
-    funcs.write_log(logfile, '## plot_bs() ')
-    for i_sys in range(0,len(infile_path_list)):
-        log_str = log_str + ('infile' + str(i_sys + 1) + ' = r\'' + str(infile_path_list[i_sys]) + '\'' + '\n')
-    if spd_and_site_projections_file_path_list not in [None, 'None', 'none']:
-        for i_sys in range(0,len(infile_path_list)):
-            if spd_and_site_projections_file_path_list[i_sys] not in [None, 'None', 'none']:
-                log_str = log_str + ('projections_file' + str(i_sys + 1) + ' = r\'' + str(spd_and_site_projections_file_path_list[i_sys]) + '\'' + '\n')
-                log_str = log_str + ('##projections_file' + str(i_sys + 1) + ' = ' + 'csv_file' + str(i_sys + 1) + ' #Please uncomment this line when you are running without a projections file' + '\n')
-            elif spd_and_site_projections_file_path_list[i_sys] in [None, 'None', 'none']:
-                log_str = log_str + ('projections_file' + str(i_sys + 1) + ' = ' + str(spd_and_site_projections_file_path_list[i_sys]) + '\n')
-        log_str = log_str + ('spd_and_site_projections_file_path_list = ' + ('[' + ','.join(projections_file_list) + ']') + '\n')
+    if not spd_and_site_projections_file_path_list is None:
+        if (not isinstance(spd_and_site_projections_file_path_list, list)):
+            if spd_and_site_projections_file_path_list.lower() == 'auto':
+                log_str = log_str + ('spd_and_site_projections_file_path_list = \'auto\'' + '\n')
+        else:
+            for i_sys in range(0,len(general_params_dict['infile_path_list'])):
+                if not spd_and_site_projections_file_path_list[i_sys] is None:
+                    log_str = log_str + ('projections_file' + str(i_sys + 1) + ' = r\'' + str(spd_and_site_projections_file_path_list[i_sys]) + '\'' + '\n')
+                    log_str = log_str + ('##projections_file' + str(i_sys + 1) + ' = ' + 'csv_file' + str(i_sys + 1) + ' #Please uncomment this line when you are running without a projections file' + '\n')
+                elif spd_and_site_projections_file_path_list[i_sys] in [None, 'None', 'none']:
+                    log_str = log_str + ('projections_file' + str(i_sys + 1) + ' = ' + str(spd_and_site_projections_file_path_list[i_sys]) + '\n')
+            log_str = log_str + ('spd_and_site_projections_file_path_list = ' + ('[' + ','.join(projections_file_list) + ']') + '\n')
     else:
             log_str = log_str + ('spd_and_site_projections_file_path_list = None' + '\n')
     log_str = log_str + ('band_list = ' + str(band_list) + '\n' +
@@ -2763,33 +3296,39 @@ def plot_bs(infile_path_list, xlim = None, ylim = None, fermi_shift_zero = True,
                          'system_color_list = ' + str(initial_system_color_list) + '\n' +
                          'system_lty_list = ' + str(initial_system_lty_list) + '\n'
                          )
-    log_str = log_str + (
-        'vasp_plot.plot_bs(' + '\n' +
-        '    infile_path_list = ' + ('[' + ','.join(infile_list) + ']') + ',\n' +
-        '    xlim = ' + str(xlim) + ',\n' + 
-        '    ylim = ' + str(ylim) + ',\n' + 
-        '    fermi_shift_zero = ' + str(fermi_shift_zero) + ',\n' +
-        '    band_list = ' + str(band_list) + ',\n' + 
-        '    interp_on = ' + str(interp_on) + ',\n' + 
-        '    plot_band_data_point = ' + str(plot_band_data_point) + ',\n' + 
-        '    band_gap_label = ' + str(band_gap_label) + ',\n' + 
-        '    band_palette_dict = band_palette_dict' + ',\n' + 
-        '    band_lty_dict = band_lty_dict' + ',\n' + 
-        '    system_color_list = system_color_list' + ',\n' + 
-        '    system_lty_list = system_lty_list' + ',\n' + 
-        '    spd_and_site_projections_file_path_list = spd_and_site_projections_file_path_list' + ',\n' +
-        '    projections_point_size_factor = ' + str(projections_point_size_factor) + ',\n' +
-        '    legend_on = ' + str(legend_on) + ',\n' +
-        '    plot_fermi_level = ' + str(plot_fermi_level) + ',\n' +
-        '    xtick_direction = ' + '\'' + str(xtick_direction) + '\'' + ',\n' +
-        '    ytick_direction = ' + '\'' + str(ytick_direction) + '\'' + ',\n' +
-        '    line_width = ' + str(initial_line_width) + ',\n' +
-        '    font_size = ' + str(initial_font_size) + ',\n' +
-        '    fig_format = ' + '\'' + str(fig_format) + '\'' + ',\n' +
-        '    fig_size = ' + str(fig_size) + ',\n' +
-        '    fig_dpi = ' + str(fig_dpi) + ',\n' +
-        '    write_band_data = ' + str(write_band_data) + ')\n' +
-        '################################################\n')
+
+    log_str += (
+                'bs_xaxis_tick_list = ' + str(kpoints_dict['bs_xaxis_tick_list']) + '\n' +
+                'bs_xaxis_label_list = ' + str(kpoints_dict['bs_xaxis_label_list']) + '\n'
+               )
+    ##################################
+    # Determine the args string
+    ##################################
+    func_name = 'vasp_plot.plot_bs'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+        if i_arg == 'infile_path_list':
+            arg_value_str = ('[' + ','.join(infile_list) + ']')
+        if i_arg == 'band_palette_dict':
+            arg_value_str = 'band_palette_dict'
+        if i_arg == 'band_lty_dict':
+            arg_value_str = 'band_lty_dict'
+        if i_arg == 'system_color_list':
+            arg_value_str = 'system_color_list'
+        if i_arg == 'system_lty_list':
+            arg_value_str = 'system_lty_list'
+        if i_arg == 'spd_and_site_projections_file_path_list':
+            arg_value_str = 'spd_and_site_projections_file_path_list'
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+
+    log_str = log_str + args_str
     funcs.write_log(plot_bs_dict['fig_log_file'], log_str)
     funcs.write_log(logfile, log_str)
     return plot_bs_dict

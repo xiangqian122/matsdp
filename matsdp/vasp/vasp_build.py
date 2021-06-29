@@ -36,6 +36,7 @@ def substitution(substitution_list_file, poscar_file_path):
      * substitution_list_file: String format. It specifies the directory of the .subst file (substitution list file)
      * poscar_file_path: String format. The directory of the POSCAR file which is to be subsituted. It can either be full path or relative path.
     '''
+    args_dict = locals()
        
     import os
     import sys
@@ -175,12 +176,26 @@ def substitution(substitution_list_file, poscar_file_path):
         i_line = i_line + n_subst + 2
         model_number += 1
     
-    funcs.write_log(
-        logfile,
-        'vasp_build.substitution(' + '\n' +
-        '    substitution_list_file=' + 'r\'' + str(substitution_list_file_abs_path) + '\'' + ',\n' +
-        '    poscar_file_path='  + 'r\'' + str(poscar_file_path) + '\'' + ')\n' +
-        '###############################\n')
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    func_name = 'vasp_build.substitution'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'substitution_list_file':
+            arg_value_str = 'r\'' + str(substitution_list_file_abs_path) + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return 0
 
 def rep_elmt(substitution_list_file, poscar_file_path, old_elmt, elmt_group):
@@ -193,12 +208,12 @@ def rep_elmt(substitution_list_file, poscar_file_path, old_elmt, elmt_group):
      * old_elmt: String format. It specifies the element in the *.subst which you want to substute with.
      * elmt_group: list format. It specifies the elements which you want to subsitute for.
     '''
+    args_dict = locals()
     import os
     import numpy as np
     import sys
     import time
-    from .. import funcs
-    from .. import default_params
+    from .. import funcs, default_params
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
@@ -223,14 +238,30 @@ def rep_elmt(substitution_list_file, poscar_file_path, old_elmt, elmt_group):
     funcs.replace_file_content(substitution_list_file,str1,old_elmt)
     time_end=time.time()
     funcs.write_log(logfile,'time=' + str(time_end-time_start) + '# unit in second \n')
-    funcs.write_log(
-        logfile,
-        'vasp_build.rep_elmt(' + '\n' +
-        '    substitution_list_file='  + 'r\'' + str(substitution_list_file) + '\'' + ',\n' +
-        '    poscar_file_path='  + 'r\'' + str(poscar_file_path) + '\'' + ',\n' +
-        '    old_elmt=' + '\'' + str(old_elmt) + '\'' + ',\n' +
-        '    elmt_group=' + str(elmt_group) + ')\n' +
-        '###############################\n')
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    func_name = 'vasp_build.rep_elmt'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'substitution_list_file':
+            arg_value_str = 'r\'' + str(substitution_list_file_abs_path) + '\''
+        if i_arg == 'poscar_file_path':
+            arg_value_str = 'r\'' + str(poscar_file_path) + '\''
+        if i_arg == 'old_elmt':
+            arg_value_str = '\'' + str(old_elmt) + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return 0
 
 def selection_sphere(poscar_file_path, origin_atom_name, radius = 7.0, include_mirror_atoms = True, output_file_name = 'example'):
@@ -244,6 +275,7 @@ def selection_sphere(poscar_file_path, origin_atom_name, radius = 7.0, include_m
     include_mirror_atoms: Logical value. Whether to include the mirror atoms or not;
     output_file_name: user-defined output file name.
     '''
+    args_dict = locals()
     import os
     import sys
     import numpy as np
@@ -464,13 +496,26 @@ def selection_sphere(poscar_file_path, origin_atom_name, radius = 7.0, include_m
     os.remove(xyz_temp_file1)
     funcs.mv(xyz_temp_file2, xyz_file)
     
-    funcs.write_log(logfile,
-        'vasp_build.selection_sphere(' + '\n' +
-        '    poscar_file_path=' + 'r\'' + str(poscar_file_path) + '\'' + ',\n' +
-        '    origin_atom_name=\'' + str(origin_atom_name) + '\',\n' + 
-        '    radius=' + str(radius) + ',\n' +
-        '    include_mirror_atoms=' + str(include_mirror_atoms) + ',\n' +
-        '    output_file_name=\'' + str(output_file_name) + '\')\n')
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    func_name = 'vasp_build.selection_sphere'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'poscar_file_path':
+            arg_value_str = 'r\'' + str(poscar_file_path) + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return 0 
 
 def create_multiple_vasp_jobs(substitution_list_file, poscar_file_path, elmt_potcar_dir, incar_str, kpoints_str):
@@ -478,10 +523,10 @@ def create_multiple_vasp_jobs(substitution_list_file, poscar_file_path, elmt_pot
     create POSCAR, INCAR, KPOINTS, POTCAR files, this module is based on the substitution module
     The POSCAR is created by atom substitution
     '''
+    args_dict = locals()
     import os
-    from .. import funcs
+    from .. import funcs, default_params
     from . import vasp_write
-    from .. import default_params
 
     defaults_dict = default_params.default_params()
     logfile = defaults_dict['logfile']
@@ -513,15 +558,31 @@ def create_multiple_vasp_jobs(substitution_list_file, poscar_file_path, elmt_pot
                     poscar_path = os.path.join(work_dir, 'POSCAR'),
                     elmt_potcar_dir = os.path.abspath(elmt_potcar_dir)
                     )
-    funcs.write_log(logfile,
-        'vasp_build.create_multiple_vasp_jobs(' + '\n' +
-        '    substitution_list_file = ' + 'r\'' + str(substitution_list_file) + '\'' + ',\n' +
-        '    poscar_file_path = ' + 'r\'' + str(poscar_file_path) + '\'' + ',\n' +
-        '    elmt_potcar_dir = ' + 'r\'' + str(elmt_potcar_dir) + '\'' + ',\n' +
-        '    incar_str = \'\'\'' + str(incar_str) + '\'\'\',\n' +
-        '    kpoints_str = \'\'\'' + str(kpoints_str) + '\'\'\')\n' +
-        '############################\n'
-        )
+
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    func_name = 'vasp_build.create_multiple_vasp_jobs'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'substitution_list_file':
+            arg_value_str = 'r\'' + str(substitution_list_file) + '\''
+        if i_arg == 'poscar_file_path':
+            arg_value_str = 'r\'' + str(poscar_file_path) + '\''
+        if i_arg == 'elmt_potcar_dir':
+            arg_value_str = 'r\'' + str(elmt_potcar_dir) + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return 0
 
 def orientation(poscar_file_path, mode = 'a along x, b in xy', output_poscar_file_path = None):
@@ -552,34 +613,26 @@ def orientation(poscar_file_path, mode = 'a along x, b in xy', output_poscar_fil
         'a along z, b in yz'
         'c along y, a in yz'   
     '''
+    args_dict = locals()
     import os
     import numpy as np
     import math
     from .. import funcs
-    from . import vasp_read
-    from . import vasp_write
+    from . import vasp_read, vasp_write
     from copy import copy, deepcopy
     poscar_file_path = os.path.abspath(poscar_file_path)
     fpath, fname = os.path.split(poscar_file_path)
-    if output_poscar_file_path in [None, 'None', 'none']:
+    if output_poscar_file_path is None:
         output_poscar_file_path = os.path.join(fpath, 'POSCAR_orientation')
     else:
         output_poscar_file_path = os.path.abspath(output_poscar_file_path)
     poscar_dict = vasp_read.read_poscar(poscar_file_path)
 
-    rotation_matrix_arr = rot_mat(mode = mode, l_arr = poscar_dict['l_arr'])
     rot_mat_dict = rot_mat(mode = mode, l_arr = poscar_dict['l_arr'])
-
-    poscar_dict['l_arr'][0, :] = rot_mat_dict['rot_mat'].dot(poscar_dict['l_arr'][0, :])
-    poscar_dict['l_arr'][1, :] = rot_mat_dict['rot_mat'].dot(poscar_dict['l_arr'][1, :])
-    poscar_dict['l_arr'][2, :] = rot_mat_dict['rot_mat'].dot(poscar_dict['l_arr'][2, :])
-    poscar_dict['box_len_arr'][0, :] = poscar_dict['l_arr'][0, :] / poscar_dict['uni_scale_fac']
-    poscar_dict['box_len_arr'][1, :] = poscar_dict['l_arr'][1, :] / poscar_dict['uni_scale_fac']
-    poscar_dict['box_len_arr'][2, :] = poscar_dict['l_arr'][2, :] / poscar_dict['uni_scale_fac']
-
+    poscar_dict['l_arr'] = rot_mat_dict['rot_mat'].dot(poscar_dict['l_arr'].T).T
+    poscar_dict['box_len_arr'] = poscar_dict['l_arr'] / poscar_dict['uni_scale_fac']
     l_arr_temp = deepcopy(poscar_dict['l_arr'])
     box_len_arr_temp = deepcopy(poscar_dict['box_len_arr'])
-
     # After rotation, we must correctly rearrange the a, b, and c axes. This is very important.
     poscar_dict['l_arr'][rot_mat_dict['xyz_vec_indx_1'], :] = l_arr_temp[rot_mat_dict['abc_vec_indx_1'], :]
     poscar_dict['l_arr'][rot_mat_dict['xyz_vec_indx_2'], :] = l_arr_temp[rot_mat_dict['abc_vec_indx_2'], :]
@@ -587,23 +640,41 @@ def orientation(poscar_file_path, mode = 'a along x, b in xy', output_poscar_fil
     poscar_dict['box_len_arr'][rot_mat_dict['xyz_vec_indx_1'], :] = box_len_arr_temp[rot_mat_dict['abc_vec_indx_1'], :]
     poscar_dict['box_len_arr'][rot_mat_dict['xyz_vec_indx_2'], :] = box_len_arr_temp[rot_mat_dict['abc_vec_indx_2'], :]
     poscar_dict['box_len_arr'][rot_mat_dict['xyz_vec_indx_3'], :] = box_len_arr_temp[rot_mat_dict['abc_vec_indx_3'], :]
+    basis_vector_dict = funcs.basis_vector_info(poscar_dict['l_arr'])
 
-    basis_vector_dict = funcs.basis_vector_info(poscar_dict['l_arr'][0, :], poscar_dict['l_arr'][1, :], poscar_dict['l_arr'][2, :])
-   
-    ## now the rotation is only valid for the three situations:
-    ## 'a along x, b in xy'
-    ## 'c along x, a in xy'
-    ## 'b along x, c in xy'
-    for i_atom_indx in range(0, poscar_dict['n_atoms']):
-        poscar_dict['pos_arr'][i_atom_indx,3:6] = rot_mat_dict['rot_mat'].dot(poscar_dict['pos_arr'][i_atom_indx,3:6])
-    for i_atom_indx in range(0, poscar_dict['n_atoms']):
-        poscar_dict['pos_arr'][i_atom_indx,0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][i_atom_indx,3:6])
-    vasp_write.write_poscar(output_poscar_file_path = output_poscar_file_path, poscar_dict = poscar_dict, coord_system = 'Direct')
+    coord_system = 'Direct' 
+    poscar_dict['pos_arr'][:,3:6] = rot_mat_dict['rot_mat'].dot(poscar_dict['pos_arr'][:,3:6].T).T
+    if (coord_system.startswith('C') or coord_system.startswith('c')):
+        pass
+    elif (coord_system.startswith('D') or coord_system.startswith('d')):
+        # Use the conventional cell orientation: 'a along x, b in xy'
+        # basis_vector_dict['car2fra_matrix_arr'] uses the conventional cell orientation: 'a along x, b in xy
+        rot_mat_dict = rot_mat(mode = 'a along x, b in xy', l_arr = poscar_dict['l_arr'])
+        poscar_dict['l_arr'] = rot_mat_dict['rot_mat'].dot(poscar_dict['l_arr'].T).T
+        poscar_dict['box_len_arr'] = poscar_dict['l_arr'] / poscar_dict['uni_scale_fac']
+        l_arr_temp = deepcopy(poscar_dict['l_arr'])
+        box_len_arr_temp = deepcopy(poscar_dict['box_len_arr'])
+        # After rotation, we must correctly rearrange the a, b, and c axes. This is very important.
+        poscar_dict['l_arr'][rot_mat_dict['xyz_vec_indx_1'], :] = l_arr_temp[rot_mat_dict['abc_vec_indx_1'], :]
+        poscar_dict['l_arr'][rot_mat_dict['xyz_vec_indx_2'], :] = l_arr_temp[rot_mat_dict['abc_vec_indx_2'], :]
+        poscar_dict['l_arr'][rot_mat_dict['xyz_vec_indx_3'], :] = l_arr_temp[rot_mat_dict['abc_vec_indx_3'], :]
+        poscar_dict['box_len_arr'][rot_mat_dict['xyz_vec_indx_1'], :] = box_len_arr_temp[rot_mat_dict['abc_vec_indx_1'], :]
+        poscar_dict['box_len_arr'][rot_mat_dict['xyz_vec_indx_2'], :] = box_len_arr_temp[rot_mat_dict['abc_vec_indx_2'], :]
+        poscar_dict['box_len_arr'][rot_mat_dict['xyz_vec_indx_3'], :] = box_len_arr_temp[rot_mat_dict['abc_vec_indx_3'], :]
+        basis_vector_dict = funcs.basis_vector_info(poscar_dict['l_arr'])
+    poscar_dict['pos_arr'][:,0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][:,3:6].T).T
+    #print('before=',poscar_dict['pos_arr'][:,0:3])
+    # adding 1 to np.modf(poscar_dict['pos_arr'][:,0:3])[0] will cause a problem of large number adding small number, this is only an approximate way
+    poscar_dict['pos_arr'][:,0:3] = np.modf(np.modf(poscar_dict['pos_arr'][:,0:3])[0] + 1)[0]
+    # Replace the value close to one with 0
+    poscar_dict['pos_arr'][:,0:3][np.isclose(poscar_dict['pos_arr'][:,0:3], 1, atol = 1e-16)] = 0
+    #print('after=',poscar_dict['pos_arr'][:,0:3])
+    vasp_write.write_poscar(output_poscar_file_path = output_poscar_file_path, poscar_dict = poscar_dict, coord_system = coord_system)
     return 0
 
 def rot_mat(mode, l_arr):
     '''
-    get rotation from the mode variable
+    get rotation matrix from the mode variable
     l_arr: [vec_a, vec_b, vec_c]
 
     Rotate the model, to reorientate the a, b, and c axes according to the x, y, and z axes
@@ -631,7 +702,13 @@ def rot_mat(mode, l_arr):
         'b along z, c in yz'
         'a along z, b in yz'
         'c along y, a in yz'   
+
+    Method:
+        for m along x/y/z, m in xy/yz/xz
+        first, find the vector p that is perpendicular to both m and n, then align p to the normal of xy/yz/xz.
+        second, align the m vector to x/y/z
     '''
+    args_dict = locals()
     import numpy as np
     from .. import funcs
     rot_mat_dict = {}
@@ -697,7 +774,7 @@ def rot_mat(mode, l_arr):
     elif xyz_plane in ['xz' or 'zx']:
         xyz_plane_indx = 1
         xyz_plane_vec = y_vector
-
+ 
     xyz_vec_indx_temp_list = [xyz_vec_indx_1, xyz_plane_indx]
     xyz_vec_indx_2 = list(set(xyz_vec_indx_list) - set(xyz_vec_indx_temp_list))[0]
     xyz_vec_indx_3 = xyz_plane_indx
@@ -711,10 +788,17 @@ def rot_mat(mode, l_arr):
     xyz_vec_1 = (xyz_vec_1 / np.linalg.norm(xyz_vec_1)).reshape((3, 1))
     abc_vec1_cross_vec2 = (abc_vec1_cross_vec2 / np.linalg.norm(abc_vec1_cross_vec2)).reshape((3, 1))
     xyz_plane_vec = (xyz_plane_vec / np.linalg.norm(xyz_plane_vec)).reshape((3, 1))
-    matrix_arr_1 = funcs.rotation_matrix_from_vectors(abc_vec_1, xyz_vec_1)
-    abc_vec1_cross_vec2 = matrix_arr_1.dot(abc_vec1_cross_vec2)
-    matrix_arr_2 = funcs.rotation_matrix_from_vectors(abc_vec1_cross_vec2, xyz_plane_vec)
+
+    ##matrix_arr_1 = funcs.rotation_matrix_from_vectors(abc_vec_1, xyz_vec_1)
+    ##abc_vec1_cross_vec2 = matrix_arr_1.dot(abc_vec1_cross_vec2)
+    ##matrix_arr_2 = funcs.rotation_matrix_from_vectors(abc_vec1_cross_vec2, xyz_plane_vec)
+    ##rotation_matrix_arr = matrix_arr_2.dot(matrix_arr_1)
+
+    matrix_arr_1 = funcs.rotation_matrix_from_vectors(abc_vec1_cross_vec2, xyz_plane_vec)
+    abc_vec_1 = matrix_arr_1.dot(abc_vec_1)
+    matrix_arr_2 = funcs.rotation_matrix_from_vectors(abc_vec_1, xyz_vec_1)
     rotation_matrix_arr = matrix_arr_2.dot(matrix_arr_1)
+
     rot_mat_dict['rot_mat'] = rotation_matrix_arr
     rot_mat_dict['abc_vec_indx_1'] = abc_vec_indx_1 
     rot_mat_dict['abc_vec_indx_2'] = abc_vec_indx_2
@@ -731,13 +815,12 @@ def align(poscar_file_path, align_direction = 'z', mode = 'bottom', output_posca
     mode = 'bottom' or 'center': this is only applied to atoms. Align the atoms to the bottom or center of the box in a certain direction
     mode = 'upright_box': Make the tilted box an "upright" one. Align one of the basis vector (a, b, or c) to x, y, or z direction(whether its x, y, or z is desiginated by the align_direction tag), without changing the box volume. First rotate the model, to reorientate the a, b, and c axes according to the x, y, and z axes (align one of the a, b, or c to one of the x, y or z axis, then make two of the a, b, and c axes in the same plane of two of the x, y, and z axes), then make two of the a, b, and c axes penpendicular to each other.
     '''
+    args_dict = locals()
     import os
     import numpy as np
     import math
     from .. import funcs
-    from . import vasp_read
-    from . import vasp_write
-    from . import vasp_tools
+    from . import vasp_read, vasp_write, vasp_tools
     poscar_file_path = os.path.abspath(poscar_file_path)
     fpath, fname = os.path.split(poscar_file_path)
     if output_poscar_file_path in [None, 'None', 'none']:
@@ -750,21 +833,22 @@ def align(poscar_file_path, align_direction = 'z', mode = 'bottom', output_posca
     # if vacuum exist in the model, align the atoms to the bottom of the model to avoid atoms too close to the top boundary
     # Check the existence of the vacuum layer and readjust the position of the layer with the value of "-1" in the bond_status_list to the origin.
     if mode in ['bottom', 'center']:
-        poscar_layer_dict = vasp_tools.poscar_layer_params(poscar_dict = poscar_dict, poscar_direction_dict = poscar_direction_dict, criteria = 'bonding', delta = delta, layer_dist_tolerance = 'auto', radius_style = 'csd', radius_scale_factor = radius_scale_factor, write_layer_info = write_layer_info, suppress_warning = suppress_warning)
+        poscar_layer_dict = vasp_tools.poscar_layer_params(poscar_dict = poscar_dict, poscar_direction_dict = poscar_direction_dict, criteria = 'auto', delta = delta, layer_dist_tolerance = 'auto', radius_style = 'csd', radius_scale_factor = radius_scale_factor, write_layer_info = write_layer_info, suppress_warning = suppress_warning)
         if -1 in poscar_layer_dict['bond_status_list']:
             i_layer_indx = int(np.argwhere(np.array(poscar_layer_dict['bond_status_list']) == -1)[0])
             atom_pos_list = []
             for i_atom_indx in poscar_layer_dict['atoms_indx_list'][i_layer_indx]:
                 atom_pos_list.append(poscar_dict['pos_arr'][i_atom_indx, poscar_direction_dict['pos_arr_direct_column']])
-            pos_arr_temp = poscar_dict['pos_arr']
-            for i_atom_indx in range(poscar_dict['n_atoms']):
-                pos_i = pos_arr_temp[i_atom_indx,poscar_direction_dict['pos_arr_direct_column']] - np.min(atom_pos_list)
-                base_i = math.floor(poscar_dict['pos_arr'][i_atom_indx,poscar_direction_dict['pos_arr_direct_column']] - np.min(atom_pos_list))
-                poscar_dict['pos_arr'][i_atom_indx,poscar_direction_dict['pos_arr_direct_column']] = pos_i - base_i
-            for i_atom_indx in range(poscar_dict['n_atoms']):
-                poscar_dict['pos_arr'][i_atom_indx,3] = np.dot(poscar_dict['pos_arr'][i_atom_indx,0:3], poscar_dict['l_arr'][:,[0]])
-                poscar_dict['pos_arr'][i_atom_indx,4] = np.dot(poscar_dict['pos_arr'][i_atom_indx,0:3], poscar_dict['l_arr'][:,[1]])
-                poscar_dict['pos_arr'][i_atom_indx,5] = np.dot(poscar_dict['pos_arr'][i_atom_indx,0:3], poscar_dict['l_arr'][:,[2]])
+            close_to_one_list = np.isclose(atom_pos_list, 1, atol = delta / 5)
+            if True in close_to_one_list: 
+                pos_i = np.modf(poscar_dict['pos_arr'][:,poscar_direction_dict['pos_arr_direct_column']] + 1 - np.min(np.array(atom_pos_list)[close_to_one_list]))[0]
+                poscar_dict['pos_arr'][:,poscar_direction_dict['pos_arr_direct_column']] = pos_i
+                poscar_dict['pos_arr'][:,3:6] = np.dot(poscar_dict['pos_arr'][:,0:3], poscar_dict['l_arr'])
+            else:
+                pos_i = poscar_dict['pos_arr'][:,poscar_direction_dict['pos_arr_direct_column']] - np.min(atom_pos_list)
+                base_i = np.floor(poscar_dict['pos_arr'][:,poscar_direction_dict['pos_arr_direct_column']] - np.min(atom_pos_list))
+                poscar_dict['pos_arr'][:,poscar_direction_dict['pos_arr_direct_column']] = pos_i - base_i
+                poscar_dict['pos_arr'][:,3:6] = np.dot(poscar_dict['pos_arr'][:,0:3], poscar_dict['l_arr'])
             vasp_write.write_poscar(output_poscar_file_path = output_poscar_file_path, poscar_dict = poscar_dict, coord_system = 'Direct')
 
     if mode == 'bottom':
@@ -883,9 +967,11 @@ def align(poscar_file_path, align_direction = 'z', mode = 'bottom', output_posca
     vec_a = poscar_dict['box_len_arr'][0, :] * poscar_dict['uni_scale_fac'] 
     vec_b = poscar_dict['box_len_arr'][1, :] * poscar_dict['uni_scale_fac']
     vec_c = poscar_dict['box_len_arr'][2, :] * poscar_dict['uni_scale_fac']
-    basis_vector_dict = funcs.basis_vector_info(vec_a, vec_b, vec_c)
-    for i_atom_indx in range(0, poscar_dict['n_atoms']):
-        poscar_dict['pos_arr'][i_atom_indx,0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][i_atom_indx,3:6])
+    cell_arr = np.vstack((vec_a, vec_b, vec_c))
+    basis_vector_dict = funcs.basis_vector_info(cell_arr)
+    poscar_dict['pos_arr'][:,0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][:,3:6].T).T
+    poscar_dict['pos_arr'][:,0:3] = np.modf(np.modf(poscar_dict['pos_arr'][:,0:3])[0] + 1)[0]
+    poscar_dict['pos_arr'][:,0:3][np.isclose(poscar_dict['pos_arr'][:,0:3], 1, atol = 1e-16)] = 0
     vasp_write.write_poscar(output_poscar_file_path = output_poscar_file_path, poscar_dict = poscar_dict, coord_system = 'Direct')
     return 0
 
@@ -894,23 +980,23 @@ def transform(poscar_file_path, r_matrix_arr = None, t_matrix_arr = None, apply_
     Transform by rotation and transformation operations.
     r_matrix_arr: Rotation matrix
     t_matrix_arr: translation matrix
-    apply_to: 'box' or 'atom'
+    apply_to: 'box/coordinate_system/basis' or 'atom/object' or 'all/atom_and_box'
+    If shear deformatoin is performed, please set apply_to == 'all'
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
-    from . import vasp_read
-    from . import vasp_write
-    
+    from . import vasp_read, vasp_write
     poscar_file_path = os.path.abspath(poscar_file_path)
     poscar_dict = vasp_read.read_poscar(poscar_file_path)
-
+    new_extension = '_transform.vasp'
     fpath, fname = os.path.split(poscar_file_path)
-    if output_poscar_file_path in [None, 'None', 'none']:
-        output_poscar_file_path = os.path.join(fpath, 'POSCAR_transform')
+    if output_poscar_file_path is None:
+        fpre, fext = os.path.splitext(poscar_file_path)
+        output_poscar_file_path = fpre + new_extension
     else:
         output_poscar_file_path = os.path.abspath(output_poscar_file_path)
-
     if r_matrix_arr is None:
         r_matrix_arr = np.identity(3)
     if t_matrix_arr is None:
@@ -919,24 +1005,33 @@ def transform(poscar_file_path, r_matrix_arr = None, t_matrix_arr = None, apply_
         r_matrix_arr = np.array(r_matrix_arr)
     if isinstance(t_matrix_arr, list):
         t_matrix_arr = np.array(t_matrix_arr)
-    if apply_to in ['atom']:
-        for i_atom_indx in range(0, poscar_dict['n_atoms']):
-            atom_coord_vec = poscar_dict['pos_arr'][i_atom_indx,3:6]
-            atom_coord_vec_trans = r_matrix_arr.dot(atom_coord_vec) + np.sum(t_matrix_arr, axis = 0)
-            poscar_dict['pos_arr'][i_atom_indx,3:6] = atom_coord_vec_trans[0:3]
-            poscar_dict['pos_arr'][i_atom_indx,0:3] = poscar_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][i_atom_indx,3:6])
-
-    elif apply_to in ['box']:
-        poscar_dict['box_len_arr'][0,:] = r_matrix_arr.dot(poscar_dict['box_len_arr'][0,:]) + t_matrix_arr[0,:]    
-        poscar_dict['box_len_arr'][1,:] = r_matrix_arr.dot(poscar_dict['box_len_arr'][1,:]) + t_matrix_arr[1,:]
-        poscar_dict['box_len_arr'][2,:] = r_matrix_arr.dot(poscar_dict['box_len_arr'][2,:]) + t_matrix_arr[2,:]
-        vec_a = poscar_dict['box_len_arr'][0, :] * poscar_dict['uni_scale_fac'] 
-        vec_b = poscar_dict['box_len_arr'][1, :] * poscar_dict['uni_scale_fac']
-        vec_c = poscar_dict['box_len_arr'][2, :] * poscar_dict['uni_scale_fac']
-        basis_vector_dict = funcs.basis_vector_info(vec_a, vec_b, vec_c)
-        for i_atom_indx in range(0, poscar_dict['n_atoms']):
-            poscar_dict['pos_arr'][i_atom_indx,0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][i_atom_indx,3:6])
-    vasp_write.write_poscar(output_poscar_file_path = output_poscar_file_path, poscar_dict = poscar_dict, coord_system = 'Direct')
+    if apply_to in ['atom', 'object']:
+        atom_coord_vec = poscar_dict['pos_arr'][:,3:6]
+        atom_coord_vec_trans = r_matrix_arr.dot(atom_coord_vec.T).T + np.tile(np.sum(t_matrix_arr, axis = 0), (atom_coord_vec.shape[0],1))
+        poscar_dict['pos_arr'][:,3:6] = atom_coord_vec_trans[:,0:3]
+        poscar_dict['pos_arr'][:,0:3] = poscar_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][:,3:6].T).T
+        poscar_dict['pos_arr'][:,0:3] = np.modf(np.modf(poscar_dict['pos_arr'][:,0:3])[0] + 1)[0]
+        poscar_dict['pos_arr'][:,0:3][np.isclose(poscar_dict['pos_arr'][:,0:3], 1, atol = 1e-16)] = 0
+        coord_system = 'Direct'
+    elif apply_to in ['box', 'coordinate_system', 'basis']:
+        poscar_dict['box_len_arr'] = r_matrix_arr.dot(poscar_dict['box_len_arr'].T).T + t_matrix_arr
+        cell_arr = poscar_dict['box_len_arr'] * poscar_dict['uni_scale_fac']
+        basis_vector_dict = funcs.basis_vector_info(cell_arr)
+        poscar_dict['pos_arr'][:,0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][:,3:6].T).T
+        poscar_dict['pos_arr'][:,0:3] = np.modf(np.modf(poscar_dict['pos_arr'][:,0:3])[0] + 1)[0]
+        poscar_dict['pos_arr'][:,0:3][np.isclose(poscar_dict['pos_arr'][:,0:3], 1, atol = 1e-16)] = 0
+        # Direct coordinate will use the 'a along x, b in xy' convention, so it is recommended to write in the Cartesian coordinate
+        coord_system = 'Cartesian'
+    elif apply_to in ['all', 'atom_and_box']:
+        # apply to box
+        poscar_dict['box_len_arr'] = r_matrix_arr.dot(poscar_dict['box_len_arr'].T).T + t_matrix_arr
+        # apply to atoms
+        atom_coord_vec = poscar_dict['pos_arr'][:,3:6]
+        atom_coord_vec_trans = r_matrix_arr.dot(atom_coord_vec.T).T + np.tile(np.sum(t_matrix_arr, axis = 0), (atom_coord_vec.shape[0],1))
+        poscar_dict['pos_arr'][:,3:6] = atom_coord_vec_trans[:,0:3]
+        # Direct coordinate will use the 'a along x, b in xy' convention, so it is recommended to write in the Cartesian coordinate
+        coord_system = 'Cartesian'
+    vasp_write.write_poscar(output_poscar_file_path = output_poscar_file_path, poscar_dict = poscar_dict, coord_system = coord_system)
     return 0
 
 def create_supercell(poscar_file_path, num_xyz_list = [1,1,1], output_poscar_file_path = None):
@@ -944,11 +1039,11 @@ def create_supercell(poscar_file_path, num_xyz_list = [1,1,1], output_poscar_fil
     Create supercell by expanding the cell in the direction of a, b, and c basis vectors.
     num_xyz_list = [n_x, n_y, n_z], nx>=1, ny>=1, nz>=1
     '''    
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
-    from . import vasp_read
-    from . import vasp_write
+    from . import vasp_read, vasp_write
     poscar_file_path = os.path.abspath(poscar_file_path)
     fpath, fname = os.path.split(poscar_file_path)
     if output_poscar_file_path in [None, 'None', 'none']:
@@ -980,10 +1075,9 @@ def create_supercell(poscar_file_path, num_xyz_list = [1,1,1], output_poscar_fil
     poscar_dict['box_len_arr'][1,:] = poscar_dict['box_len_arr'][1,:] * ny
     poscar_dict['box_len_arr'][2,:] = poscar_dict['box_len_arr'][2,:] * nz
     poscar_dict['elmt_num_arr'] = poscar_dict['elmt_num_arr'] * nx * ny * nz
-    vec_a = poscar_dict['box_len_arr'][0, :] * poscar_dict['uni_scale_fac'] 
-    vec_b = poscar_dict['box_len_arr'][1, :] * poscar_dict['uni_scale_fac']
-    vec_c = poscar_dict['box_len_arr'][2, :] * poscar_dict['uni_scale_fac']
-    basis_vector_dict = funcs.basis_vector_info(vec_a, vec_b, vec_c)
+    poscar_dict['l_arr'] = poscar_dict['box_len_arr'] * poscar_dict['uni_scale_fac']
+    basis_vector_dict = funcs.basis_vector_info(poscar_dict['l_arr'])
+
     #Element start index
     poscar_dict['elmt_start_indx_arr'] = np.array([0]*n_species,dtype=np.int)
     for i in range(0, n_species):
@@ -1024,8 +1118,9 @@ def create_supercell(poscar_file_path, num_xyz_list = [1,1,1], output_poscar_fil
                     temp_arr_fix = np.vstack((temp_arr_fix, new_fix_arr))
         poscar_dict['pos_arr'][row_span_new, 3:6] = temp_arr_coord
         poscar_dict['fix_arr'][row_span_new, :] = temp_arr_fix
-    for i_atom_indx in range(0, poscar_dict['n_atoms']):
-        poscar_dict['pos_arr'][i_atom_indx,0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][i_atom_indx,3:6])
+    poscar_dict['pos_arr'][:,0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][:,3:6].T).T
+    poscar_dict['pos_arr'][:,0:3] = np.modf(np.modf(poscar_dict['pos_arr'][:,0:3])[0] + 1)[0]
+    poscar_dict['pos_arr'][:,0:3][np.isclose(poscar_dict['pos_arr'][:,0:3], 1, atol = 1e-16)] = 0
     vasp_write.write_poscar(output_poscar_file_path = output_poscar_file_path, poscar_dict = poscar_dict, coord_system = 'Direct')
     return 0
 
@@ -1038,13 +1133,12 @@ def build_vacuum_layer(poscar_file_path, vacuum_layer_direction = 'z', vacuum_wi
     vacuum_layer_direction: Designate the direction to add the vacuum layer
     threshold_vacuum_width: This is the threshold distance for the vacuum layer separation, if layer separation is larger than this value, then it is denoted as vacuum layer. Otherwise, it is not a vacuum layer. Default value of threshold_vacuum_width is (1.15 * 2 * (CSD_covalent_radius of Fr)) = 1.15 * 2 * 2.60 = 5.98 Angstrom
     '''
+    args_dict = locals()
     import os
     import math
     import numpy as np
     from .. import funcs
-    from . import vasp_read
-    from . import vasp_write
-    from . import vasp_tools
+    from . import vasp_read, vasp_write, vasp_tools
 
     poscar_file_path = os.path.abspath(poscar_file_path)
     fpath, fname = os.path.split(poscar_file_path)
@@ -1064,30 +1158,38 @@ def build_vacuum_layer(poscar_file_path, vacuum_layer_direction = 'z', vacuum_wi
     # initialization
     ##############################################################
     poscar_direction_dict = vasp_tools.poscar_direction_params(poscar_dict = poscar_dict, direction = vacuum_layer_direction)
-    if vacuum_layer_direction in ['x', 'X']:
-        nx = math.ceil((vacuum_width + poscar_direction_dict['box_len_ortho']) / poscar_direction_dict['box_len_ortho'])
-        ny = 1
-        nz = 1
-    if vacuum_layer_direction in ['y', 'Y']:
-        nx = 1
-        ny = math.ceil((vacuum_width + poscar_direction_dict['box_len_ortho']) / poscar_direction_dict['box_len_ortho'])
-        nz = 1
-    if vacuum_layer_direction in ['z', 'Z']:
-        nx = 1
-        ny = 1
-        nz = math.ceil((vacuum_width + poscar_direction_dict['box_len_ortho']) / poscar_direction_dict['box_len_ortho'])
+    ##if vacuum_layer_direction in ['x', 'X']:
+    ##    nx = math.ceil((vacuum_width + poscar_direction_dict['box_len_ortho']) / poscar_direction_dict['box_len_ortho'])
+    ##    ny = 1
+    ##    nz = 1
+    ##if vacuum_layer_direction in ['y', 'Y']:
+    ##    nx = 1
+    ##    ny = math.ceil((vacuum_width + poscar_direction_dict['box_len_ortho']) / poscar_direction_dict['box_len_ortho'])
+    ##    nz = 1
+    ##if vacuum_layer_direction in ['z', 'Z']:
+    ##    nx = 1
+    ##    ny = 1
+    ##    nz = math.ceil((vacuum_width + poscar_direction_dict['box_len_ortho']) / poscar_direction_dict['box_len_ortho'])
+
     ##############################################################
     # Displace the atoms to the bottom of the axis
     ##############################################################
+    ##exit()
     align(poscar_file_path = poscar_file_path, align_direction = vacuum_layer_direction, mode = 'bottom', output_poscar_file_path = output_poscar_file_path, delta = delta, radius_scale_factor = radius_scale_factor, write_layer_info = False, suppress_warning = suppress_warning)
+    #print('----build vacuum: align_bottom----');exit()
     ##############################################################
     # Build vacuum layer
     ##############################################################
     poscar_dict = vasp_read.read_poscar(output_poscar_file_path)
+
     crystal_len = np.max(poscar_dict['pos_arr'][:, poscar_direction_dict['pos_arr_column']]) - np.min(poscar_dict['pos_arr'][:,poscar_direction_dict['pos_arr_column']])
     layer_separation = poscar_direction_dict['box_len_ortho'] - crystal_len
     #Determine the added delta_l_arr
     ##poscar_dict = vasp_read.read_poscar(output_poscar_file_path)
+
+    ##layer_separation = poscar_direction_dict['box_len_ortho'] - poscar_layer_dict['crystal_width']
+    ##delta_len = poscar_layer_dict['vacuum_width'] - layer_separation
+
     delta_len = vacuum_width - layer_separation
     ##if vacuum_layer_exist == False:
     ##    delta_len = vacuum_width - layer_separation
@@ -1097,6 +1199,11 @@ def build_vacuum_layer(poscar_file_path, vacuum_layer_direction = 'z', vacuum_wi
     ##    elif layer_separation > vacuum_width:
     ##        delta_len = vacuum_width - layer_separation
     delta_l_arr = delta_len / poscar_direction_dict['cos_angle'] * poscar_direction_dict['unit_vector']
+    ##print('crystal_len=',crystal_len)
+    ##print('box_len_ortho=',poscar_direction_dict['box_len_ortho'])
+    ##print('layer_separation=',layer_separation)
+    ##print('delta_len=',delta_len)
+    ##print('delta_l_arr=', delta_l_arr)
     if vacuum_layer_direction in ['x', 'X']:
         t_matrix_arr = np.array([delta_l_arr,[0,0,0],[0,0,0]])
     elif vacuum_layer_direction in ['y', 'Y']:
@@ -1109,10 +1216,13 @@ def build_vacuum_layer(poscar_file_path, vacuum_layer_direction = 'z', vacuum_wi
         output_poscar_file_path = output_poscar_file_path) 
     return 0
 
-def exfoliation(poscar_file_path, num_layers = 1, vacuum_width = 20, exfoliation_direction = 'z', delta = 0.05, layer_dist_tolerance = 'auto', criteria = 'auto', radius_style = 'csd', radius_scale_factor = 1.15, align_center = False, align_upright = True, output_poscar_file_path = None, write_layer_info = False, suppress_warning = True):
+def exfoliation(poscar_file_path, num_periods = 1, layer_lim = None, vacuum_width = 20, exfoliation_direction = 'z', delta = 0.05, layer_dist_tolerance = 'auto', criteria = 'auto', radius_style = 'csd', radius_scale_factor = 1.15, align_center = True, align_upright = True, output_poscar_file_path = None, write_layer_info = False, overwrite = True, suppress_warning = True):
     '''
     Exfoliate 2d material
-    num_layers: the number of layers left after exfoliation.
+    NOTE: The inpout POSCAR file should not be started with 'exfoliation_'
+    num_periods: the number of periods(collective layers grouped by periodicity) left after exfoliation.
+    num_layers: the number of layers left after exfoloiation
+    layer_lim: a 2-d list (layer_lim = [m, n]) specific the selected layer from m-th layer to n-th layer, m,n start form 1
     - layer_dist_tolerance: If layer_dist_tolerance = 'auto', then the program determines this value automatically. This is the spacial resolution for the layer distance, for example z=0.24 and z=0.27 are considered to be in the same layer if layer_dist_tolerance = 0.03. If the distance between two atoms in certain direction exceeds this value, then they belongto different layers, otherwise they are in the same layer. A reference value of layer_dist_tolerance is set to 115% of the He-He CSD covalent radius plus an arbitrary small distance (e.g. 0.02 Angstrom): (1.15 * 2 * (CSD_covalent_radius of He)) + arbitrary_delta = 1.15 * 2 * 0.28 + 0.02 = 0.664 Angstrom
     align_center: Align the atoms to the center of the model along the exfoliation direction
     align_upright: Align the exfoliation direction axis as an upright one (i.e. not a tilted one)
@@ -1121,24 +1231,55 @@ def exfoliation(poscar_file_path, num_layers = 1, vacuum_width = 20, exfoliation
             poscar_dict['fix_arr'][i_atom,2] + ' ' + '\n')
             IndexError: index 60 is out of bounds for axis 0 with size 60
     '''
+    args_dict = locals()
     import os
     import numpy as np
     import math
     from .. import funcs
-    from . import vasp_read
-    from . import vasp_write
-    from . import vasp_tools
+    from . import vasp_read, vasp_write, vasp_tools
     from collections import Counter
+    from copy import copy, deepcopy
+    import itertools
+    from .. import default_params
+
+    defaults_dict = default_params.default_params()
+    logfile = defaults_dict['logfile']
 
     poscar_file_path = os.path.abspath(poscar_file_path)
     # Check file type: check if the file is POSCAR format
     pass
     fpath, fname = os.path.split(poscar_file_path)
-    if output_poscar_file_path in [None, 'None', 'none']:
-        output_poscar_file_path = os.path.join(fpath, 'POSCAR_exfoliation')
+    if not output_poscar_file_path is None:
+        fpath_o, fname_o = os.path.split(output_poscar_file_path)
+        if fname == fname_o:
+            return 0
+
+    #if fname.startswith('exfoliation_'):
+    new_extension = '_exfoliation.vasp'
+    if fname.endswith(new_extension):
+        return 0
+
+    if output_poscar_file_path is None:
+        #output_poscar_file_path = os.path.join(fpath, 'POSCAR_exfoliation.vasp')
+        fpre, fext = os.path.splitext(poscar_file_path)
+        output_poscar_file_path = fpre + new_extension
     else:
         output_poscar_file_path = os.path.abspath(output_poscar_file_path)
-    poscar_dict = vasp_read.read_poscar(poscar_file_path)
+    
+    # Whether to overwirte previous output
+    if overwrite == True:
+        if os.path.isfile(output_poscar_file_path):
+            os.remove(output_poscar_file_path)
+    else:
+        if os.path.isfile(output_poscar_file_path):
+            return 0 
+
+    # reorient the model
+    #mode: ['a along x, b in xy', 'b along x, c in xy', 'c along x, a in xy']:
+    orientation(poscar_file_path = poscar_file_path, mode = 'a along x, b in xy', output_poscar_file_path = output_poscar_file_path)
+    poscar_dict = vasp_read.read_poscar(output_poscar_file_path)
+
+    #poscar_dict = vasp_read.read_poscar(poscar_file_path)
 
     #######################################
     # Initialize
@@ -1151,20 +1292,26 @@ def exfoliation(poscar_file_path, num_layers = 1, vacuum_width = 20, exfoliation
         nx = math.ceil((vacuum_width + poscar_direction_dict['box_len_ortho']) / poscar_direction_dict['box_len_ortho'])
         ny = 1
         nz = 1
-        if num_layers >= nx:
-            nx = num_layers + 1
+        if num_periods >= nx:
+            nx = num_periods + 1
+        if nx > 100:
+            nx = 1
     if exfoliation_direction in ['y', 'Y']:
         nx = 1
         ny = math.ceil((vacuum_width + poscar_direction_dict['box_len_ortho']) / poscar_direction_dict['box_len_ortho'])
         nz = 1
-        if num_layers >= ny:
-            ny = num_layers + 1
+        if num_periods >= ny:
+            ny = num_periods + 1
+        if ny > 100:
+            ny = 1
     if exfoliation_direction in ['z', 'Z']:
         nx = 1
         ny = 1
         nz = math.ceil((vacuum_width + poscar_direction_dict['box_len_ortho']) / poscar_direction_dict['box_len_ortho'])
-        if num_layers >= nz:
-            nz = num_layers + 1
+        if num_periods >= nz:
+            nz = num_periods + 1
+        if nz > 100:
+            nz = 1
 
     #######################################
     # Reduce to primitive cell
@@ -1174,6 +1321,14 @@ def exfoliation(poscar_file_path, num_layers = 1, vacuum_width = 20, exfoliation
     # Reorientate the model
     ############################################################
     orientation(poscar_file_path = poscar_file_path, mode = 'a along x, b in xy', output_poscar_file_path = output_poscar_file_path)
+    poscar_dict_reorientation = vasp_read.read_poscar(output_poscar_file_path)
+    poscar_dict_old = deepcopy(poscar_dict_reorientation) 
+    vec_a_old = poscar_dict['box_len_arr'][0, :] * poscar_dict['uni_scale_fac'] 
+    vec_b_old = poscar_dict['box_len_arr'][1, :] * poscar_dict['uni_scale_fac']
+    vec_c_old = poscar_dict['box_len_arr'][2, :] * poscar_dict['uni_scale_fac']
+    cell_arr_old = np.vstack((vec_a_old, vec_b_old, vec_c_old))
+    basis_vector_dict_old = funcs.basis_vector_info(cell_arr_old)
+    #print('---orientation----');exit()
     ############################################################
     # Expand model in a certain direction by creating supercell
     ############################################################
@@ -1181,6 +1336,7 @@ def exfoliation(poscar_file_path, num_layers = 1, vacuum_width = 20, exfoliation
         num_xyz_list = [nx, ny, nz],
         output_poscar_file_path = output_poscar_file_path,
         ) 
+    #print('----supercell--------');exit()
     ##############################################################
     # Get layer parameters from POSCAR
     ##############################################################
@@ -1202,13 +1358,22 @@ def exfoliation(poscar_file_path, num_layers = 1, vacuum_width = 20, exfoliation
         atom_indx_list = []
         for i_elmt in poscar_dict['elmt_species_arr']:
             i_num_elmt = 0
-            stacked_layer_number = 0
+            #stacked_period_number = 0
+            if not layer_lim is None:
+                if layer_lim[1] > poscar_layer_dict['num_layers']:
+                    min_layer_indx = layer_lim[0] - 1
+                    max_layer_indx = poscar_layer_dict['num_layers'] - 1
+                else:
+                    min_layer_indx = layer_lim[0] - 1
+                    max_layer_indx = layer_lim[1] - 1
+                num_periods = 999
+            else:
+                min_layer_indx = 0
+                max_layer_indx = poscar_layer_dict['num_layers'] - 1
             for i_layer_indx in range(0, poscar_layer_dict['num_layers']):
-               if poscar_layer_dict['bond_status_list'][i_layer_indx] == -1:
-                   stacked_layer_number = stacked_layer_number + 1
-               if stacked_layer_number <= num_layers and stacked_layer_number != 0:
+               if (poscar_layer_dict['cell_by_bond_list'][i_layer_indx] <= num_periods and poscar_layer_dict['cell_by_bond_list'][i_layer_indx] != 0) and ((i_layer_indx >= min_layer_indx) and (i_layer_indx <= max_layer_indx)):
                    for i_atom_indx in poscar_layer_dict['atoms_indx_list'][i_layer_indx]:
-                       if i_elmt == poscar_dict['atom_species_arr'][i_atom_indx]:
+                       if (i_elmt == poscar_dict['atom_species_arr'][i_atom_indx]):
                            atom_indx_list.append(i_atom_indx)
                            i_num_elmt = i_num_elmt + 1
             if i_num_elmt != 0:
@@ -1220,14 +1385,15 @@ def exfoliation(poscar_file_path, num_layers = 1, vacuum_width = 20, exfoliation
         poscar_dict['n_atoms'] = len(atom_indx_list) 
         poscar_dict['pos_arr'] = np.array([0.0] * poscar_dict['n_atoms'] * 6,dtype = np.float)
         poscar_dict['pos_arr'].shape = poscar_dict['n_atoms'], 6
-        new_atom_indx = 0
-        for i_atom_indx in atom_indx_list:
-            poscar_dict['pos_arr'][new_atom_indx, 3:6] = pos_arr_old[i_atom_indx, 3:6]
-            new_atom_indx = new_atom_indx + 1
+        ##new_atom_indx = 0
+        ##for i_atom_indx in atom_indx_list:
+        ##    poscar_dict['pos_arr'][new_atom_indx, 3:6] = pos_arr_old[i_atom_indx, 3:6]
+        ##    new_atom_indx = new_atom_indx + 1
     elif poscar_layer_dict['criteria'] == 'bonding' and 0 in poscar_layer_dict['bond_status_list']:
         #There are one or more layers which do not form bonds with the adjacent layers. Besides the bonding criterion, periodicity criterion usually will not handle this situation perfectly.
         if suppress_warning == False:
-            print('WARNING #2103221330 (from exfoliation): Cannot exfoliate layers according to the bonding state. There are one or more atomic layers which do not form bond with both sides of the adjacent layers. The bond_status_list is: ' + str(poscar_layer_dict['bond_status_list']) + '. Please check the model manually or enlarge the threshold value for atom bonding by setting a larger multiplying factor for the atomic radius: ' + poscar_file_path)
+            print('WARNING #2103221330 (from exfoliation): Cannot exfoliate layers according to the bonding state. There are one or more atomic layers which do not form bond with both sides of the adjacent layers. The bond_status_list is: ' + str(poscar_layer_dict['bond_status_list']) + '. Please check the model manually or enlarge the threshold value for atom bonding by setting a larger multiplying factor for the atomic radius. Current, the \'periodicity\' criterion will be used to exfoliate the layers : ' + poscar_file_path)
+        poscar_layer_dict['criteria'] = 'periodicity'
     elif poscar_layer_dict['criteria'] == 'bonding' and 2 in poscar_layer_dict['bond_status_list'] and len(set(poscar_layer_dict['bond_status_list'])) == 1:
         if suppress_warning == False:
             print('WARNING #2012301623 (from exfoliation): Cannot exfoliate layers according to the bonding state. All the layers form bonds with their adjacent layers. The \'periodicity\' criterion will be used to exfoliate the layers: ' + poscar_file_path)
@@ -1241,34 +1407,45 @@ def exfoliation(poscar_file_path, num_layers = 1, vacuum_width = 20, exfoliation
         num_elmt_list = []
         elmt_species_list = []
         atom_indx_list = []
-        # Each layer is labeled by a number , so find out the elements with the value of 0 or 1 in the periodicity status list
-        layer_indices_0_list = [i for i, x in enumerate(poscar_layer_dict['periodicity_status_list']) if x == 0]
-        layer_indices_1_list = [i for i, x in enumerate(poscar_layer_dict['periodicity_status_list']) if x == 1]
-        #####How to initialize periodicity_indx????????????????????????????????????????
-        # characteristic_periodicity_indx denotes the characteristic index for identifying the new layers. When checking the layer index from layer to layer, if the characteristic_periodicithy_indx is meet, a new periodicity is identified. Due to the periodic boundary condition, in some model, the first layer (layer index =0) may be the layer in the other end of the model, thus in searching for the new layers, better treat the starting layer as the second layher (layer index = 1).
+        
         characteristic_periodicity_indx = 0
-        if len(layer_indices_0_list) == 1:
-            # this situation corresponds to a model with only one layer
-            characteristic_periodicity_indx = 0
-        if len(layer_indices_0_list) > 1 and len(layer_indices_1_list) > 1:
-            delta_indices_0 = layer_indices_0_list[1] - layer_indices_0_list[0]
-            delta_indices_1 = layer_indices_1_list[1] - layer_indices_1_list[0]
-            if delta_indices_0 > delta_indices_1:
-                characteristic_periodicity_indx = 1
-            else:
-                characteristic_periodicity_indx = 0
-            
         for i_elmt in poscar_dict['elmt_species_arr']:
+            #admit_new_period = True
+            #stacked_period_number = 0
             i_num_elmt = 0
-            stacked_layer_number = 0
+            # specify range of layers
+            if not layer_lim is None:
+                if layer_lim[1] > poscar_layer_dict['num_layers']:
+                    min_layer_indx = layer_lim[0] - 1
+                    max_layer_indx = poscar_layer_dict['num_layers'] - 1
+                else:
+                    min_layer_indx = layer_lim[0] - 1
+                    max_layer_indx = layer_lim[1] - 1
+                num_periods = 999
+            else:
+                min_layer_indx = 0
+                max_layer_indx = poscar_layer_dict['num_layers'] - 1
+
+            # Screen according to the periodicity and layer indices
+            # For the ABCABCABC lattice, use the VACUUM + ABCA + VACUUM configuration instead of VACUUM + ABC + VACUUM configuration. This vacuum_abca_vacuum condition is suited for the 2-dimensional configuration. the a_layer_indx denotes the layer index of the last 'A' layer in the ABCA configuration.
+            cell_by_periodicity_arr = np.array(poscar_layer_dict['cell_by_periodicity_list'])
+            periodicity_status_arr = np.array(poscar_layer_dict['periodicity_status_list'])
+            next_cell_layer_indx_list = np.argwhere(cell_by_periodicity_arr == num_periods + 1)
+            periodicity_layer_characteristic_indx_list = np.argwhere(periodicity_status_arr == characteristic_periodicity_indx)
+            temp_arr = next_cell_layer_indx_list[np.in1d(next_cell_layer_indx_list, periodicity_layer_characteristic_indx_list)]
+            if len(temp_arr) != 0:
+                a_layer_indx = temp_arr[0]
+            else:
+                a_layer_indx = None
+
             for i_layer_indx in range(0, poscar_layer_dict['num_layers']):
-               if poscar_layer_dict['periodicity_status_list'][i_layer_indx] == characteristic_periodicity_indx:
-                   stacked_layer_number = stacked_layer_number + 1
-               if stacked_layer_number <= num_layers and stacked_layer_number != 0:
+               vacuum_abca_vacuum_condition = (i_layer_indx == a_layer_indx)
+               if ((poscar_layer_dict['cell_by_periodicity_list'][i_layer_indx] <= num_periods and poscar_layer_dict['cell_by_periodicity_list'][i_layer_indx] != 0) and ((i_layer_indx >= min_layer_indx) and (i_layer_indx <= max_layer_indx))) or vacuum_abca_vacuum_condition:
                    for i_atom_indx in poscar_layer_dict['atoms_indx_list'][i_layer_indx]:
-                       if i_elmt == poscar_dict['atom_species_arr'][i_atom_indx]:
+                       if (i_elmt == poscar_dict['atom_species_arr'][i_atom_indx]):
                            atom_indx_list.append(i_atom_indx)
                            i_num_elmt = i_num_elmt + 1
+
             if i_num_elmt != 0:
                 num_elmt_list.append(i_num_elmt)
                 elmt_species_list.append(i_elmt)
@@ -1277,27 +1454,62 @@ def exfoliation(poscar_file_path, num_layers = 1, vacuum_width = 20, exfoliation
         ##print('len_atom_indx_list=',len(atom_indx_list))
         poscar_dict['elmt_num_arr'] = np.array(num_elmt_list) 
         poscar_dict['elmt_species_arr'] = np.array(elmt_species_list) 
-        pos_arr_old = np.copy(poscar_dict['pos_arr'])
+        #pos_arr_old = np.copy(poscar_dict['pos_arr'])
+        pos_arr_old = deepcopy(poscar_dict['pos_arr'])
         poscar_dict['n_atoms'] = len(atom_indx_list) 
         poscar_dict['pos_arr'] = np.array([0.0] * poscar_dict['n_atoms'] * 6,dtype = np.float)
-        poscar_dict['pos_arr'].shape = poscar_dict['n_atoms'], 6
-        new_atom_indx = 0
-        for i_atom_indx in atom_indx_list:
-            poscar_dict['pos_arr'][new_atom_indx, 3:6] = pos_arr_old[i_atom_indx, 3:6]
-            new_atom_indx = new_atom_indx + 1
-    vec_a = poscar_dict['box_len_arr'][0, :] * poscar_dict['uni_scale_fac'] 
-    vec_b = poscar_dict['box_len_arr'][1, :] * poscar_dict['uni_scale_fac']
-    vec_c = poscar_dict['box_len_arr'][2, :] * poscar_dict['uni_scale_fac']
-    basis_vector_dict = funcs.basis_vector_info(vec_a, vec_b, vec_c)
-    for i_atom_indx in range(0, poscar_dict['n_atoms']):
-        poscar_dict['pos_arr'][i_atom_indx,0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][i_atom_indx,3:6])
-    ##print(output_poscar_file_path)
-    #print(poscar_dict)
+        poscar_dict['pos_arr'].shape = (poscar_dict['n_atoms'], 6)
+    ###################################################################################
+    # find the coordinates of the selected atoms according to the selected atom index
+    ###################################################################################
+    new_atom_indx = 0
+    basis_vector_dict = funcs.basis_vector_info(poscar_dict['l_arr'])
+    for i_atom_indx in atom_indx_list:
+        poscar_dict['pos_arr'][new_atom_indx, 3:6] = pos_arr_old[i_atom_indx, 3:6]
+        # the direct coordinate of the atom relative to the original cell(no supercell built)
+        poscar_dict['pos_arr'][new_atom_indx, 0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][new_atom_indx,3:6])
+        poscar_dict['pos_arr'][new_atom_indx,0:3] = np.modf(np.modf(poscar_dict['pos_arr'][new_atom_indx,0:3])[0] + 1)[0]
+        poscar_dict['pos_arr'][new_atom_indx,0:3][np.isclose(poscar_dict['pos_arr'][new_atom_indx,0:3], 1, atol = 1e-16)] = 0
+        #poscar_dict['pos_arr'][new_atom_indx, 0:3] = basis_vector_dict_old['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][new_atom_indx,3:6])
+        new_atom_indx = new_atom_indx + 1
+    ##vasp_write.write_poscar(output_poscar_file_path = output_poscar_file_path, poscar_dict = poscar_dict, coord_system = 'Direct')
+    #print('--periodicity-----');exit()
+
+    #######################################################################################
+    # Solve the problem of the topmost and the bottom atoms that are in the same layers
+    #######################################################################################
+    base_list = set(math.floor(poscar_dict['pos_arr'][i_atom_indx, poscar_direction_dict['l_arr_row']]) for i_atom_indx in range(0, poscar_dict['n_atoms']))
+    max_bound = None
+    for i_z in range(min(base_list), nz):
+        if (i_z + 1) not in base_list:
+            max_bound = i_z
+            break
+    if not max_bound is None:
+        for i_atom_indx in range(0, poscar_dict['n_atoms']):
+            #poscar_dict['pos_arr'][i_atom_indx,0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(poscar_dict['pos_arr'][i_atom_indx,3:6])
+            if math.floor(poscar_dict['pos_arr'][i_atom_indx, poscar_direction_dict['l_arr_row']]) > max_bound:
+                poscar_dict['pos_arr'][i_atom_indx,poscar_direction_dict['l_arr_row']] += (-math.floor(poscar_dict['pos_arr'][i_atom_indx,poscar_direction_dict['l_arr_row']]) + max_bound) 
+                ##print(poscar_dict['pos_arr'][i_atom_indx,poscar_direction_dict['l_arr_row']])
+    ##vasp_write.write_poscar(output_poscar_file_path = output_poscar_file_path, poscar_dict = poscar_dict, coord_system = 'Direct')
+    ##print('--max bound-----');exit()
+
+    ############################################################ 
+    # Convert the atom coordinate to cartesian coordinate 
+    ############################################################ 
+    pass
+    ############################################################ 
+    # Use the direct coordinate to write the final configuration
+    ############################################################ 
+    poscar_dict['pos_arr'][:,0:3] = np.modf(np.modf(poscar_dict['pos_arr'][:,0:3])[0] + 1)[0]
+    poscar_dict['pos_arr'][:,0:3][np.isclose(poscar_dict['pos_arr'][:,0:3], 1, atol = 1e-16)] = 0
+    
     vasp_write.write_poscar(output_poscar_file_path = output_poscar_file_path, poscar_dict = poscar_dict, coord_system = 'Direct')
+    #print('--periodicity-----');exit()
     #######################################
     # Adjust the vacuum layer width
     #######################################
     build_vacuum_layer(poscar_file_path = output_poscar_file_path, vacuum_layer_direction = exfoliation_direction, vacuum_width = vacuum_width, threshold_vacuum_width = 5.98, output_poscar_file_path = output_poscar_file_path, delta = delta, radius_scale_factor = radius_scale_factor, write_layer_info = write_layer_info, suppress_warning = suppress_warning)
+    #print('--build vacuum-----');exit()
     ##############################################################################
     # Align the atoms to the center of the model along the exfoliation direction
     ##############################################################################
@@ -1322,6 +1534,26 @@ def exfoliation(poscar_file_path, num_layers = 1, vacuum_width = 20, exfoliation
     # To be considered
     ##print('natoms=',poscar_dict['n_atoms'])
     #print('#########################################################################')
+    log_str = ''
+    ##################################
+    # Determine the args string
+    ##################################
+    func_name = 'vasp_build.exfoliation'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+        if i_arg == 'poscar_file_path':
+            arg_value_str = 'r\'' + poscar_file_path + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return 0
 
 def conventional_cell(poscar_file_path, delta = 0.05, radius_scale_factor = 1.15, align_center = False, align_upright = True, vacuum_width = None, output_poscar_file_path = None, write_layer_info = False, suppress_warning = True):
@@ -1331,13 +1563,12 @@ def conventional_cell(poscar_file_path, delta = 0.05, radius_scale_factor = 1.15
     Reference:
     [Wahyu Setyawan and Stefano Curtarolo, Computational Materials Science, 2010, 49, 299-312]
     '''
+    args_dict = locals()
     import os
     import numpy as np
     import math
     from .. import funcs
-    from . import vasp_read
-    from . import vasp_write
-    from . import vasp_tools
+    from . import vasp_read, vasp_write, vasp_tools
 
     conv_cell_dict = {}
     conv_cell_dict['file_path'] = None
@@ -1351,9 +1582,11 @@ def conventional_cell(poscar_file_path, delta = 0.05, radius_scale_factor = 1.15
     conv_cell_dict['file_path'] = poscar_file_path
     # Check file type: check if the file is POSCAR format
     pass
+    new_extension = '_conventional.vasp'
     fpath, fname = os.path.split(poscar_file_path)
-    if output_poscar_file_path in [None, 'None', 'none']:
-        output_poscar_file_path = os.path.join(fpath, 'POSCAR_conventional')
+    if output_poscar_file_path is None:
+        fpre, fext = os.path.splitext(poscar_file_path)
+        output_poscar_file_path = fpre + new_extension
     else:
         output_poscar_file_path = os.path.abspath(output_poscar_file_path)
  
@@ -1409,3 +1642,22 @@ def conventional_cell(poscar_file_path, delta = 0.05, radius_scale_factor = 1.15
     if align_upright == True:
         align(poscar_file_path = output_poscar_file_path, align_direction = 'z', mode = 'upright_box', output_poscar_file_path = output_poscar_file_path, delta = delta, radius_scale_factor = radius_scale_factor, write_layer_info = False, suppress_warning = suppress_warning)
     return conv_cell_dict 
+
+def car2frac(poscar_file_path, output_poscar_file_path = None, suppress_warning = True):
+    '''
+    convert Cartesian coordinate to Fractional coordinate
+    '''
+    args_dict = locals()
+    import os
+    from .. import funcs
+    from . import vasp_read, vasp_write, vasp_tools
+    poscar_file_path = os.path.abspath(poscar_file_path)
+    new_extension = '_car2frac.vasp'
+    fpath, fname = os.path.split(poscar_file_path)
+    if output_poscar_file_path is None:
+        fpre, fext = os.path.splitext(poscar_file_path)
+        output_poscar_file_path = fpre + new_extension
+    else:
+        output_poscar_file_path = os.path.abspath(output_poscar_file_path)
+    orientation(poscar_file_path = poscar_file_path, mode = 'a along x, b in xy', output_poscar_file_path = output_poscar_file_path)
+    return 0

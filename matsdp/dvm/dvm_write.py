@@ -6,6 +6,7 @@ def write_input(pos_file_path, dvm_input_dict = None):
     pos_file_path: the file path for the file which contains the atom coordinates, now the POSCAR file is supported.
     dvm_input_dict: the dictionary which contains the input parameters of the *.input file. If dvm_input_dict = None, then the default value of the parameters in the *.input file will be used
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -136,6 +137,7 @@ def write_ind(pos_file_path, elmt_ind_file_dir):
     pos_file_path: the file path for the file which contains the atom coordinates, now the POSCAR file is supported.
     elmt_ind_file_dir: the directory which contains the element IND.DAT files. The element IND.DAT files if the file with IND.DAT information of each element
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from ..vasp import vasp_read
@@ -188,6 +190,7 @@ def write_ie(dvm_otput_file_path):
     This module has been tested for the source_23oct05 version of the DVM program
     dvm_otput_file_path: the *.otput file of the DVM output
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -365,6 +368,7 @@ def write_tex_ie_nn(ie_nn_file_path):
     the spin restricted and spin polarized situations are considered
     ie_nn_file_path: the path for the IE result, it can either be *_ie_ev_nn.txt or *_ie_eu_nn.txt
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from . import dvm_default

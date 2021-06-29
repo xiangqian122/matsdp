@@ -4,6 +4,7 @@ def ie_nn(dvm_otput_file_path, a0 = 3.545):
     This module has been tested for the source_23oct05 version of the DVM program
     dvm_otput_file_path: the *.otput file of the DVM output
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -171,6 +172,7 @@ def job_status(job_parent_dir):
     Check the job status for multiple jobs
     job_parent_dir: This is the parent directory which contains the multiple DVM jobs.
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import default_params

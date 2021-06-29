@@ -7,6 +7,7 @@ def create_multiple_dvm_jobs(poscar_file_path_dict, origin_atom_name_list_dict, 
     radius: the radius of the sphere in the atom selection (spherical) of the POSCAR
     include_mirror_atoms: whether to include the mirror atoms
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from ..vasp import vasp_build

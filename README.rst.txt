@@ -25,6 +25,10 @@ Functions
  * VASP tools: Check VASP errors/warnings and give solutions; Check the job status of multiple jobs; Check lattice parameters of multiple VASP jobs; Conversion of coordinate systems (Fractional/Cartesian);
  * Job management: Processing of multiple VASP jobs automatically; Write task summary/report of multiple VASP jobs.
 
+- Wannier tools
+
+ * Retrieving data from Wannier results and data visualization. 
+
 - Three-dimensional atom probe tomography (APT) postprocessing tools
 
  * Read the concentration profile .csv file
@@ -55,10 +59,10 @@ pip install matsdp
 Release note
 ------------
 
-- version 0.2.3
+- version 0.2.4
 
- * Date: 20210420
-
+ * Date: 20210629
+ 
 ======
 Usage
 ======

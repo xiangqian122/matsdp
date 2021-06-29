@@ -17,6 +17,7 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
         slet_dyn_on': Logic type. Selective dynamics on or off? True or False
         num_header': Number of header lines. i.e. the number of lines before atomic positions
     '''
+    args_dict = locals()
     import os
     import numpy as np
     import sys
@@ -58,21 +59,41 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
             poscar_dict['vec_a'] = vec_a
             poscar_dict['vec_b'] = vec_b
             poscar_dict['vec_c'] = vec_c
-            basis_vector_dict = funcs.basis_vector_info(vec_a, vec_b, vec_c)
+            #basis_vector_dict = funcs.basis_vector_info(vec_a, vec_b, vec_c)
+            cell_arr = np.vstack((poscar_dict['vec_a'], poscar_dict['vec_b'], poscar_dict['vec_c']))
+            basis_vector_dict = funcs.basis_vector_info(cell_arr)
             poscar_dict['len_vec_a'] = basis_vector_dict['len_vec_a']
             poscar_dict['len_vec_b'] = basis_vector_dict['len_vec_b']
             poscar_dict['len_vec_c'] = basis_vector_dict['len_vec_c']
+            poscar_dict['a_times_b'] = np.cross(poscar_dict['vec_a'], poscar_dict['vec_b'])
+            poscar_dict['b_times_c'] = np.cross(poscar_dict['vec_b'], poscar_dict['vec_c'])
+            poscar_dict['c_times_a'] = np.cross(poscar_dict['vec_c'], poscar_dict['vec_a'])
+            poscar_dict['b_times_a'] = - poscar_dict['a_times_b']
+            poscar_dict['c_times_b'] = - poscar_dict['b_times_c']
+            poscar_dict['a_times_c'] = - poscar_dict['c_times_a']
+            poscar_dict['area_ab'] = np.linalg.norm(poscar_dict['a_times_b'])
+            poscar_dict['area_bc'] = np.linalg.norm(poscar_dict['b_times_c'])
+            poscar_dict['area_ca'] = np.linalg.norm(poscar_dict['c_times_a'])
+            poscar_dict['area_ba'] = poscar_dict['area_ab']
+            poscar_dict['area_cb'] = poscar_dict['area_bc']
+            poscar_dict['area_ac'] = poscar_dict['area_ca']
+            sorted_arg_arr = np.argsort([poscar_dict['vec_a'], poscar_dict['vec_b'], poscar_dict['vec_c']])
+            if all([x in sorted_arg_arr[0:2] for x in [0,1]]):
+                poscar_dict['area_star'] = poscar_dict['area_ab']
+            elif all([x in sorted_arg_arr[0:2] for x in [1,2]]):
+                poscar_dict['area_star'] = poscar_dict['area_bc']
+            elif all([x in sorted_arg_arr[0:2] for x in [2,0]]):
+                poscar_dict['area_star'] = poscar_dict['area_ca']
             poscar_dict['angle_alpha_radian'] = basis_vector_dict['angle_alpha_radian']
             poscar_dict['angle_beta_radian'] = basis_vector_dict['angle_beta_radian']
             poscar_dict['angle_gamma_radian'] = basis_vector_dict['angle_gamma_radian']
             poscar_dict['angle_alpha_degree'] = basis_vector_dict['angle_alpha_degree']
             poscar_dict['angle_beta_degree'] = basis_vector_dict['angle_beta_degree']
             poscar_dict['angle_gamma_degree'] = basis_vector_dict['angle_gamma_degree']
-            poscar_dict['box_volume'] = basis_vector_dict['box_volume']
+            poscar_dict['volume'] = basis_vector_dict['volume']
             poscar_dict['reciprocal_arr'] = basis_vector_dict['reciprocal_arr']
             poscar_dict['car2fra_matrix_arr'] = basis_vector_dict['car2fra_matrix_arr']
             poscar_dict['fra2car_matrix_arr'] = basis_vector_dict['fra2car_matrix_arr']
-            poscar_dict['reciprocal_arr'] = basis_vector_dict['reciprocal_arr']
 
             elmt_species_info = False
             # extract string from the 6th line
@@ -119,6 +140,11 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
                     #poscar_dict['elmt_species_arr'][i] = funcs.split_line(lines[5])[i]
                     poscar_dict['elmt_num_arr'][i] = funcs.split_line(lines[5])[i]
             n_atoms = sum(poscar_dict['elmt_num_arr'][:])
+            # Chemical formula in the order of appearence of elements in the POSCAR file
+            poscar_dict['formula'] = ''.join([str(poscar_dict['elmt_species_arr'][x]) + str(poscar_dict['elmt_num_arr'][x]) for x in range(len(poscar_dict['elmt_species_arr']))])
+            # Chemical formula in alphabetical order
+            sorted_arg_arr = np.argsort(poscar_dict['elmt_species_arr'])
+            poscar_dict['alphabetical_formula'] = ''.join([str(poscar_dict['elmt_species_arr'][x]) + str(poscar_dict['elmt_num_arr'][x]) for x in sorted_arg_arr])
             #Element start index
             poscar_dict['elmt_start_indx_arr'] = np.array([0]*n_species,dtype=np.int)
             for i in range(0,n_species):
@@ -166,31 +192,26 @@ def read_poscar(poscar_file_path, suppress_atom_number_ortho = True):
                 coord_arr[i,1] = float(temp[1])
                 coord_arr[i,2] = float(temp[2])
                 if poscar_dict['slet_dyn_on'] == True:
-                    fix_arr[i,0] = temp[3]
-                    fix_arr[i,1] = temp[4]
-                    fix_arr[i,2] = temp[5]
+                    fix_arr[i,0:3] = temp[3:6]
                     added_atom_data_arr[i,0:num_added_atom_data_column] = temp[6:(6+num_added_atom_data_column)]
                 elif poscar_dict['slet_dyn_on'] == False:
                     added_atom_data_arr[i,0:num_added_atom_data_column] = temp[3:(3+num_added_atom_data_column)]
                 if poscar_dict['coord_system'] == "Direct":
                     # fractional coordinate
-                    pos_arr[i,0] = coord_arr[i,0]
-                    pos_arr[i,1] = coord_arr[i,1]
-                    pos_arr[i,2] = coord_arr[i,2]
+                    pos_arr[i,0:3] = coord_arr[i,0:3]
+                    # convert the coordinate to values between 0 and 1. Values close to 1 will be replaced by 0
+                    pos_arr[i,0:3] = np.modf(np.modf(pos_arr[i,0:3])[0] + 1)[0]
+                    pos_arr[i,0:3][np.isclose(pos_arr[i,0:3], 1, rtol = 1e-16)] = 0
                     # cartesian coordinate
-                    pos_arr[i,3] = np.dot(coord_arr[i,:], l_arr[:,[0]])
-                    pos_arr[i,4] = np.dot(coord_arr[i,:], l_arr[:,[1]])
-                    pos_arr[i,5] = np.dot(coord_arr[i,:], l_arr[:,[2]])
+                    #pos_arr[i,3:6] = np.dot(coord_arr[i,:], l_arr)
+                    pos_arr[i,3:6] = np.dot(pos_arr[i,0:3], l_arr)
                 elif poscar_dict['coord_system'] == "Cartesian":
                     #cartesian coordinate
-                    pos_arr[i,3] = coord_arr[i,0] * poscar_dict['uni_scale_fac']
-                    pos_arr[i,4] = coord_arr[i,1] * poscar_dict['uni_scale_fac']
-                    pos_arr[i,5] = coord_arr[i,2] * poscar_dict['uni_scale_fac']
+                    pos_arr[i,3:6] = coord_arr[i,0:3] * poscar_dict['uni_scale_fac']
                     # fractional coordinate
                     pos_arr[i,0:3] = basis_vector_dict['car2fra_matrix_arr'].dot(pos_arr[i,3:6])
-                    ##pos_arr[i,0] = np.dot(l_inv_arr[0,:], coord_arr[i,:])
-                    ##pos_arr[i,1] = np.dot(l_inv_arr[1,:], coord_arr[i,:])
-                    ##pos_arr[i,2] = np.dot(l_inv_arr[2,:], coord_arr[i,:])
+                    pos_arr[i,0:3] = np.modf(np.modf(pos_arr[i,0:3])[0] + 1)[0]
+                    pos_arr[i,0:3][np.isclose(pos_arr[i,0:3], 1, rtol = 1e-16)] = 0
 
             poscar_dict['n_atoms'] = int(np.sum(poscar_dict['elmt_num_arr']))
             poscar_dict['num_elmts'] = len(atom_species_arr)
@@ -238,6 +259,7 @@ def read_outcar(outcar_file_path):
     Return:
         @.outcar_params_dict
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -275,6 +297,7 @@ def read_outcar(outcar_file_path):
     outcar_params_dict['elapsed_time'] = None
     outcar_params_dict['NELM'] = None
     outcar_params_dict['NSW'] = None
+    outcar_params_dict['LMAXMIX'] = None
     outcar_params_dict['initial_value_dict'] = {}
 
     outcar_params_dict['initial_value_dict'] = copy.deepcopy(outcar_params_dict)
@@ -336,6 +359,11 @@ def read_outcar(outcar_file_path):
                     if 'NELM' in line[i] and 'NELMIN' in line[i]:
                         try:
                             outcar_params_dict['NELM'] = int(funcs.split_line(line = line[i],separator = ';')[0].split('=')[-1]) 
+                        except:
+                            pass
+                    if 'LMAXMIX' in line[i] and 'LMAXMIX' in line[i]:
+                        try:
+                            outcar_params_dict['LMAXMIX'] = int(funcs.split_line(line = line[i],separator = '=')[1].split()[0]) 
                         except:
                             pass
                     if 'NSW' in line[i]:
@@ -437,7 +465,7 @@ def read_outcar(outcar_file_path):
     outcar_params_dict['read_status'] = check_outcar_params_dict(outcar_params_dict)
     return outcar_params_dict
 
-def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
+def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False, write_dos_header = True):
     '''
     Description:
         Read information from DOSCAR file.
@@ -445,18 +473,34 @@ def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
         spin down DOS is mutiplied by -1
         atom_indx = 0 denotes extracting the total DOS
         atom_indx > 0 denotes extracting the partial DOS of each atom
-        For The NCol columns in DOSCAR, each column denotes:
+        For The num_columnsol columns in DOSCAR, each column denotes:
             num_col = 10. energy, s, py, pz, px, dxy, dyz, dz2, dxz, dx2 
-            num_col = 19. energy, s(up), s(dw), py(up), py(dw), pz(up), pz(dw), px(up), px(dw), dxy(up), dxy(dw), dyz(up), dyz(dw), dz2(up), dz2(dw), dxz(up), dxz(dw), dx2(up), dx2(dw) 
+            num_col = 19. energy, s(up), s(dn), py(up), py(dn), pz(up), pz(dn), px(up), px(dn), dxy(up), dxy(dn), dyz(up), dyz(dn), dz2(up), dz2(dn), dxz(up), dxz(dn), dx2(up), dx2(dn) 
             num_col = 17. energy, s, py, pz, px, dxy, dyz, dz2, dxz, dx2, f-3, f-2, f-1, f0, f1, f2, f3 
-            num_col = 33. energy, s(up), s(dw), py(up), py(dw), pz(up), pz(dw), px(up), px(dw), dxy(up), dxy(dw), dyz(up), dyz(dw), dz2(up), dz2(dw), dxz(up), dxz(dw), dx2(up), dx2(dw) , f-3(up) , f-3(dw), f-2(up), f-2(dw), f-1(up), f-1(dw), f0(up), f0(dw), f1(up), f1(dw), f2(up), f2(dw), f3(up), f3(dw) 
+            num_col = 33. energy, s(up), s(dn), py(up), py(dn), pz(up), pz(dn), px(up), px(dn), dxy(up), dxy(dn), dyz(up), dyz(dn), dz2(up), dz2(dn), dxz(up), dxz(dn), dx2(up), dx2(dn) , f-3(up) , f-3(dn), f-2(up), f-2(dn), f-1(up), f-1(dn), f0(up), f0(dn), f1(up), f1(dn), f2(up), f2(dn), f3(up), f3(dn) 
+            For the noncollinear case:
+            num_col = 37, energy, s, s(mx), s(my), s(mz), 
+                                  py, py(mx), py(my), py(mz), 
+                                  pz, pz(mx), pz(my), py(mz), 
+                                  px, px(mx), px(my), px(mz), 
+                                  dxy, dxy(mx), dxy(my), dxy(mz)
+                                  dyz, dyz(mx), dyz(my), dyz(mz)
+                                  dz2, dz2(mx), dz2(my), dz2(mz)
+                                  dxz, dxz(mx), dxz(my), dxz(mz)
+                                  dx2, dx2(mx), dx2(my), dx2(mz)
+    orbital designation:
+        YLM(:,1) -> s
+        YLM(:,2:4) -> p:= y, z, x
+        YLM(:,5:9) -> d:= xy, yz, z2, xz, x2
+        YLM(:,10:16) -> f:= y(3x2-y2), xyz, yz2, z3, xz2, z(x2-y2), x(x2-3y2)
     Args:
         @.doscar_file_path: String format. The directory of the DOSCAR file. It can either be full path or relative path
         @.atom_indx: Integer format. The real atom index in the POSCAR. If there are N atoms then the atom indices are frim 1 to N. Note that atom_indx = 0 means to extract TDOS inoformation
         @save_dos_arr: logical value. Determine whether to save the dos_arr to a file or not.
     Return:
-        @.dos_arr: nedos * NCol array type. It contains the density of states
+        @.dos_arr: nedos * num_columnsol array type. It contains the density of states
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -472,10 +516,46 @@ def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
     file_status = funcs.file_status(doscar_file_path)
     doscar_dict['file_status'] = file_status
     
+    ##doscar_dict['num_columns'] = None
+
+    nc3_list =  ['energy', 'DOS', 'Int_DOS']
+    nc5_list =  ['energy', 'DOS(up)', 'DOS(dn)', 'Int_DOS(up)', 'Int_DOS(dn)']
+    nc10_list = ['energy', 's', 'py', 'pz', 'px', 'dxy', 'dyz', 'dz2', 'dxz', 'dx2']
+    nc19_list = ['energy', 's(up)', 's(dn)', 'py(up)', 'py(dn)', 'pz(up)', 'pz(dn)', 'px(up)', 'px(dn)', 'dxy(up)', 'dxy(dn)', 'dyz(up)', 'dyz(dn)', 'dz2(up)', 'dz2(dn)', 'dxz(up)', 'dxz(dn)', 'dx2(up)', 'dx2(dn)']
+    nc17_list = ['energy', 's', 'py', 'pz', 'px', 'dxy', 'dyz', 'dz2', 'dxz', 'dx2', 'f-3', 'f-2', 'f-1', 'f0', 'f1', 'f2', 'f3']
+    nc33_list = ['energy', 's(up)', 's(dn)', 'py(up)', 'py(dn)', 'pz(up)', 'pz(dn)', 'px(up)', 'px(dn)', 'dxy(up)', 'dxy(dn)', 'dyz(up)', 'dyz(dn)', 'dz2(up)', 'dz2(dn)', 'dxz(up)', 'dxz(dn)', 'dx2(up)', 'dx2(dn)' , 'f-3(up)' , 'f-3(dn)', 'f-2(up)', 'f-2(dn)', 'f-1(up)', 'f-1(dn)', 'f0(up)', 'f0(dn)', 'f1(up)', 'f1(dn)', 'f2(up)', 'f2(dn)', 'f3(up)', 'f3(dn)']
+    nc37_list = ['energy', 's', 's(mx)', 's(my)', 's(mz)',
+                           'py',  'py(mx)',  'py(my)',  'py(mz)', 
+                           'pz',  'pz(mx)',  'pz(my)',  'py(mz)', 
+                           'px',  'px(mx)',  'px(my)',  'px(mz)', 
+                           'dxy', 'dxy(mx)', 'dxy(my)', 'dxy(mz)',  
+                           'dyz', 'dyz(mx)', 'dyz(my)', 'dyz(mz)',
+                           'dz2', 'dz2(mx)', 'dz2(my)', 'dz2(mz)',
+                           'dxz', 'dxz(mx)', 'dxz(my)', 'dxz(mz)',
+                           'dx2', 'dx2(mx)', 'dx2(my)', 'dx2(mz)'
+                    ]
+    nc65_list = ['energy', 's', 's(mx)', 's(my)', 's(mz)',
+                           'py',  'py(mx)',  'py(my)',  'py(mz)', 
+                           'pz',  'pz(mx)',  'pz(my)',  'py(mz)', 
+                           'px',  'px(mx)',  'px(my)',  'px(mz)', 
+                           'dxy', 'dxy(mx)', 'dxy(my)', 'dxy(mz)',  
+                           'dyz', 'dyz(mx)', 'dyz(my)', 'dyz(mz)',
+                           'dz2', 'dz2(mx)', 'dz2(my)', 'dz2(mz)',
+                           'dxz', 'dxz(mx)', 'dxz(my)', 'dxz(mz)',
+                           'dx2', 'dx2(mx)', 'dx2(my)', 'dx2(mz)'
+                           'f-3', 'f-3(mx)', 'f-3(my)', 'f-3(mz)'
+                           'f-2', 'f-2(mx)', 'f-2(my)', 'f-2(mz)'
+                           'f-1', 'f-1(mx)', 'f-1(my)', 'f-1(mz)'
+                           'f0', 'f0(mx)', 'f0(my)', 'f0(mz)'
+                           'f1', 'f1(mx)', 'f1(my)', 'f1(mz)'
+                           'f2', 'f2(mx)', 'f2(my)', 'f2(mz)'
+                           'f3', 'f3(mx)', 'f3(my)', 'f3(mz)'
+                    ]
     if file_status != 1:
-        print('WARNING #20120313 (from read_doscar): The file ' + outcar_file_path + ' does not exist or is empty, please check this file.')
+        print('WARNING #20120313 (from read_doscar): The file ' + doscar_file_path + ' does not exist or is empty, please check this file.')
     else:
         #Also Required files are OUTCAR and POSCAR
+        num_columns = None
         with open(doscar_file_path,'r') as f:
             lines = f.readlines()
             n_atoms = int(funcs.split_line(lines[0])[0])
@@ -486,54 +566,64 @@ def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
                 #TDOS
                 start_line = 6
                 end_line = start_line + nedos - 1
-                NC = len(funcs.split_line(lines[start_line]))
-                dos_arr = np.array([0.000000]*nedos*NC,dtype = np.float)
-                dos_arr.shape = nedos,NC
+                num_columns = len(funcs.split_line(lines[start_line]))
+                dos_arr = np.array([0.000000]*nedos*num_columns,dtype = np.float)
+                dos_arr.shape = nedos,num_columns
                 for i in range(0,nedos):
-                    for j in range(0,NC):
+                    for j in range(0,num_columns):
                         dos_arr[i][j] = float(funcs.split_line(lines[start_line + i])[j]) * funcs.logic_retn_val(j % 2 == 0 and j > 0, -1, 1)
                 dos_file = os.path.join(workdir, 'TDOS.dat')
             elif isinstance(atom_indx, int)  and atom_indx != 0:
                 #DOS
                 start_line = 6 + (nedos + 1) * atom_indx
                 end_line = start_line + nedos - 1
-                NC = len(funcs.split_line(lines[start_line]))
-                dos_arr = np.array([0.000000] * nedos * NC,dtype = np.float)
-                dos_arr.shape = nedos,NC
-                if NC == 10 or NC == 17:
+                num_columns = len(funcs.split_line(lines[start_line]))
+                dos_arr = np.array([0.000000] * nedos * num_columns,dtype = np.float)
+                dos_arr.shape = nedos,num_columns
+                if num_columns == 10 or num_columns == 17 or num_columns == 37:
                     for i in range(0,nedos):
-                        for j in range(0,NC):
+                        for j in range(0,num_columns):
                             dos_arr[i][j] = float(funcs.split_line(lines[start_line + i])[j])
-                elif NC == 19 or NC == 33:
+                elif num_columns == 19 or num_columns == 33:
                     for i in range(0,nedos):
-                        for j in range(0,NC):
+                        for j in range(0,num_columns):
                             dos_arr[i][j] = float(funcs.split_line(lines[start_line + i])[j]) * funcs.logic_retn_val(j % 2 == 0 and j > 0, -1, 1)
+                
                 dos_file = os.path.join(workdir, 'DOS' + str(atom_indx) + '.dat')
             elif isinstance(atom_indx, list):
                 # This is for the case of LDOS of multiple atoms.
                 for i_atom_indx in atom_indx:
                     start_line = 6 + (nedos + 1) * i_atom_indx
                     end_line = start_line + nedos - 1
-                    NC = len(funcs.split_line(lines[start_line]))
-                    dos_arr = np.array([0.000000] * nedos * NC,dtype = np.float)
-                    dos_arr.shape = nedos,NC
-                    if NC == 10 or NC == 17:
+                    num_columns = len(funcs.split_line(lines[start_line]))
+                    dos_arr = np.array([0.000000] * nedos * num_columns,dtype = np.float)
+                    dos_arr.shape = nedos,num_columns
+                    if num_columns == 10 or num_columns == 17 or num_columns == 37:
                         for i in range(0,nedos):
-                            for j in range(0,NC):
+                            for j in range(0,num_columns):
                                 dos_arr[i][j] = dos_arr[i][j] + float(funcs.split_line(lines[start_line + i])[j])
-                    elif NC == 19 or NC == 33:
+                    elif num_columns == 19 or num_columns == 33:
                         for i in range(0,nedos):
-                            for j in range(0,NC):
+                            for j in range(0,num_columns):
                                 dos_arr[i][j] = dos_arr[i][j] + float(funcs.split_line(lines[start_line + i])[j]) * funcs.logic_retn_val(j % 2 == 0 and j > 0, -1, 1)
                     dos_file = os.path.join(workdir, 'DOS_' + '+'.join([str(x) for x in atom_indx]) + '.dat')
                 
+            temp_list = []
+            nc_list = [3, 5, 10, 19, 17, 33, 37, 65] 
+            nc_tag_list = [nc3_list, nc5_list, nc10_list, nc19_list, nc17_list, nc33_list, nc37_list, nc65_list] 
+            for i_indx in range(len(nc_list)):
+                if num_columns == nc_list[i_indx]:
+                    temp_list = nc_tag_list[i_indx]
+            header_str = ''.join([funcs.str_format(x, max_len = 18, padding_str = ' ', padding_str_loc = 'l') for x in temp_list])
             if save_dos_arr == True:
-                np.savetxt(dos_file, dos_arr)
+                if write_dos_header == False or write_dos_header is None:
+                    header_str = ''
+                np.savetxt(dos_file, dos_arr, fmt = '%17.4E', header = header_str)
             else:
                 pass
 
         doscar_dict['atom_indx'] = atom_indx
-        doscar_dict['num_col'] = NC
+        doscar_dict['num_col'] = num_columns
         doscar_dict['dos_arr'] = dos_arr
         doscar_dict['energy'] = dos_arr[:,[0]]
         if doscar_dict['num_col'] == 3:
@@ -541,11 +631,51 @@ def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
             doscar_dict['IntDOS'] = dos_arr[:,[2]]
         elif doscar_dict['num_col'] == 5:
             doscar_dict['TDOS_up'] = dos_arr[:,[1]]
-            doscar_dict['TDOS_dw'] = dos_arr[:,[2]]
-            doscar_dict['TDOS'] = doscar_dict['TDOS_up'] - doscar_dict['TDOS_dw']
+            doscar_dict['TDOS_dn'] = dos_arr[:,[2]]
+            doscar_dict['TDOS'] = doscar_dict['TDOS_up'] - doscar_dict['TDOS_dn']
             doscar_dict['IntDOS_up'] = dos_arr[:,[3]]
-            doscar_dict['IntDOS_dw'] = dos_arr[:,[4]]
-            doscar_dict['IntDOS'] = doscar_dict['IntDOS_up'] - doscar_dict['IntDOS_dw']
+            doscar_dict['IntDOS_dn'] = dos_arr[:,[4]]
+            doscar_dict['IntDOS'] = doscar_dict['IntDOS_up'] - doscar_dict['IntDOS_dn']
+        elif doscar_dict['num_col'] == 37:
+            doscar_dict['s'] = dos_arr[:,[1]]
+            doscar_dict['s_mx'] = dos_arr[:,[2]]
+            doscar_dict['s_my'] = dos_arr[:,[3]]
+            doscar_dict['s_mz'] = dos_arr[:,[4]]
+            doscar_dict['py'] = dos_arr[:,[5]]
+            doscar_dict['py_mx'] = dos_arr[:,[6]]
+            doscar_dict['py_my'] = dos_arr[:,[7]]
+            doscar_dict['py_mz'] = dos_arr[:,[8]]
+            doscar_dict['pz'] = dos_arr[:,[9]]
+            doscar_dict['pz_mx'] = dos_arr[:,[10]]
+            doscar_dict['pz_my'] = dos_arr[:,[11]]
+            doscar_dict['pz_mz'] = dos_arr[:,[12]]
+            doscar_dict['px'] = dos_arr[:,[13]]
+            doscar_dict['px_mx'] = dos_arr[:,[14]]
+            doscar_dict['px_my'] = dos_arr[:,[15]]
+            doscar_dict['px_mz'] = dos_arr[:,[16]]
+            doscar_dict['dxy'] = dos_arr[:,[17]]
+            doscar_dict['dxy_mx'] = dos_arr[:,[18]]
+            doscar_dict['dxy_my'] = dos_arr[:,[19]]
+            doscar_dict['dxy_mz'] = dos_arr[:,[20]]
+            doscar_dict['dyz'] = dos_arr[:,[21]]
+            doscar_dict['dyz_mx'] = dos_arr[:,[22]]
+            doscar_dict['dyz_my'] = dos_arr[:,[23]]
+            doscar_dict['dyz_mz'] = dos_arr[:,[24]]
+            doscar_dict['dz2'] = dos_arr[:,[25]]
+            doscar_dict['dz2_mx'] = dos_arr[:,[26]]
+            doscar_dict['dz2_my'] = dos_arr[:,[27]]
+            doscar_dict['dz2_mz'] = dos_arr[:,[28]]
+            doscar_dict['dxz'] = dos_arr[:,[29]]
+            doscar_dict['dxz_mx'] = dos_arr[:,[30]]
+            doscar_dict['dxz_my'] = dos_arr[:,[31]]
+            doscar_dict['dxz_mz'] = dos_arr[:,[32]]
+            doscar_dict['dx2'] = dos_arr[:,[33]]
+            doscar_dict['dx2_mx'] = dos_arr[:,[34]]
+            doscar_dict['dx2_my'] = dos_arr[:,[35]]
+            doscar_dict['dx2_mz'] = dos_arr[:,[36]]
+            doscar_dict['p'] = doscar_dict['py'] + doscar_dict['pz'] + doscar_dict['px']
+            doscar_dict['d'] = doscar_dict['dxy'] + doscar_dict['dyz'] + doscar_dict['dz2']  + doscar_dict['dxz'] + doscar_dict['dx2']
+            doscar_dict['LDOS'] = doscar_dict['s'] + doscar_dict['p'] + doscar_dict['d']
         elif doscar_dict['num_col'] == 10 or doscar_dict['num_col'] == 17:
             doscar_dict['s'] = dos_arr[:,[1]]
             doscar_dict['py'] = dos_arr[:,[2]]
@@ -571,66 +701,69 @@ def read_doscar(doscar_file_path, atom_indx, save_dos_arr = False):
                 doscar_dict['LDOS'] = doscar_dict['s'] + doscar_dict['p'] + doscar_dict['d'] + doscar_dict['f']
         elif doscar_dict['num_col'] == 19 or doscar_dict['num_col'] == 33:
             doscar_dict['s_up'] = dos_arr[:,[1]]
-            doscar_dict['s_dw'] = dos_arr[:,[2]]
+            doscar_dict['s_dn'] = dos_arr[:,[2]]
             doscar_dict['py_up'] = dos_arr[:,[3]]
-            doscar_dict['py_dw'] = dos_arr[:,[4]]
+            doscar_dict['py_dn'] = dos_arr[:,[4]]
             doscar_dict['pz_up'] = dos_arr[:,[5]]
-            doscar_dict['pz_dw'] = dos_arr[:,[6]]
+            doscar_dict['pz_dn'] = dos_arr[:,[6]]
             doscar_dict['px_up'] = dos_arr[:,[7]]
-            doscar_dict['px_dw'] = dos_arr[:,[8]]
+            doscar_dict['px_dn'] = dos_arr[:,[8]]
             doscar_dict['dxy_up'] = dos_arr[:,[9]]
-            doscar_dict['dxy_dw'] = dos_arr[:,[10]]
+            doscar_dict['dxy_dn'] = dos_arr[:,[10]]
             doscar_dict['dyz_up'] = dos_arr[:,[11]]
-            doscar_dict['dyz_dw'] = dos_arr[:,[12]]
+            doscar_dict['dyz_dn'] = dos_arr[:,[12]]
             doscar_dict['dz2_up'] = dos_arr[:,[13]]
-            doscar_dict['dz2_dw'] = dos_arr[:,[14]]
+            doscar_dict['dz2_dn'] = dos_arr[:,[14]]
             doscar_dict['dxz_up'] = dos_arr[:,[15]]
-            doscar_dict['dxz_dw'] = dos_arr[:,[16]]
+            doscar_dict['dxz_dn'] = dos_arr[:,[16]]
             doscar_dict['dx2_up'] = dos_arr[:,[17]]
-            doscar_dict['dx2_dw'] = dos_arr[:,[18]]
-            doscar_dict['s'] = doscar_dict['s_up'] - doscar_dict['s_dw']
+            doscar_dict['dx2_dn'] = dos_arr[:,[18]]
+            doscar_dict['s'] = doscar_dict['s_up'] - doscar_dict['s_dn']
             doscar_dict['p_up'] = doscar_dict['py_up'] + doscar_dict['pz_up'] + doscar_dict['px_up']
-            doscar_dict['p_dw'] = doscar_dict['py_dw'] + doscar_dict['pz_dw'] + doscar_dict['px_dw']
-            doscar_dict['py'] = doscar_dict['py_up'] - doscar_dict['py_dw']
-            doscar_dict['pz'] = doscar_dict['pz_up'] - doscar_dict['pz_dw']
-            doscar_dict['px'] = doscar_dict['px_up'] - doscar_dict['px_dw']               
-            doscar_dict['p'] = doscar_dict['p_up'] - doscar_dict['p_dw']
+            doscar_dict['p_dn'] = doscar_dict['py_dn'] + doscar_dict['pz_dn'] + doscar_dict['px_dn']
+            doscar_dict['py'] = doscar_dict['py_up'] - doscar_dict['py_dn']
+            doscar_dict['pz'] = doscar_dict['pz_up'] - doscar_dict['pz_dn']
+            doscar_dict['px'] = doscar_dict['px_up'] - doscar_dict['px_dn']               
+            doscar_dict['p'] = doscar_dict['p_up'] - doscar_dict['p_dn']
             doscar_dict['d_up'] = doscar_dict['dxy_up'] + doscar_dict['dyz_up'] + doscar_dict['dz2_up'] + doscar_dict['dxz_up'] + doscar_dict['dx2_up']
-            doscar_dict['d_dw'] = doscar_dict['dxy_dw'] + doscar_dict['dyz_dw'] + doscar_dict['dz2_dw'] + doscar_dict['dxz_dw'] + doscar_dict['dx2_dw']
-            doscar_dict['dxy'] = doscar_dict['dxy_up'] - doscar_dict['dxy_dw']
-            doscar_dict['dyz'] = doscar_dict['dyz_up'] - doscar_dict['dyz_dw']
-            doscar_dict['dz2'] = doscar_dict['dz2_up'] - doscar_dict['dz2_dw']
-            doscar_dict['dxz'] = doscar_dict['dxz_up'] - doscar_dict['dx2_dw']
-            doscar_dict['dx2'] = doscar_dict['dx2_up'] - doscar_dict['dx2_dw']
-            doscar_dict['d'] = doscar_dict['d_up'] - doscar_dict['d_dw']
+            doscar_dict['d_dn'] = doscar_dict['dxy_dn'] + doscar_dict['dyz_dn'] + doscar_dict['dz2_dn'] + doscar_dict['dxz_dn'] + doscar_dict['dx2_dn']
+            doscar_dict['dxy'] = doscar_dict['dxy_up'] - doscar_dict['dxy_dn']
+            doscar_dict['dyz'] = doscar_dict['dyz_up'] - doscar_dict['dyz_dn']
+            doscar_dict['dz2'] = doscar_dict['dz2_up'] - doscar_dict['dz2_dn']
+            doscar_dict['dxz'] = doscar_dict['dxz_up'] - doscar_dict['dx2_dn']
+            doscar_dict['dx2'] = doscar_dict['dx2_up'] - doscar_dict['dx2_dn']
+            doscar_dict['d'] = doscar_dict['d_up'] - doscar_dict['d_dn']
             doscar_dict['LDOS'] = doscar_dict['s'] + doscar_dict['p'] + doscar_dict['d']
             doscar_dict['LDOS_up'] = doscar_dict['s_up'] + doscar_dict['p_up'] + doscar_dict['d_up']
-            doscar_dict['LDOS_dw'] = doscar_dict['s_dw'] + doscar_dict['p_dw'] + doscar_dict['d_dw']
+            doscar_dict['LDOS_dn'] = doscar_dict['s_dn'] + doscar_dict['p_dn'] + doscar_dict['d_dn']
             if doscar_dict['num_col'] == 33:
                 doscar_dict['fm3_up'] = dos_arr[:,[19]]
-                doscar_dict['fm3_dw'] = dos_arr[:,[20]]
+                doscar_dict['fm3_dn'] = dos_arr[:,[20]]
                 doscar_dict['fm2_up'] = dos_arr[:,[21]]
-                doscar_dict['fm2_dw'] = dos_arr[:,[22]]
+                doscar_dict['fm2_dn'] = dos_arr[:,[22]]
                 doscar_dict['fm1_up'] = dos_arr[:,[23]]
-                doscar_dict['fm1_dw'] = dos_arr[:,[24]]
+                doscar_dict['fm1_dn'] = dos_arr[:,[24]]
                 doscar_dict['f0_up'] = dos_arr[:,[25]]
-                doscar_dict['f0_dw'] = dos_arr[:,[26]]
+                doscar_dict['f0_dn'] = dos_arr[:,[26]]
                 doscar_dict['f1_up'] = dos_arr[:,[27]]
-                doscar_dict['f1_dw'] = dos_arr[:,[28]]
+                doscar_dict['f1_dn'] = dos_arr[:,[28]]
                 doscar_dict['f2_up'] = dos_arr[:,[29]]
-                doscar_dict['f2_dw'] = dos_arr[:,[30]]
+                doscar_dict['f2_dn'] = dos_arr[:,[30]]
                 doscar_dict['f3_up'] = dos_arr[:,[31]]
-                doscar_dict['f3_dw'] = dos_arr[:,[32]]
+                doscar_dict['f3_dn'] = dos_arr[:,[32]]
                 doscar_dict['f_up'] = doscar_dict['fm3_up'] + doscar_dict['fm2_up'] + doscar_dict['fm1_up'] + doscar_dict['f0_up'] + doscar_dict['f1_up'] + doscar_dict['f2_up'] + doscar_dict['f3_up']
-                doscar_dict['f_dw'] = doscar_dict['fm3_dw'] + doscar_dict['fm2_dw'] + doscar_dict['fm1_dw'] + doscar_dict['f0_dw'] + doscar_dict['f1_dw'] + doscar_dict['f2_dw'] + doscar_dict['f3_dw']
-                doscar_dict['f'] = doscar_dict['f_up'] - doscar_dict['f_dw']
+                doscar_dict['f_dn'] = doscar_dict['fm3_dn'] + doscar_dict['fm2_dn'] + doscar_dict['fm1_dn'] + doscar_dict['f0_dn'] + doscar_dict['f1_dn'] + doscar_dict['f2_dn'] + doscar_dict['f3_dn']
+                doscar_dict['f'] = doscar_dict['f_up'] - doscar_dict['f_dn']
                 doscar_dict['LDOS'] = doscar_dict['s'] + doscar_dict['p'] + doscar_dict['d'] + doscar_dict['f']
                 doscar_dict['LDOS_up'] = doscar_dict['s_up'] + doscar_dict['p_up'] + doscar_dict['d_up'] + doscar_dict['f_up']
-                doscar_dict['LDOS_dw'] = doscar_dict['s_dw'] + doscar_dict['p_dw'] + doscar_dict['d_dw'] + doscar_dict['f_dw']
+                doscar_dict['LDOS_dn'] = doscar_dict['s_dn'] + doscar_dict['p_dn'] + doscar_dict['d_dn'] + doscar_dict['f_dn']
     return doscar_dict
 
 def read_oszicar(oszicar_file_path, save_fig = False, dpi = 100):
-    '''Read OSZICAR'''
+    '''
+    Read OSZICAR
+    '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -747,6 +880,7 @@ def read_oszicar(oszicar_file_path, save_fig = False, dpi = 100):
 
 def read_kpoints(kpoints_file_path):
     '''Read KPOINTS'''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -763,6 +897,28 @@ def read_kpoints(kpoints_file_path):
     poscar_file_status = poscar_dict['file_status']
 
     kpoints_dict = {}
+    kpoints_dict['file_path'] = None
+    kpoints_dict['file_status'] = None
+    kpoints_dict['comment'] = None
+    kpoints_dict['scheme'] = None
+    kpoints_dict['num_kpoints'] = None
+    kpoints_dict['length_param'] = None
+    kpoints_dict['subdivisions_arr'] = None
+    kpoints_dict['origin_shift_arr'] = None
+    kpoints_dict['coord_type'] = None
+    kpoints_dict['kpath'] = None
+    kpoints_dict['num_intersections'] = None
+    kpoints_dict['kpath_nodes_xaxis_tick_list'] = None
+    kpoints_dict['num_kpath_nodes'] = None
+    kpoints_dict['kpath_nodes_list'] = None
+    kpoints_dict['kpath_left_right_list'] = None
+    kpoints_dict['num_intersections_interval'] = None
+    kpoints_dict['num_kpoints_xaxis'] = None
+    kpoints_dict['intersections_end_kpt_list'] = None
+    kpoints_dict['kpoints_xaxis_arr'] = None
+    kpoints_dict['bs_xaxis_label_list'] = None
+    kpoints_dict['bs_xaxis_tick_list'] = None
+
     kpoints_dict['file_path'] = kpoints_file_path
     
     kpoints_file_status = funcs.file_status(kpoints_file_path)
@@ -783,61 +939,145 @@ def read_kpoints(kpoints_file_path):
             if kpoints_dict['scheme'] in ['a', 'A']:
                 kpoints_dict['num_kpoints'] = int(funcs.split_line(line[1])[0])
                 kpoints_dict['length_param'] = float(funcs.split_line(line[3])[0])
-            elif kpoints_dict['scheme'] in ['g', 'G', 'm', 'M']:
-                num_kpoints_temp = funcs.split_line(line[1])[0]
+            elif kpoints_dict['scheme'] in ['g', 'G', 'm', 'M'] or kpoints_dict['scheme'] in ['c', 'C', 'k', 'K']:
+                try:
+                    num_kpoints_temp = int(funcs.split_line(line[1])[0])
+                except:
+                    num_kpoints_temp = funcs.split_line(line[1])[0]
                 if isinstance(num_kpoints_temp, str):
                     kpoints_dict['num_kpoints'] = 0
                 else:
                     kpoints_dict['num_kpoints'] = int(num_kpoints_temp)
 
-                subdivisions_arr_0 = funcs.split_line(line[3])[0]
-                subdivisions_arr_1 = funcs.split_line(line[3])[1]
-                subdivisions_arr_2 = funcs.split_line(line[3])[2]
-                ##if isinstance(subdivisions_arr_0, str):
-                ##    subdivisions_arr[0] = 0
-                ##else:
-                ##    subdivisions_arr[0] = int(float(subdivisions_arr_0))
-                ##if isinstance(subdivisions_arr_1, str):
-                ##    subdivisions_arr[1] = 0
-                ##else:
-                ##    subdivisions_arr[1] = int(float(subdivisions_arr_1))
-                ##if isinstance(subdivisions_arr_2, str):
-                ##    subdivisions_arr[2] = 0
-                ##else:
-                ##    subdivisions_arr[2] = int(float(subdivisions_arr_2))
-                try:
-                    subdivisions_arr[0] = int(float(subdivisions_arr_0))
-                    subdivisions_arr[1] = int(float(subdivisions_arr_1))
-                    subdivisions_arr[2] = int(float(subdivisions_arr_2))
-                except:
-                    #if the type of value is string, we denote it as a meaningless negative number
-                    subdivisions_arr[0] = -999999 
-                    subdivisions_arr[1] = -999999 
-                    subdivisions_arr[2] = -999999 
-                kpoints_dict['subdivisions_arr'] = subdivisions_arr
+                if kpoints_dict['num_kpoints'] == 0:
+                    subdivisions_arr_0 = funcs.split_line(line[3])[0]
+                    subdivisions_arr_1 = funcs.split_line(line[3])[1]
+                    subdivisions_arr_2 = funcs.split_line(line[3])[2]
+                    try:
+                        subdivisions_arr[0] = int(float(subdivisions_arr_0))
+                        subdivisions_arr[1] = int(float(subdivisions_arr_1))
+                        subdivisions_arr[2] = int(float(subdivisions_arr_2))
+                    except:
+                        #if the type of value is string, we denote it as a meaningless negative number
+                        subdivisions_arr[0] = -999999 
+                        subdivisions_arr[1] = -999999 
+                        subdivisions_arr[2] = -999999 
+                    kpoints_dict['subdivisions_arr'] = subdivisions_arr
 
-                origin_shift_arr_0 = funcs.split_line(line[4])[0]
-                origin_shift_arr_1 = funcs.split_line(line[4])[1]
-                origin_shift_arr_2 = funcs.split_line(line[4])[2]
-                if isinstance(origin_shift_arr_0, str):
-                    origin_shift_arr[0] = 0
-                else:
-                    origin_shift_arr[0] = float(origin_shift_arr_0)  
-                if isinstance(origin_shift_arr_1, str):
-                    origin_shift_arr[1] = 0
-                else:
-                    origin_shift_arr[1] = float(origin_shift_arr_1)  
-                if isinstance(origin_shift_arr_2, str):
-                    origin_shift_arr[2] = 0
-                else:
-                    origin_shift_arr[2] = float(origin_shift_arr_2)  
-                kpoints_dict['origin_shift_arr'] = origin_shift_arr
-            elif kpoints_dict['scheme'] in ['c', 'C', 'k', 'K']:
-                pass
+                    origin_shift_arr_0 = funcs.split_line(line[4])[0]
+                    origin_shift_arr_1 = funcs.split_line(line[4])[1]
+                    origin_shift_arr_2 = funcs.split_line(line[4])[2]
+                    if isinstance(origin_shift_arr_0, str):
+                        origin_shift_arr[0] = 0
+                    else:
+                        origin_shift_arr[0] = float(origin_shift_arr_0)  
+                    if isinstance(origin_shift_arr_1, str):
+                        origin_shift_arr[1] = 0
+                    else:
+                        origin_shift_arr[1] = float(origin_shift_arr_1)  
+                    if isinstance(origin_shift_arr_2, str):
+                        origin_shift_arr[2] = 0
+                    else:
+                        origin_shift_arr[2] = float(origin_shift_arr_2)  
+                    kpoints_dict['origin_shift_arr'] = origin_shift_arr
+                elif kpoints_dict['num_kpoints'] != 0:
+                    kpoints_dict['num_intersections'] = int(funcs.split_line(line[1])[0])
+                    kpoints_dict['coord_type'] = str(funcs.split_line(line[2])[0])[0]
+                    kpath_nodes_coord_x_list = []
+                    kpath_nodes_coord_y_list = []
+                    kpath_nodes_coord_z_list = []
+                    kpath_nodes_label_list = []
+                    last_high_symm_kpt_label = None
+                    kpt_label_list = []
+                    #get high symmetry k points (units in cartesian coordinate)
+                    kpoints_dict['bs_xaxis_label_list'] = []
+                    for i_line in range(3, num_lines):
+                        if len(funcs.split_line(line[i_line])) == 0:
+                            continue
+                        elif len(funcs.split_line(line[i_line])) != 0:
+                            if funcs.split_line(line[i_line])[0][0] == '#':
+                                continue
+                        high_symm_kpt_x = float(funcs.split_line(line[i_line])[0])
+                        high_symm_kpt_y = float(funcs.split_line(line[i_line])[1])
+                        high_symm_kpt_z = float(funcs.split_line(line[i_line])[2])
+                        temp_x = high_symm_kpt_x
+                        temp_y = high_symm_kpt_y
+                        temp_z = high_symm_kpt_z
+                        high_symm_kpt_label = ''.join(funcs.split_line(line[i_line])[3:]).strip('!').strip('\\')
+                        kpoints_dict['bs_xaxis_label_list'].append(high_symm_kpt_label)
+                        ###############################################################################################################
+                        # if the coordinate is reciprocal, change it to Cartesian (See VASP manual: VASP the Guide)
+                        # \vec{k}=x_{1}\vec{b}_{1}+x_{2}\vec{b}_{2}+x_{3}\vec{b}_{3}
+                        # where {\vec b}}_{{1...3}} are the three reciprocal basis vectors, and x_{{1...3}} are the values you supply.
+                        ###############################################################################################################
+                        if kpoints_dict['coord_type'] in ['R', 'r']:
+                            high_symm_kpt_x = temp_x * poscar_dict['reciprocal_arr'][0,0] + temp_y * poscar_dict['reciprocal_arr'][1,0] + temp_z * poscar_dict['reciprocal_arr'][2,0]
+                            high_symm_kpt_y = temp_x * poscar_dict['reciprocal_arr'][0,1] + temp_y * poscar_dict['reciprocal_arr'][1,1] + temp_z * poscar_dict['reciprocal_arr'][2,1]
+                            high_symm_kpt_z = temp_x * poscar_dict['reciprocal_arr'][0,2] + temp_y * poscar_dict['reciprocal_arr'][1,2] + temp_z * poscar_dict['reciprocal_arr'][2,2]
+                        ############################################################################################
+                        # if the coordinate is Cartesian, the kpoints are given by (See VASP manual: VASP the Guide)
+                        # \vec{k}=2*\pi/a*(x_{1}, x_{2}, x_(3))
+                        # where a is the scaling parameter you have specified on the second line of the POSCAR file.
+                        ############################################################################################
+                        if kpoints_dict['coord_type'] in ['C', 'c']:
+                            high_symm_kpt_x = 2 * np.pi / poscar_dict['uni_scale_fac'] * temp_x
+                            high_symm_kpt_y = 2 * np.pi / poscar_dict['uni_scale_fac'] * temp_y
+                            high_symm_kpt_z = 2 * np.pi / poscar_dict['uni_scale_fac'] * temp_z
+                        # Change the labeling of the band to LaTeX format
+                        kpt_label_list.append(high_symm_kpt_label)
+                        kpath_nodes_coord_x_list.append(high_symm_kpt_x)
+                        kpath_nodes_coord_y_list.append(high_symm_kpt_y)
+                        kpath_nodes_coord_z_list.append(high_symm_kpt_z)
+                        kpath_nodes_label_list.append(high_symm_kpt_label)
+                    #build xaxis tick list for high symmetry k points
+                    kpath_nodes_xaxis_tick_list = []
+                    last_high_symm_kpt_x = kpath_nodes_coord_x_list[0]
+                    last_high_symm_kpt_y = kpath_nodes_coord_x_list[0]
+                    last_high_symm_kpt_z = kpath_nodes_coord_x_list[0]
+                    last_xaxis_tick = 0
+                    for i_kpt in range(0, len(kpath_nodes_label_list)):
+                        kpts_dist = np.linalg.norm([kpath_nodes_coord_x_list[i_kpt] - last_high_symm_kpt_x,
+                                                    kpath_nodes_coord_y_list[i_kpt] - last_high_symm_kpt_y,
+                                                    kpath_nodes_coord_z_list[i_kpt] - last_high_symm_kpt_z])
+                        new_xaxis_tick = last_xaxis_tick + kpts_dist 
+                        kpath_nodes_xaxis_tick_list.append(new_xaxis_tick)
+                        last_high_symm_kpt_x = kpath_nodes_coord_x_list[i_kpt]    
+                        last_high_symm_kpt_y = kpath_nodes_coord_y_list[i_kpt]
+                        last_high_symm_kpt_z = kpath_nodes_coord_z_list[i_kpt]
+                        last_xaxis_tick = new_xaxis_tick
+                    kpoints_dict['kpath_nodes_xaxis_tick_list'] = kpath_nodes_xaxis_tick_list
+                    kpoints_dict['bs_xaxis_tick_list'] = kpath_nodes_xaxis_tick_list
+                    #build kpoints_dict
+                    num_kpath_nodes = len(kpath_nodes_label_list)
+                    kpoints_dict['num_kpath_nodes'] = num_kpath_nodes
+                    kpoints_dict['kpath_nodes_list'] = kpath_nodes_label_list
+                    kpath_nodes_arr = np.array([None] * num_kpath_nodes * 8)
+                    kpath_nodes_arr.shape = num_kpath_nodes, 8
+                    bs_xaxis_label = None
+                    bs_xaxis_label_arr = [None] * num_kpath_nodes
+                    for i_kpt in range(0, num_kpath_nodes):
+                        kpath_nodes_arr[i_kpt, 0] = i_kpt
+                        kpath_nodes_arr[i_kpt, 1] = kpath_nodes_coord_x_list[i_kpt]  
+                        kpath_nodes_arr[i_kpt, 2] = kpath_nodes_coord_y_list[i_kpt]
+                        kpath_nodes_arr[i_kpt, 3] = kpath_nodes_coord_z_list[i_kpt]
+                        kpath_nodes_arr[i_kpt, 4] = kpath_nodes_label_list[i_kpt]
+                        kpath_nodes_arr[i_kpt, 5] = format(kpath_nodes_xaxis_tick_list[i_kpt], '.9f')
+                        kpath_nodes_arr[i_kpt, 6] = None #kpath_continuous_list[i_kpt]
+                        kpath_nodes_arr[i_kpt, 7] = None #kpath_left_right_list[i_kpt]
+                    kpoints_dict['kpath_nodes_arr'] = kpath_nodes_arr
+                    # determine the k points in the xaxis for the band structure plot
+                    kpoints_dict['num_kpoints_xaxis'] = kpoints_dict['num_intersections']
+                    kpoints_dict['kpoints_xaxis_arr'] = kpoints_dict['kpath_nodes_xaxis_tick_list']
+
+            ##elif kpoints_dict['scheme'] in ['c', 'C', 'k', 'K']:
+            ##    pass
             elif kpoints_dict['scheme'] in ['l', 'L']:
+                ''' 
+                Build the kpath_left_right_list, this list reflects the continuity of the kpath. R means the left end of a section of kpath, L means the right end of a section of kpath, LR means a certain kpoint acts as left and right ends of a section of kpath at the same time.
+                Build the kpath_continuous_list, if two adjacent kpionts are the same, then it is denoted as continuous and the value of that point is set as True. Use the kpath_continuous_list, we can determin the 'LR' components in the kpath_left_right_list.
+                Build intersections_end_kpt_list, this list determines the whether the kpoint is an end of a kpath section. Use kpath_left_right_list to determine the intersections_end_kpt_list.
+                '''
                 # Line-mode
-                kpoints_dict['coord_type'] = None
-                kpoints_dict['kpath'] = None
                 kpoints_dict['num_intersections'] = int(funcs.split_line(line[1])[0])
                 kpoints_dict['coord_type'] = str(funcs.split_line(line[3])[0])[0]
                 kpath_nodes_coord_x_list = []
@@ -847,6 +1087,8 @@ def read_kpoints(kpoints_file_path):
                 last_high_symm_kpt_label = None
                 kpt_label_list = []
                 #get high symmetry k points (units in cartesian coordinate)
+                kpath_left_right_list = []
+                num_effective_kpt = 0
                 for i_line in range(4, num_lines):
                     if len(funcs.split_line(line[i_line])) == 0:
                         continue
@@ -860,33 +1102,49 @@ def read_kpoints(kpoints_file_path):
                     temp_y = high_symm_kpt_y
                     temp_z = high_symm_kpt_z
                     high_symm_kpt_label = ''.join(funcs.split_line(line[i_line])[3:]).strip('!').strip('\\')
+                    num_effective_kpt += 1
                     ##print('original',high_symm_kpt_x, high_symm_kpt_y, high_symm_kpt_z, high_symm_kpt_label)
-                    #############################################################
+                    ###############################################################################################################
                     # if the coordinate is reciprocal, change it to Cartesian (See VASP manual: VASP the Guide)
                     # \vec{k}=x_{1}\vec{b}_{1}+x_{2}\vec{b}_{2}+x_{3}\vec{b}_{3}
-                    #############################################################
+                    # where {\vec b}}_{{1...3}} are the three reciprocal basis vectors, and x_{{1...3}} are the values you supply.
+                    ###############################################################################################################
                     if kpoints_dict['coord_type'] in ['R', 'r']:
                         high_symm_kpt_x = temp_x * poscar_dict['reciprocal_arr'][0,0] + temp_y * poscar_dict['reciprocal_arr'][1,0] + temp_z * poscar_dict['reciprocal_arr'][2,0]
                         high_symm_kpt_y = temp_x * poscar_dict['reciprocal_arr'][0,1] + temp_y * poscar_dict['reciprocal_arr'][1,1] + temp_z * poscar_dict['reciprocal_arr'][2,1]
                         high_symm_kpt_z = temp_x * poscar_dict['reciprocal_arr'][0,2] + temp_y * poscar_dict['reciprocal_arr'][1,2] + temp_z * poscar_dict['reciprocal_arr'][2,2]
+                    ############################################################################################
+                    # if the coordinate is Cartesian, the kpoints are given by (See VASP manual: VASP the Guide)
+                    # \vec{k}=2*\pi/a*(x_{1}, x_{2}, x_(3))
+                    # where a is the scaling parameter you have specified on the second line of the POSCAR file.
+                    ############################################################################################
+                    if kpoints_dict['coord_type'] in ['C', 'c']:
+                        high_symm_kpt_x = 2 * np.pi / poscar_dict['uni_scale_fac'] * temp_x
+                        high_symm_kpt_y = 2 * np.pi / poscar_dict['uni_scale_fac'] * temp_y
+                        high_symm_kpt_z = 2 * np.pi / poscar_dict['uni_scale_fac'] * temp_z
                         ##print('x,y,z',high_symm_kpt_x, high_symm_kpt_y, high_symm_kpt_z, high_symm_kpt_label)
                     # Change the labeling of the band to LaTeX format
-                    if high_symm_kpt_label in ['GAMMA', 'gamma', 'Gamma']:
-                        high_symm_kpt_label = 'Gamma'
-                    for i_greek_capital_lett in defaults_dict['greek_capital_letter_list']:
-                        if i_greek_capital_lett in high_symm_kpt_label:
-                            high_symm_kpt_label = high_symm_kpt_label.replace(i_greek_capital_lett, '\\' + i_greek_capital_lett)
+                    ##if high_symm_kpt_label.lower() in defaults_dict['greek_small_letter_list']:
+                    ##    high_symm_kpt_label = '\\' + high_symm_kpt_label.title()
+                    for i_greek_lower in defaults_dict['greek_small_letter_list']:
+                        if i_greek_lower in high_symm_kpt_label.lower():
+                            # also take the special case into account, e.g. $/Sigma_0$
+                            high_symm_kpt_label = high_symm_kpt_label.lower().replace(i_greek_lower, '\\' + i_greek_lower.title())
                     high_symm_kpt_label = '$' + high_symm_kpt_label + '$'
-                    ##if high_symm_kpt_label in ['Gamma', 'gamma', 'g']:
-                    ##    high_symm_kpt_label = '$\Gamma$'
                     kpt_label_list.append(high_symm_kpt_label)
                     if high_symm_kpt_label != last_high_symm_kpt_label:
                         kpath_nodes_coord_x_list.append(high_symm_kpt_x)
                         kpath_nodes_coord_y_list.append(high_symm_kpt_y)
                         kpath_nodes_coord_z_list.append(high_symm_kpt_z)
                         kpath_nodes_label_list.append(high_symm_kpt_label)
+                        if num_effective_kpt %2 != 0: 
+                            kpath_left_right_list.append('R')
+                        elif num_effective_kpt %2 == 0: 
+                            kpath_left_right_list.append('L')
                     last_high_symm_kpt_label = high_symm_kpt_label
-                #print(kpath_nodes_label_list)   #for debugging purpose
+                kpath_left_right_list[0] = 'R'
+                kpath_left_right_list[-1] = 'L'
+                #print('kpath_nodes_label_list = ',kpath_nodes_label_list)   #for debugging purpose
                 #check the continuity of the kpath
                 kpath_node_counter_list = [0] * len(kpath_nodes_label_list)
                 kpath_continuous_list = [False] * len(kpath_nodes_label_list)
@@ -905,21 +1163,18 @@ def read_kpoints(kpoints_file_path):
                     if kpath_node_counter_list[i_kpt] != 1:
                         kpath_continuous_list[i_kpt] = True
                 # based on the kpath_continuous_list, we determine the left_right_list
-                kpath_left_right_list = ['L'] * len(kpath_nodes_label_list)
-                kpath_left_right_list[0] = 'R'
                 for i_kpt in range(0, len(kpath_nodes_label_list)):
                     if kpath_continuous_list[i_kpt] == True:
                         kpath_left_right_list[i_kpt] = 'LR'
-                    if kpath_continuous_list[i_kpt] == False and i_kpt != 0:
-                        #find the nearest point in the kpath_continuous_list which is True
-                        for temp_i_kpt in reversed(range(0,i_kpt)): 
-                            if kpath_continuous_list[temp_i_kpt] == True and (i_kpt - temp_i_kpt) % 2 != 0:
-                                kpath_left_right_list[i_kpt] = 'R'
-                                continue
-                            elif kpath_continuous_list[temp_i_kpt] == True and (i_kpt - temp_i_kpt) % 2 == 0:
-                                kpath_left_right_list[i_kpt] = 'L'
-                                continue
-                kpath_left_right_list[-1] = 'L'
+                    ##if kpath_continuous_list[i_kpt] == False and i_kpt != 0:
+                    ##    #find the nearest point in the kpath_continuous_list which is True
+                    ##    for temp_i_kpt in reversed(range(0,i_kpt)): 
+                    ##        if kpath_continuous_list[temp_i_kpt] == True and (i_kpt - temp_i_kpt) % 2 != 0:
+                    ##            kpath_left_right_list[i_kpt] = 'R'
+                    ##            continue
+                    ##        elif kpath_continuous_list[temp_i_kpt] == True and (i_kpt - temp_i_kpt) % 2 == 0:
+                    ##            kpath_left_right_list[i_kpt] = 'L'
+                    ##            continue
                 #build xaxis tick list for high symmetry k points
                 kpath_nodes_xaxis_tick_list = []
                 last_high_symm_kpt_x = kpath_nodes_coord_x_list[0]
@@ -1027,13 +1282,17 @@ def read_eigenval(eigenval_file_path):
     '''
     Read EIGENVAL
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
     from . import vasp_tools
+    from . import vasp_read
 
     eigenval_file_path = os.path.abspath(eigenval_file_path)
     file_path, filename = os.path.split(eigenval_file_path)
+    poscar_file_path = os.path.join(file_path, 'POSCAR')
+    poscar_dict = vasp_read.read_poscar(poscar_file_path)
     eigenval_dict = {}
     eigenval_dict['file_path'] = eigenval_file_path
     eigenval_dict['dict_type'] = 'eigenval'
@@ -1055,10 +1314,11 @@ def read_eigenval(eigenval_file_path):
     eigenval_dict['weights'] = None
     eigenval_dict['eigs'] = None
     eigenval_dict['eigs_up'] = None
-    eigenval_dict['eigs_dw'] = None
+    eigenval_dict['eigs_dn'] = None
     eigenval_dict['occupancy'] = None
     eigenval_dict['occupancy_up'] = None
-    eigenval_dict['occupancy_dw'] = None
+    eigenval_dict['occupancy_dn'] = None
+    eigenval_dict['kpath_len_list'] = None
 
     if file_status != 1:
         print('WARNING #20120310 (from read_eigenval): The file ' + eigenval_dict['file_path'] + ' does not exist or is empty. Please check the EIGENVAL file.')
@@ -1094,12 +1354,12 @@ def read_eigenval(eigenval_file_path):
                 elif eigenval_dict['ispin'] == 2:
                     eigenval_dict['eigs_up'] = np.array([None] * eigenval_dict['num_kpoints'] * eigenval_dict['num_bands'], dtype=np.float64)
                     eigenval_dict['eigs_up'].shape = eigenval_dict['num_kpoints'], eigenval_dict['num_bands']
-                    eigenval_dict['eigs_dw'] = np.array([None] * eigenval_dict['num_kpoints'] * eigenval_dict['num_bands'], dtype=np.float64)
-                    eigenval_dict['eigs_dw'].shape = eigenval_dict['num_kpoints'], eigenval_dict['num_bands']
+                    eigenval_dict['eigs_dn'] = np.array([None] * eigenval_dict['num_kpoints'] * eigenval_dict['num_bands'], dtype=np.float64)
+                    eigenval_dict['eigs_dn'].shape = eigenval_dict['num_kpoints'], eigenval_dict['num_bands']
                     eigenval_dict['occupancy_up'] = np.array([None] * eigenval_dict['num_kpoints'] * eigenval_dict['num_bands'], dtype=np.float64)
                     eigenval_dict['occupancy_up'].shape = eigenval_dict['num_kpoints'], eigenval_dict['num_bands']
-                    eigenval_dict['occupancy_dw'] = np.array([None] * eigenval_dict['num_kpoints'] * eigenval_dict['num_bands'], dtype=np.float64)
-                    eigenval_dict['occupancy_dw'].shape = eigenval_dict['num_kpoints'], eigenval_dict['num_bands']
+                    eigenval_dict['occupancy_dn'] = np.array([None] * eigenval_dict['num_kpoints'] * eigenval_dict['num_bands'], dtype=np.float64)
+                    eigenval_dict['occupancy_dn'].shape = eigenval_dict['num_kpoints'], eigenval_dict['num_bands']
 
                 eigenval_dict['kpt_coord_arr'] = np.array([None] * eigenval_dict['num_kpoints'] * 3)     
                 eigenval_dict['kpt_coord_arr'].shape = eigenval_dict['num_kpoints'], 3
@@ -1133,25 +1393,34 @@ def read_eigenval(eigenval_file_path):
                             i_line = i_line + 1
                             try:
                                 eigenval_dict['eigs_up'][i_kpoint,i_band] = float(funcs.split_line(line[i_line])[1])
-                                eigenval_dict['eigs_dw'][i_kpoint,i_band] = float(funcs.split_line(line[i_line])[2])
+                                eigenval_dict['eigs_dn'][i_kpoint,i_band] = float(funcs.split_line(line[i_line])[2])
                             except:
                                 # This happens when the parameter cannot be converted to string, for example: sting: '***************'
                                 eigenval_dict['eigs_up'][i_kpoint,i_band] = 999999
-                                eigenval_dict['eigs_dw'][i_kpoint,i_band] = 999999
+                                eigenval_dict['eigs_dn'][i_kpoint,i_band] = 999999
                             # Currently, the occupancy will not be read, because the format is unclear for now
                             #occupancy_up[i_kpoint, i_band] = float(funcs.split_line(line[i_line])[3])
-                            #occupancy_dw[i_kpoint, i_band] = float(funcs.split_line(line[i_line])[4])
+                            #occupancy_dn[i_kpoint, i_band] = float(funcs.split_line(line[i_line])[4])
                             if i_band == (eigenval_dict['num_bands'] - 1):
                                 i_line = i_line + 2
             eigenval_dict['read_status'] = 1
-                
-            band_data_txt = ''
-            band_data_txt_up = ''
-            band_data_txt_dw = ''
+            ###################################
+            # Determine the k=path length list
+            ###################################
+            kpath_len_car = 0
+            characteristic_len = np.linalg.norm(vasp_tools.kpoint_rec2car(eigenval_dict['kpt_coord_arr'][1,:] - eigenval_dict['kpt_coord_arr'][0,:], poscar_dict['reciprocal_arr']))
+            eigenval_dict['kpath_len_list'] = [None] * eigenval_dict['num_kpoints']
+            eigenval_dict['kpath_len_list'][0] = 0
+            for i_kpt in range(1, eigenval_dict['num_kpoints']):
+                kpt_dist_car = np.linalg.norm(vasp_tools.kpoint_rec2car(eigenval_dict['kpt_coord_arr'][i_kpt,:] - eigenval_dict['kpt_coord_arr'][i_kpt - 1,:], poscar_dict['reciprocal_arr']))
+                if kpt_dist_car < characteristic_len * 3:
+                    kpath_len_car += kpt_dist_car
+                eigenval_dict['kpath_len_list'][i_kpt] = kpath_len_car
     return eigenval_dict
 
 def read_procar(procar_file_path):
     '''Read PROCAR'''
+    args_dict = locals()
     import os
     import numpy as np
     from . import vasp_read
@@ -1159,7 +1428,35 @@ def read_procar(procar_file_path):
     from .. import funcs
 
     procar_file_path = os.path.abspath(procar_file_path)
+    file_path, filename = os.path.split(procar_file_path)
+    poscar_file_path = os.path.join(file_path, 'POSCAR')
+    poscar_dict = vasp_read.read_poscar(poscar_file_path)
+
     procar_dict = {}
+    procar_dict['file_path'] = None
+    procar_dict['num_lines'] = None
+    procar_dict['num_kpoints'] = None
+    procar_dict['num_bands'] = None
+    procar_dict['num_ions'] = None
+    procar_dict['num_cols'] = None
+    procar_dict['num_orbits'] = None
+    procar_dict['ispin'] = None
+    procar_dict['kpt_coord_arr'] = None
+    procar_dict['weights'] = None
+    procar_dict['eigs'] = None
+    procar_dict['occupancy'] = None
+    procar_dict['projections'] = None
+    procar_dict['projections_noncollinear'] = None
+    procar_dict['eigs_up'] = None
+    procar_dict['eigs_dn'] = None
+    procar_dict['occupancy_up'] = None
+    procar_dict['occupancy_dn'] = None
+    procar_dict['projections_up'] = None
+    procar_dict['projections_dn'] = None
+    procar_dict['projections_up_noncollinear'] = None
+    procar_dict['projections_dn_noncollinear'] = None
+    procar_dict['kpath_len_list'] = 0
+
     procar_dict['file_path'] = procar_file_path
     procar_dict['dict_type'] = 'procar'
 
@@ -1186,21 +1483,35 @@ def read_procar(procar_file_path):
                 #estimated number of lines for PROCAR file in collinear calculations
                 estimated_num_lines_ispin1 = num_header + 1 * ((num_kpoints * ((num_bands * (num_ions + 1 + 4)) + 3)) + 1)
                 estimated_num_lines_ispin2 = num_header + 2 * ((num_kpoints * ((num_bands * (num_ions + 1 + 4)) + 3)) + 1)
+                estimated_num_lines_ispin2_variant = num_header + 2 * ((num_kpoints * ((num_bands * (num_ions + 1 + 5)) + 3)) + 1)
             elif file_type == 'PROCAR_noncollinear':
                 #estimated number of lines for PROCAR file in noncollinear calculations
                 estimated_num_lines_ispin1 = num_header + 1 * ((num_kpoints * ((num_bands * ((num_ions + 1) * 4 + 4)) + 3)) + 1) 
                 estimated_num_lines_ispin2 = num_header + 2 * ((num_kpoints * ((num_bands * ((num_ions + 1) * 4 + 4)) + 3)) + 1)
+                estimated_num_lines_ispin2_variant = num_header + 2 * ((num_kpoints * ((num_bands * ((num_ions + 1) * 4 + 5)) + 3)) + 1)
 
             if num_lines == estimated_num_lines_ispin1:
                 ispin = 1 
             elif num_lines == estimated_num_lines_ispin2:
                 ispin = 2
+                empty_lines_before_band_i = 1
+            elif num_lines == estimated_num_lines_ispin2_variant:
+                # this corresponds to the PROCAR with two empty lines before the line:
+                # band   2 # energy  -35.39571890 # occ.  1.00000000
+                ispin = 2
+                empty_lines_before_band_i = 2
             else:
-                print('ERROR: from vasp_read. Please check you PROCAR file')
+                print('ERROR (#2106281158) from vasp_read: The format of PROCAR file cannot be recognized. Please check your PROCAR file: ' + procar_file_path)
+                exit()
             num_m = 4 #total partial charge, mx, my and mz (m = magnetization) contributions to that state 
             # orbitals      0     1      2      3     4      5      6      7      8      9
             # orbitals      s     py     pz     px    dxy    dyz    dz2    dxz    dx2    tot
-            num_orbits = 9
+            procar_dict['num_cols'] = len(funcs.split_line(line = line[7], separator = ' '))
+            if procar_dict['num_cols'] == 11:
+                num_orbits = 9
+            elif procar_dict['num_cols'] == 18:
+                num_orbits = 16
+            procar_dict['num_orbits'] = num_orbits
 
             #to avoid the following error: mask = np.isnan(self.x) TypeError: ufunc 'isnan' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''.    Use dtype = np.float64 instead of dtype = object.
             if ispin == 1:
@@ -1217,22 +1528,22 @@ def read_procar(procar_file_path):
             elif ispin == 2:
                 eigs_up = np.array([None] * num_kpoints * num_bands, dtype=np.float64)
                 eigs_up.shape = num_kpoints, num_bands
-                eigs_dw = np.array([None] * num_kpoints * num_bands, dtype=np.float64)
-                eigs_dw.shape = num_kpoints, num_bands
+                eigs_dn = np.array([None] * num_kpoints * num_bands, dtype=np.float64)
+                eigs_dn.shape = num_kpoints, num_bands
                 occupancy_up = np.array([None] * num_kpoints * num_bands, dtype=np.float64)
                 occupancy_up.shape = num_kpoints, num_bands
-                occupancy_dw = np.array([None] * num_kpoints * num_bands, dtype=np.float64)
-                occupancy_dw.shape = num_kpoints, num_bands
+                occupancy_dn = np.array([None] * num_kpoints * num_bands, dtype=np.float64)
+                occupancy_dn.shape = num_kpoints, num_bands
                 if file_type == 'PROCAR_collinear':
-                    projections_up = np.array([None] * num_kpoints * num_bands * (num_ions + 1) * (num_orbits + 1), dtype=np.float64)
+                    projections_up = np.array([None] * num_kpoints * num_bands * (num_ions + 1) * (num_orbits + 1), dtype=np.float32)
                     projections_up.shape = num_kpoints, num_bands, (num_ions + 1), (num_orbits + 1)
-                    projections_dw = np.array([None] * num_kpoints * num_bands * (num_ions + 1) * (num_orbits + 1), dtype=np.float64)
-                    projections_dw.shape = num_kpoints, num_bands, (num_ions + 1), (num_orbits + 1)
+                    projections_dn = np.array([None] * num_kpoints * num_bands * (num_ions + 1) * (num_orbits + 1), dtype=np.float64)
+                    projections_dn.shape = num_kpoints, num_bands, (num_ions + 1), (num_orbits + 1)
                 elif file_type == 'PROCAR_noncollinear':
                     projections_up_noncollinear = np.array([None] * num_kpoints * num_bands * (num_ions + 1) * num_m * (num_orbits + 1), dtype=np.float64)
                     projections_up_noncollinear.shape = num_kpoints, num_bands, (num_ions + 1), num_m, (num_orbits + 1)
-                    projections_dw_noncollinear = np.array([None] * num_kpoints * num_bands * (num_ions + 1) * num_m, (num_orbits + 1), dtype=np.float64)
-                    projections_dw_noncollinear.shape = num_kpoints, num_bands, (num_ions + 1), num_m, (num_orbits + 1)
+                    projections_dn_noncollinear = np.array([None] * num_kpoints * num_bands * (num_ions + 1) * num_m, (num_orbits + 1), dtype=np.float64)
+                    projections_dn_noncollinear.shape = num_kpoints, num_bands, (num_ions + 1), num_m, (num_orbits + 1)
             
             kpt_coord_arr = np.array([None] * num_kpoints * 3)
             kpt_coord_arr.shape = num_kpoints, 3
@@ -1243,15 +1554,28 @@ def read_procar(procar_file_path):
                 i_line = i_line + 1
                 for i_kpoint in range(0, num_kpoints):
                     i_line = i_line + 1
-                    ###############################################################################
+                    #############################################################################################
                     # the format in VASP source code:
                     # sphpro.F: 3201 FORMAT(/' k-point ',I4,' :',3X,3F11.8,'     weight = ',F10.8/)
-                    ###############################################################################
-                    temp_n = len(' k-point ') + 4 + len(' :') + 3 + 1
-                    kpt_coord_arr[i_kpoint, 0] = float(line[i_line][temp_n:temp_n+11])
-                    kpt_coord_arr[i_kpoint, 1] = float(line[i_line][temp_n+11:temp_n+11+11])
-                    kpt_coord_arr[i_kpoint, 2] = float(line[i_line][temp_n+11+11:temp_n+11+11+11])
-                    weights[i_kpoint] = float(funcs.split_line(line = line[i_line], separator = '=')[1])
+                    # for example: " k-point   22 :    0.50000000 0.00924551-0.00924551     weight = 0.00555556"
+                    # different format:
+                    # sphpro.F: 3201 FORMAT(/' k-point ',I5,' :',3X,3F11.8,'     weight = ',F10.8/)
+                    #############################################################################################
+                    #temp_n = len(' k-point ') + 4 + len(' :') + 3 + 1
+                    try:
+                        # sphpro.F: 3201 FORMAT(/' k-point ',I4,' :',3X,3F11.8,'     weight = ',F10.8/)
+                        temp_n = len(' k-point ') + 4 + len(' :') + 3
+                        kpt_coord_arr[i_kpoint, 0] = float(line[i_line][temp_n:temp_n+11])
+                        kpt_coord_arr[i_kpoint, 1] = float(line[i_line][temp_n+11:temp_n+11+11])
+                        kpt_coord_arr[i_kpoint, 2] = float(line[i_line][temp_n+11+11:temp_n+11+11+11])
+                        weights[i_kpoint] = float(funcs.split_line(line = line[i_line], separator = '=')[1])
+                    except:
+                        # sphpro.F: 3201 FORMAT(/' k-point ',I5,' :',3X,3F11.8,'     weight = ',F10.8/)
+                        temp_n = len(' k-point ') + 5 + len(' :') + 3
+                        kpt_coord_arr[i_kpoint, 0] = float(line[i_line][temp_n:temp_n+11])
+                        kpt_coord_arr[i_kpoint, 1] = float(line[i_line][temp_n+11:temp_n+11+11])
+                        kpt_coord_arr[i_kpoint, 2] = float(line[i_line][temp_n+11+11:temp_n+11+11+11])
+                        weights[i_kpoint] = float(funcs.split_line(line = line[i_line], separator = '=')[1])
                     i_line = i_line + 2
                     for i_band in range(0, num_bands):
                         if ispin == 1:
@@ -1261,8 +1585,8 @@ def read_procar(procar_file_path):
                             eigs_up[i_kpoint,i_band] = float(funcs.split_line(line = line[i_line], separator = '#')[1].split()[1])
                             occupancy_up[i_kpoint, i_band] = float(funcs.split_line(line = line[i_line], separator = '#')[2].split()[1])
                         elif ispin == 2 and i_ispin == 1:
-                            eigs_dw[i_kpoint,i_band] = float(funcs.split_line(line = line[i_line], separator = '#')[1].split()[1])
-                            occupancy_dw[i_kpoint, i_band] = float(funcs.split_line(line = line[i_line], separator = '#')[2].split()[1])
+                            eigs_dn[i_kpoint,i_band] = float(funcs.split_line(line = line[i_line], separator = '#')[1].split()[1])
+                            occupancy_dn[i_kpoint, i_band] = float(funcs.split_line(line = line[i_line], separator = '#')[2].split()[1])
                         i_line = i_line + 3
                         if file_type == 'PROCAR_collinear':
                             for i_ion in range(0, num_ions + 1):
@@ -1272,9 +1596,13 @@ def read_procar(procar_file_path):
                                     elif ispin == 2 and i_ispin == 0:
                                         projections_up[i_kpoint, i_band, i_ion, i_orbit] = float(funcs.split_line(line[i_line])[i_orbit + 1])
                                     elif ispin == 2 and i_ispin == 1:
-                                        projections_dw[i_kpoint, i_band, i_ion, i_orbit] = float(funcs.split_line(line[i_line])[i_orbit + 1])
+                                        projections_dn[i_kpoint, i_band, i_ion, i_orbit] = float(funcs.split_line(line[i_line])[i_orbit + 1])
                                 i_line = i_line + 1
-                            i_line = i_line + 1
+                            #i_line = i_line + 1
+                            if procar_dict['num_orbits'] == 9:
+                                i_line = i_line + 1
+                            elif procar_dict['num_orbits'] == 16:
+                                i_line = i_line + 2
                         elif file_type == 'PROCAR_noncollinear':
                             for i_m in range(0, num_m):
                                 for i_ion in range(0, num_ions + 1):
@@ -1284,9 +1612,13 @@ def read_procar(procar_file_path):
                                         elif ispin == 2 and i_ispin == 0:
                                             projections_up_noncollinear[i_kpoint, i_band, i_ion, i_m, i_orbit] = float(funcs.split_line(line[i_line])[i_orbit + 1])
                                         elif ispin == 2 and i_ispin == 1:
-                                            projections_dw_noncollinear[i_kpoint, i_band, i_ion, i_m, i_orbit] = float(funcs.split_line(line[i_line])[i_orbit + 1])
+                                            projections_dn_noncollinear[i_kpoint, i_band, i_ion, i_m, i_orbit] = float(funcs.split_line(line[i_line])[i_orbit + 1])
                                     i_line = i_line + 1
-                            i_line = i_line + 1
+                            #i_line = i_line + 1
+                            if empty_lines_before_band_i == 1:
+                                i_line = i_line + 1
+                            elif empty_lines_before_band_i == 2:
+                                i_line = i_line + 2
         #build procar_dict
         procar_dict['file_type'] = file_type
         procar_dict['num_lines'] = num_ions
@@ -1305,26 +1637,46 @@ def read_procar(procar_file_path):
                 procar_dict['projections_noncollinear'] = projections_noncollinear
         elif ispin == 2:
             procar_dict['eigs_up'] = eigs_up
-            procar_dict['eigs_dw'] = eigs_dw
+            procar_dict['eigs_dn'] = eigs_dn
             procar_dict['occupancy_up'] = occupancy_up
-            procar_dict['occupancy_dw'] = occupancy_dw
+            procar_dict['occupancy_dn'] = occupancy_dn
             if file_type == 'PROCAR_collinear':
                 procar_dict['projections_up'] = projections_up
-                procar_dict['projections_dw'] = projections_dw
+                procar_dict['projections_dn'] = projections_dn
             elif file_type == 'PROCAR_noncollinear':
                 procar_dict['projections_up_noncollinear'] = projections_up_noncollinear
-                procar_dict['projections_dw_noncollinear'] = projections_dw_noncollinear
+                procar_dict['projections_dn_noncollinear'] = projections_dn_noncollinear
+        # Determine the k=path length list
+        kpath_len = 0
+        procar_dict['kpath_len_list'] = [None] * procar_dict['num_kpoints']
+        procar_dict['kpath_len_list'][0] = 0
+        for i_kpt in range(1, procar_dict['num_kpoints']):
+            kpath_len += np.linalg.norm(procar_dict['kpt_coord_arr'][i_kpt,:] - procar_dict['kpt_coord_arr'][i_kpt - 1,:]) 
+            procar_dict['kpath_len_list'][i_kpt] = kpath_len
+        ###################################
+        # Determine the k=path length list
+        ###################################
+        kpath_len_car = 0
+        characteristic_len = np.linalg.norm(vasp_tools.kpoint_rec2car(procar_dict['kpt_coord_arr'][1,:] - procar_dict['kpt_coord_arr'][0,:], poscar_dict['reciprocal_arr']))
+        procar_dict['kpath_len_list'] = [None] * procar_dict['num_kpoints']
+        procar_dict['kpath_len_list'][0] = 0
+        for i_kpt in range(1, procar_dict['num_kpoints']):
+            kpt_dist_car = np.linalg.norm(vasp_tools.kpoint_rec2car(procar_dict['kpt_coord_arr'][i_kpt,:] - procar_dict['kpt_coord_arr'][i_kpt - 1,:], poscar_dict['reciprocal_arr']))
+            if kpt_dist_car < characteristic_len * 3:
+                kpath_len_car += kpt_dist_car
+            procar_dict['kpath_len_list'][i_kpt] = kpath_len_car
     return procar_dict
 
 def read_incar(incar_file_path):
     '''
     Description:
-        Read information from INCAR file
+        Read information from Inum_columnsAR file
     Args:
         @.incar_file_path: String format. The file path of INCAR. It can either be full path or relative path
     Return:
         incar_dict: dictionary type.
     '''
+    args_dict = locals()
     import os
     import numpy as np
     import sys
@@ -1341,9 +1693,11 @@ def read_incar(incar_file_path):
 
     file_status = funcs.file_status(incar_file_path)
     incar_dict['file_status'] = file_status
+    incar_dict['read_status'] = None
 
     if file_status != 1:
         print('WARNING #20120313 (from read_incar): The file ' + incar_file_path + ' does not exist or is empty, please check this file.')
+        incar_dict['read_status'] = 0
     else:
         with open(incar_file_path) as f:
             line = f.readlines()
@@ -1351,8 +1705,14 @@ def read_incar(incar_file_path):
                 if line[i_line_indx][0] == '#' or len(line[i_line_indx].strip()) == 0:
                     continue
                 else:
-                    incar_key = funcs.split_line(line = line[i_line_indx], separator = '=')[0]
-                    incar_val = funcs.split_line(line = line[i_line_indx], separator = '=')[1]
+                    incar_key = None
+                    incar_val = None
+                    try:
+                        incar_key = funcs.split_line(line = line[i_line_indx], separator = '=')[0]
+                        incar_val = funcs.split_line(line = line[i_line_indx], separator = '=')[1]
+                        incar_dict['read_status'] = 1
+                    except:
+                        incar_dict['read_status'] = 0
                     try:
                         incar_val = float(incar_val)
                     except:
@@ -1362,6 +1722,8 @@ def read_incar(incar_file_path):
                     except:
                         pass
                     incar_dict[incar_key] = incar_val
+    if incar_dict['read_status'] == 0:
+        print('WARNING #2104252055 (from read_incar): Cannot successfully read the file ' + incar_file_path)
     return incar_dict
 
 def read_potcar(potcar_file_path):
@@ -1373,6 +1735,7 @@ def read_potcar(potcar_file_path):
     Return:
         potcar_dict: dictionary type.
     '''
+    args_dict = locals()
     import os
     import numpy as np
     import sys
@@ -1411,6 +1774,8 @@ def read_potcar(potcar_file_path):
                 potcar_dict['elmt_list'].append(elmt)
                 potcar_dict['zvalf_list'].append(zvalf)
     return potcar_dict
+
+###def read_band_dat_file()
 
 ##def read_vasprun(vasprun_file_path, screen_list = None):
 ##    '''

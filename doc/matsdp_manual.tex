@@ -49,8 +49,8 @@
 %\small dianwuwang@163.com \\
 \vspace{0.8cm}
 
-\small version 0.2.3\\
-\small Apr. 20, 2021
+\small version 0.2.4\\
+\small Jun. 29, 2021
 
 \end{center}
 \end{titlepage}
@@ -129,12 +129,14 @@ The matsdp package contains the vasp module, the apt module and the dvm module a
 \begin{tikzpicture}[line width=3pt, node distance=4.3cm]
 \def \smbwd{2cm}
 \node (matsdp) [startstop] {matsdp};
-\node (vasp) [process1, right of=matsdp,yshift=6.5cm] {vasp module};
-\node (apt) [process1, below of=vasp] {apt module};
+\node (vasp) [process1, right of=matsdp,yshift=8.5cm] {vasp module};
+\node (wannier) [process1, below of=vasp] {wannier module};
+\node (apt) [process1, below of=wannier] {apt module};
 \node (dvm) [process1, below of=apt] {dvm module};
 \node (pms) [process1, below of=dvm] {pms module};
 
 \draw[arrow] (matsdp) -- (vasp);
+\draw[arrow] (matsdp) -- (wannier);
 \draw[arrow] (matsdp) -- (apt);
 \draw[arrow] (matsdp) -- (dvm);
 \draw[arrow] (matsdp) -- (pms);
@@ -992,29 +994,68 @@ Plot band structure, including fat band.
 \subsubsection{Syntax}
 \begin{lstlisting}
 plot_bs(
-    infile_path_list, 
-    xlim = None, 
-    ylim = None, 
-    fermi_shift_zero = True, 
+    infile_path_list = [EIGENVAL],
+    xlim = None,
+    ylim = [-2,2],
+    fermi_shift_zero = True,
+    e_fermi_list = None,
     band_list = None,
-    interp_on = True, 
-    show_band_data_point = False,
-    band_gap_label = False,
-    band_palette_dict = None, 
+    interp_on = False,
+    plot_band_data_point = False,
+    plot_line = True,
+    band_gap_label = True,
+    band_palette_dict = None,
     band_lty_dict = None,
-    system_color_list = None, 
+    system_color_list = None,
     system_lty_list = None,
-    spd_and_site_projections_file_path_list = None, 
+    spd_and_site_projections_file_path_list = None,
     projections_point_size_factor = 1,
-    legend_on = True, 
-    plot_fermi_level = False,
-    xtick_direction = 'out', 
+    spin_resolved_projections = False,
+    alpha = 0.8,
+    clip_on = True,
+    solid_marker = True,
+    legend_on = True,
+    plot_fermi_level = True,
+    xtick_direction = 'out',
     ytick_direction = 'out',
-    line_width = 2.0, 
-    font_size = 23, 
-    fig_format = 'png', 
-    fig_size = [15,10], 
-    fig_dpi = 600)
+    line_width = 2.0,
+    font_size = 24,
+    fig_format = 'png',
+    fig_size = [15, 10],
+    fig_dpi = 150,
+    write_band_data = True)
+
+plot_bs(
+    infile_path_list = [PROCAR],
+    xlim = None,
+    ylim = [-2,2],
+    fermi_shift_zero = True,
+    e_fermi_list = None,
+    band_list = None,
+    interp_on = False,
+    plot_band_data_point = False,
+    plot_line = False,
+    band_gap_label = True,
+    band_palette_dict = None,
+    band_lty_dict = None,
+    system_color_list = None,
+    system_lty_list = None,
+    spd_and_site_projections_file_path_list = 'auto',
+    projections_point_size_factor = 1,
+    spin_resolved_projections = False,
+    alpha = 0.8,
+    clip_on = True,
+    solid_marker = True,
+    legend_on = True,
+    plot_fermi_level = True,
+    xtick_direction = 'out',
+    ytick_direction = 'out',
+    line_width = 2.0,
+    font_size = 24,
+    fig_format = 'png',
+    fig_size = [15, 10],
+    fig_dpi = 150,
+    write_band_data = True)
 \end{lstlisting}
 
 \subsubsection{Arguments}
@@ -1031,9 +1072,9 @@ plot_bs(
 \item band\_lty\_dict: this is used to define the linestyle of specific band. Dictionary key is the band index (numbered from 1).
 \item system\_color\_list: if multiple infile are to be plotted. the label only label the system index. The line color of different systems, this is used when the band structure for different systems are to be compared.
 \item system\_lty\_list: if multiple infile are to be plotted. the band linestyles are designated for each infile. The line style of different systems, this is used when the band structure for different systems are to be compared.
-\item spd\_and\_site\_projections\_file\_path\_list: The parameter denotes the file which can be used to designate the spd- and site projected wave function character or each orbit. This parameter is only valid when the input file has the PROCAR file format. This file contains five columns: spin, mag, ion, orbit, color.
+\item spd\_and\_site\_projections\_file\_path\_list: The parameter denotes the file which can be used to designate the spd- and site projected wave function character or each orbit.  The user can also set this parameter to 'auto' to automatically plotting the spd- and site projected band structure. This parameter is only valid when the input file has the PROCAR file format. This file contains five columns: spin, mag, ion, orbit, color.
     \begin{itemize}
-    \item spin: spin status of the projected contribution.
+    \item spin: spin status of the projected contribution. Choices are None, up, dn, up\_dn, in which up and dn are spin resolved, and up\_dn is spin unresolved.
 
     \item mag: Magnetization\_density. The total and local magnetizations, i.e. rho (orbital-projected contributions to the wavefunctions for each ion) and magnetization density (orbital-projected contributions to the magnetization) in the x(mx), y(my) and z(mz) directions. Please choose from the quadruplet of texts: \['rho', 'mx', 'my', 'mz'\] or \['tot', 'mx', 'my', 'mz'\]. The 'rho' represents 'tot'. The default is \['rho'\].
 
@@ -1060,8 +1101,8 @@ plot_bs(
            spin     ,         mag      ,             ions\_list     ,      orbit      ,    color    ,     legend
         None /  0   ,      None / 0    ,    ['tot']       / [4 ]   ,    s   /  0     ,    black    ,     None
         up   /  1   ,      tot  / 0    ,    ['Te2','Li5'] / [2, 7] ,    py  /  1     ,    red      ,     Auto
-        dw   /  2   ,      mx   / 1    ,    ['Se5']       / [4 ]   ,    pz  /  2     ,    blue     ,     'Li'
-                    ,      my   / 2    ,    ['Al3']       / [3 ]   ,    px  /  3     ,    pink     ,     'Li3 py $m_{x}$'
+        dn   /  2   ,      mx   / 1    ,    ['Se5']       / [4 ]   ,    pz  /  2     ,    blue     ,     'Li'
+        up_dn/  3   ,      my   / 2    ,    ['Al3']       / [3 ]   ,    px  /  3     ,    pink     ,     'Li3 py $m_{x}$'
                     ,      mz   / 3    ,    ['Bi3']       / [12]   ,    dxy /  4     ,    green    ,
                     ,                  ,                           ,    dyz /  5     ,             ,   
                     ,                  ,                           ,    dz2 /  6     ,             ,   
@@ -1071,6 +1112,7 @@ plot_bs(
         \end{lstlisting}
         \end{landscape}
     \end{itemize}
+\item spin\_resolved\_projections: whether the spd and site projected band is spin resolved or not.
 \item projections\_point\_size\_factor: the scaling factor for the fat band point size. Default value is 1.
 \item legend\_on: if True, the legend will be shown.
 \item plot\_fermi\_level: if True, the Fermi level will be shown.
@@ -1114,13 +1156,13 @@ projections\_li.txt:
 \begin{lstlisting}
 spin, mag, ions_list  , orbit    , color      , legend
 up  , tot, ['Li']     , tot      , black      , Auto
-dw  , tot, ['Li']     , tot      , gray       , Auto
+dn  , tot, ['Li']     , tot      , gray       , Auto
 up  , tot, ['Li']     , px       , red        , Auto
-dw  , tot, ['Li']     , px       , darkviolet , Auto
+dn  , tot, ['Li']     , px       , darkviolet , Auto
 up  , tot, ['Li']     , py       , blue       , Auto
-dw  , tot, ['Li']     , py       , steelblue  , Auto
+dn  , tot, ['Li']     , py       , steelblue  , Auto
 up  , tot, ['Li']     , pz       , green      , Auto
-dw  , tot, ['Li']     , pz       , seagreen   , Auto
+dn  , tot, ['Li']     , pz       , seagreen   , Auto
 \end{lstlisting}
 
 The examples are shown in the Figure \ref{fig:bs_li} and Figure \ref{fig:fatband_li}.
@@ -1359,6 +1401,28 @@ vasp_write.write_poscar_with_force(
 \subsubsection{Output}
 
 The POSCAR file which contains the force on each atom.
+
+%%%%%%%%%%%%%%%%
+%WANNIER
+%%%%%%%%%%%%%%%%
+\chapter{Subpackage: wannier}
+
+Modules that may be imported before using the wannier package
+\begin{itemize}
+\item from matsdp.wannier import wannier\_read
+\item from matsdp.wannier import wannier\_plot
+\end{itemize}
+
+%%%%%%%%%%%%%%
+%wannier\_read
+%%%%%%%%%%%%%%
+\section{wannier\_read module}
+
+Omitted
+
+\section{wannier\_plot module}
+
+Omitted
 
 %%%%%%%%%%%%%%%%
 %APT

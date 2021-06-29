@@ -9,6 +9,7 @@ def write_task_summary(task_dir, task_type = 'VASP', band_gap_label = True, plot
     band_struct_ylim: A list of length two. The limit of the y axis (i.e. the energy range around the Fermi level). This is used to check the band structure near the Fermi level. If the value is None, then the program will determine the ylim automatically.
     num_added_bands: This is used to automatically determine the added bands around the Fermi level. 
     '''
+    args_dict = locals()
     import time
     import os
     import numpy as np
@@ -289,10 +290,10 @@ r'\setcounter{page}{1}    ' + '\n')
             cbm_up = band_gap_dict['CBM_up']
             vbm_up = band_gap_dict['VBM_up']
 
-            band_gap_dw = band_gap_dict['band_gap_dw']
-            gap_type_dw = band_gap_dict['gap_type_dw']
-            cbm_dw = band_gap_dict['CBM_dw']
-            vbm_dw = band_gap_dict['VBM_dw']
+            band_gap_dn = band_gap_dict['band_gap_dn']
+            gap_type_dn = band_gap_dict['gap_type_dn']
+            cbm_dn = band_gap_dict['CBM_dn']
+            vbm_dn = band_gap_dict['VBM_dn']
 
             if band_gap in [None, 'None', 'none']:
                 band_gap = 'None'
@@ -320,18 +321,18 @@ r'\setcounter{page}{1}    ' + '\n')
             else:
                 vbm_up = '{:.6f}'.format(vbm_up)
 
-            if band_gap_dw in [None, 'None', 'none']:
-                band_gap_dw = 'None'
+            if band_gap_dn in [None, 'None', 'none']:
+                band_gap_dn = 'None'
             else:
-                band_gap_dw = '{:.6f}'.format(band_gap_dw)
-            if cbm_dw in [None, 'None', 'none']:
-                cbm_dw = 'None'
+                band_gap_dn = '{:.6f}'.format(band_gap_dn)
+            if cbm_dn in [None, 'None', 'none']:
+                cbm_dn = 'None'
             else:
-                cbm_dw = '{:.6f}'.format(cbm_dw)
-            if vbm_dw in [None, 'None', 'none']:
-                vbm_dw = 'None'
+                cbm_dn = '{:.6f}'.format(cbm_dn)
+            if vbm_dn in [None, 'None', 'none']:
+                vbm_dn = 'None'
             else:
-                vbm_dw = '{:.6f}'.format(vbm_dw)
+                vbm_dn = '{:.6f}'.format(vbm_dn)
 
             poscar_dict = vasp_read.read_poscar(poscar_file_path)
             if poscar_dict['file_status'] == 1:
@@ -417,10 +418,10 @@ r'\setcounter{page}{1}    ' + '\n')
             task_summary_ctex_str = task_summary_ctex_str + ('VBM(up) (eV) & ' + str(vbm_up) + '\\\\\n')
 
             task_summary_ctex_str = task_summary_ctex_str + (r'\hline' + '\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('$E_{gap}$(down) (eV) & ' + str(band_gap_dw) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('Gap Type(down) & ' + str(gap_type_dw) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('CBM(down) (eV) & ' + str(cbm_dw) + '\\\\\n')
-            task_summary_ctex_str = task_summary_ctex_str + ('VBM(down) (eV) & ' + str(vbm_dw) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('$E_{gap}$(down) (eV) & ' + str(band_gap_dn) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('Gap Type(down) & ' + str(gap_type_dn) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('CBM(down) (eV) & ' + str(cbm_dn) + '\\\\\n')
+            task_summary_ctex_str = task_summary_ctex_str + ('VBM(down) (eV) & ' + str(vbm_dn) + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + (r'\hline' + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + (r'\end{tabular}' + '\\\\\n')
             task_summary_ctex_str = task_summary_ctex_str + (r'\end{table}' + '\\\\\n')
@@ -556,18 +557,18 @@ r'\setcounter{page}{1}    ' + '\n')
                             band_indx_max_up = band_gap_dict['num_bands'] - 1
                         if band_indx_min_up < 0:
                             band_indx_min_up = 0
-                        band_indx_max_dw = band_gap_dict['CBM_band_indx_dw'] + num_added_bands 
-                        band_indx_min_dw = band_gap_dict['VBM_band_indx_dw'] - num_added_bands 
-                        if band_indx_max_dw > band_gap_dict['num_bands']:
-                            band_indx_max_dw = band_gap_dict['num_bands'] - 1
-                        if band_indx_min_dw < 0:
-                            band_indx_min_dw = 0
+                        band_indx_max_dn = band_gap_dict['CBM_band_indx_dn'] + num_added_bands 
+                        band_indx_min_dn = band_gap_dict['VBM_band_indx_dn'] - num_added_bands 
+                        if band_indx_max_dn > band_gap_dict['num_bands']:
+                            band_indx_max_dn = band_gap_dict['num_bands'] - 1
+                        if band_indx_min_dn < 0:
+                            band_indx_min_dn = 0
                         e_max_up = np.max(band_gap_dict['eigs_up'][:, band_indx_max_up])
                         e_min_up = np.min(band_gap_dict['eigs_up'][:, band_indx_min_up])
-                        e_max_dw = np.max(band_gap_dict['eigs_dw'][:, band_indx_max_dw])
-                        e_min_dw = np.min(band_gap_dict['eigs_dw'][:, band_indx_min_dw])
-                        e_max = max(e_max_up, e_max_dw)
-                        e_min = min(e_min_up, e_min_dw)
+                        e_max_dn = np.max(band_gap_dict['eigs_dn'][:, band_indx_max_dn])
+                        e_min_dn = np.min(band_gap_dict['eigs_dn'][:, band_indx_min_dn])
+                        e_max = max(e_max_up, e_max_dn)
+                        e_min = min(e_min_up, e_min_dn)
                     if band_struct_ylim in [None, 'None', 'none']:
                         band_struct_ylim = [e_min, e_max]
                     formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time.time()))
@@ -633,7 +634,7 @@ r"None, tot, " + r"['" + i_elmt_species + r"']     , tot      , " + default_pale
 )
                         elif ispin == 2:
                             for i_spin in range(0, ispin):
-                                spin_label = funcs.logic_retn_val(i_spin == 0,'up','dw') 
+                                spin_label = funcs.logic_retn_val(i_spin == 0,'up','dn') 
                                 projections_txt = projections_txt +(
 spin_label + r"  , tot, " + r"['" + i_elmt_species + r"']     , tot      , " + default_palette_list[item_counter] + r"      , Auto" + "\n"
 )
@@ -661,18 +662,18 @@ spin_label + r"  , tot, " + r"['" + i_elmt_species + r"']     , tot      , " + d
                             band_indx_max_up = band_gap_dict['num_bands'] - 1
                         if band_indx_min_up < 0:
                             band_indx_min_up = 0
-                        band_indx_max_dw = band_gap_dict['CBM_band_indx_dw'] + num_added_bands 
-                        band_indx_min_dw = band_gap_dict['VBM_band_indx_dw'] - num_added_bands 
-                        if band_indx_max_dw > band_gap_dict['num_bands']:
-                            band_indx_max_dw = band_gap_dict['num_bands'] - 1
-                        if band_indx_min_dw < 0:
-                            band_indx_min_dw = 0
+                        band_indx_max_dn = band_gap_dict['CBM_band_indx_dn'] + num_added_bands 
+                        band_indx_min_dn = band_gap_dict['VBM_band_indx_dn'] - num_added_bands 
+                        if band_indx_max_dn > band_gap_dict['num_bands']:
+                            band_indx_max_dn = band_gap_dict['num_bands'] - 1
+                        if band_indx_min_dn < 0:
+                            band_indx_min_dn = 0
                         e_max_up = np.max(band_gap_dict['eigs_up'][:, band_indx_max_up])
                         e_min_up = np.min(band_gap_dict['eigs_up'][:, band_indx_min_up])
-                        e_max_dw = np.max(band_gap_dict['eigs_dw'][:, band_indx_max_dw])
-                        e_min_dw = np.min(band_gap_dict['eigs_dw'][:, band_indx_min_dw])
-                        e_max = max(e_max_up, e_max_dw)
-                        e_min = min(e_min_up, e_min_dw)
+                        e_max_dn = np.max(band_gap_dict['eigs_dn'][:, band_indx_max_dn])
+                        e_min_dn = np.min(band_gap_dict['eigs_dn'][:, band_indx_min_dn])
+                        e_max = max(e_max_up, e_max_dn)
+                        e_min = min(e_min_up, e_min_dn)
                     if band_struct_ylim in [None, 'None', 'none']:
                         band_struct_ylim = [e_min, e_max]
                     formatted_time = time.strftime('%Y%m%d_%H-%M-%S',time.localtime(time.time()))
@@ -766,6 +767,7 @@ def gen_kpath(fpath, kpath_scheme, kpath_params):
     kpath_scheme: pymatgen, vaspkit
     kpath_params: 'echo 3;echo 303 | vaspkit'
     '''
+    args_dict = locals()
     import os
     #fpath = bs_dir
     fpath = fpath
@@ -831,6 +833,7 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
     For a given structure, to keep the uniqueness of the task, this module should only run once.
     use_primitive_cell: If True, then the structure will be reduced to primitive cell. Now the "phonopy --symmetry" is used to fulfill this function.
     '''
+    args_dict = locals()
     import time
     import math
     import os
@@ -946,6 +949,9 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
                 pass
             else:
                 print('WARNING #2012271604 (from task_manager.gen_inputs): ' + i_task_dir + ' does not exist! Cannot be created.')
+
+        # If vacuum exists in certain direction, then set the number of kpoints in that directions to num_kpt_in_vacuum_direction
+        num_kpt_in_vacuum_direction = 1
         ############################
         # opt
         ############################
@@ -987,7 +993,9 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
                         os.system('sh ' + phonopy_sh_file_path)
                     except:
                         print('# phonopy --symmetry did not work for the file: ' + opt_poscar_file_path)
+            ##################################
             # prepare INCAR
+            ##################################
             incar_dict = {}
             incar_dict['SYSTEM']    = 'opt'
             incar_dict['ISTART']    = 0
@@ -999,12 +1007,13 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
             incar_dict['NSW']       = 200
             incar_dict['ISIF']      = 3
             incar_dict['POTIM']     = 0.5
-            incar_dict['ALGO']      = 'Fast'
-            incar_dict['ISMEAR']    = -5
+            incar_dict['ALGO']      = 'Normal'
+            incar_dict['ISMEAR']    = 0
             incar_dict['SIGMA']     = 0.05
             incar_dict['LREAL']     = '.FALSE.'
             incar_dict['ISPIN']     = 2 
             incar_dict['NELM']      = 200
+            incar_dict['NELMIN']    = 6
             incar_dict['ICHARG']    = 2
             incar_dict['LWAVE']     = '.FALSE.'
             incar_dict['LCHARG']    = '.FALSE.'
@@ -1012,7 +1021,9 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
             incar_dict['AMIX']      = 0.1
             incar_file_path = os.path.join(opt_dir, 'INCAR')
             vasp_write.write_incar(incar_file_path, incar_dict = incar_dict, mode = 'w')
+            ##################################
             # prepare KPOINTS
+            ##################################
             vec1_len = np.linalg.norm(poscar_dict['l_arr'][0,:])
             vec2_len = np.linalg.norm(poscar_dict['l_arr'][1,:])
             vec3_len = np.linalg.norm(poscar_dict['l_arr'][2,:])
@@ -1028,6 +1039,45 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
                 num_k2 = num_k2 + 1
             if (num_k3 % 2) == 0:
                 num_k3 = num_k3 + 1
+
+            if os.path.exists(opt_poscar_file_path): 
+                vacuum_in_xyz = vasp_tools.get_vacuum_status(opt_poscar_file_path)
+                #####################################################################################################################################
+                # If vacuum exist in the model, the vector length in that direction can be kept unchanged. To that end, the user can modify VSAP src.
+                # The usser can modify the VASP src file constr_cell_relax.F by inserting the following codes and recompile VASP software. 
+                # After recompiling VASP, the user needs OPTCELL file and set ISIF = 3 to relax the model
+                #
+                #
+                # Adding the folowing codes to SUBROUTINE CONSTR_CELL_RELAX(FCELL) in constr_cell_relax.F:
+                #      LOGICAL FILFLG
+                #      INTEGER ICELL(3,3)
+                #      INQUIRE(FILE='OPTCELL',EXIST=FILFLG)
+                #      IF (FILFLG) THEN
+                #         OPEN(67,FILE='OPTCELL',FORM='FORMATTED',STATUS='OLD')
+                #         DO J=1,3
+                #            READ(67,"(3I1)") (ICELL(I,J),I=1,3)
+                #         ENDDO
+                #         CLOSE(67)
+                #         DO J=1,3
+                #         DO I=1,3
+                #            IF (ICELL(I,J)==0) FCELL(I,J)=0.0
+                #         ENDDO
+                #         ENDDO
+                #      ENDIF
+                #####################################################################################################################################
+                identity_arr = np.ones((3,3))
+                if vacuum_in_xyz[0] == True:
+                   num_k1 = num_kpt_in_vacuum_direction
+                   identity_arr[0,:] = [0,0,0]
+                elif vacuum_in_xyz[1] == True:
+                   num_k2 = num_kpt_in_vacuum_direction
+                   identity_arr[1,:] = [0,0,0]
+                elif vacuum_in_xyz[2] == True:
+                   num_k3 = num_kpt_in_vacuum_direction
+                   identity_arr[2,:] = [0,0,0]
+                optcell_file_path = os.path.join(opt_dir, 'OPTCELL')
+                np.savetxt(optcell_file_path, identity_arr, fmt = '%i')
+
             kpoints_str = ''
             kpoints_str = kpoints_str + 'Gamma centered Monkhorst-Pack grids' + '\n'
             kpoints_str = kpoints_str + '0' + '\n'
@@ -1036,12 +1086,17 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
             kpoints_str = kpoints_str + '0 0 0' + '\n'
             kpoints_file_path = os.path.join(opt_dir, 'KPOINTS')
             funcs.write_file(kpoints_str, kpoints_file_path, mode = 'w')
+            ##################################
             # prepare POTCAR
+            ##################################
             try:
                 vasp_write.write_potcar(opt_poscar_file_path, elmt_potcar_dir)
             except:
                 print('WARNING #2101102026 from gen_inputs: Cannot write POTCAR file')
 
+            ##################################
+            # Modify INCAR
+            ##################################
             # set default ENCUT according to 1.3 * ENMAX (Value of ENMAX can be found in POTCAR)
             opt_potcar_file_path = os.path.join(task_dir, 'opt', 'POTCAR')
             enmax_val = -9999
@@ -1232,6 +1287,14 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
                 num_k2 = num_k2 + 1
             if (num_k3 % 2) == 0:
                 num_k3 = num_k3 + 1
+            if os.path.exists(os.path.join(opt_dir, 'POSCAR')): 
+                vacuum_in_xyz = vasp_tools.get_vacuum_status(os.path.join(opt_dir, 'POSCAR'))
+                if vacuum_in_xyz[0] == True:
+                   num_k1 = num_kpt_in_vacuum_direction
+                elif vacuum_in_xyz[1] == True:
+                   num_k2 = num_kpt_in_vacuum_direction
+                elif vacuum_in_xyz[2] == True:
+                   num_k3 = num_kpt_in_vacuum_direction
             kpoints_dict = vasp_read.read_kpoints(os.path.join(opt_dir, 'KPOINTS'))
             if kpoints_dict['scheme'] in ['g', 'G', 'm', 'M']:
                 subdivisions_arr = (kpoints_dict['subdivisions_arr'])
@@ -1310,12 +1373,13 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
             incar_dict['NSW']       = 0
             incar_dict['ISIF']      = 3
             incar_dict['POTIM']     = 0.5
-            incar_dict['ALGO']      = 'Fast'
-            incar_dict['ISMEAR']    = -5
+            incar_dict['ALGO']      = 'Normal'
+            incar_dict['ISMEAR']    = 0
             incar_dict['SIGMA']     = 0.05
             incar_dict['LREAL']     = '.FALSE.'
             incar_dict['ISPIN']     = 2 
             incar_dict['NELM']      = 200
+            incar_dict['NELMIN']    = 6
             incar_dict['ICHARG']    = 2
             incar_dict['LWAVE']     = '.FALSE.'
             incar_dict['LCHARG']    = '.TRUE.'
@@ -1359,7 +1423,16 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
             # modify the KPOINTS
             kpoints_dict = vasp_read.read_kpoints(os.path.join(opt_dir, 'KPOINTS'))
             if kpoints_dict['scheme'] in ['g', 'G', 'm', 'M']:
-                subdivisions_arr = (kpoints_dict['subdivisions_arr'] * 2) - 1 
+                #subdivisions_arr = (kpoints_dict['subdivisions_arr'] * 2) - 1 
+                subdivisions_arr = (kpoints_dict['subdivisions_arr'] + 2)
+                if os.path.exists(scf_poscar_file_path): 
+                    vacuum_in_xyz = vasp_tools.get_vacuum_status(scf_poscar_file_path)
+                    if vacuum_in_xyz[0] == True:
+                        subdivisions_arr[0] = num_kpt_in_vacuum_direction
+                    elif vacuum_in_xyz[1] == True:
+                        subdivisions_arr[1] = num_kpt_in_vacuum_direction
+                    elif vacuum_in_xyz[2] == True:
+                        subdivisions_arr[2] = num_kpt_in_vacuum_direction
                 kpoints_dict_temp = {}
                 kpoints_dict_temp['subdivisions_arr'] = subdivisions_arr
                 vasp_write.write_kpoints(os.path.join(scf_dir, 'KPOINTS'), kpoints_dict = kpoints_dict_temp, mode = 's')
@@ -1410,12 +1483,13 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
             incar_dict['NSW']       = 0
             incar_dict['ISIF']      = 3
             incar_dict['POTIM']     = 0.5
-            incar_dict['ALGO']      = 'Fast'
+            incar_dict['ALGO']      = 'Normal'
             incar_dict['ISMEAR']    = 0
             incar_dict['SIGMA']     = 0.05
             incar_dict['LREAL']     = '.FALSE.'
             incar_dict['ISPIN']     = 2 
             incar_dict['NELM']      = 200
+            incar_dict['NELMIN']    = 6
             incar_dict['ICHARG']    = 11
             incar_dict['LWAVE']     = '.FALSE.'
             incar_dict['LCHARG']    = '.TRUE.'
@@ -1469,7 +1543,15 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
                 incar_dict_temp['NBANDS'] = nbands_scf
                 vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
             # generate KPATH
-            gen_kpath(fpath = bs_dir, kpath_scheme = kpath_scheme, kpath_params = kpath_params)
+            if os.path.exists(bs_poscar_file_path): 
+                vacuum_in_xyz = vasp_tools.get_vacuum_status(bs_poscar_file_path)
+            if not any(vacuum_in_xyz):
+                # 3D kpoint
+                gen_kpath(fpath = bs_dir, kpath_scheme = kpath_scheme, kpath_params = kpath_params)
+            else:
+                # 2D kpoint
+                kpath_params = '''echo 3 ; echo 302 | vaspkit'''
+                gen_kpath(fpath = bs_dir, kpath_scheme = kpath_scheme, kpath_params = kpath_params)
         ############################
         # bs_soc
         ############################
@@ -1518,12 +1600,13 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
             incar_dict['NSW']        = 0
             incar_dict['ISIF']       = 3
             incar_dict['POTIM']      = 0.5
-            incar_dict['ALGO']       = 'Fast'
+            incar_dict['ALGO']      = 'Normal'
             incar_dict['ISMEAR']     = 0
             incar_dict['SIGMA']      = 0.05
             incar_dict['LREAL']      = '.FALSE.'
             incar_dict['ISPIN']      = 2 
             incar_dict['NELM']       = 200
+            incar_dict['NELMIN']     = 6
             incar_dict['ICHARG']     = 11
             incar_dict['LWAVE']      = '.FALSE.'
             incar_dict['LCHARG']     = '.TRUE.'
@@ -1592,7 +1675,15 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
                 incar_dict_temp['NBANDS'] = int(nbands_scf * 2)
                 vasp_write.write_incar(incar_file_path, incar_dict = incar_dict_temp, mode = 's')
             # generate KPATH
-            gen_kpath(fpath = bs_soc_dir, kpath_scheme = kpath_scheme, kpath_params = kpath_params)
+            if os.path.exists(bs_soc_poscar_file_path): 
+                vacuum_in_xyz = vasp_tools.get_vacuum_status(bs_soc_poscar_file_path)
+            if not any(vacuum_in_xyz):
+                # 3D kpoint
+                gen_kpath(fpath = bs_dir, kpath_scheme = kpath_scheme, kpath_params = kpath_params)
+            else:
+                # 2D kpoint
+                kpath_params = '''echo 3 ; echo 302 | vaspkit'''
+                gen_kpath(fpath = bs_dir, kpath_scheme = kpath_scheme, kpath_params = kpath_params)
 
         ############################
         # dos
@@ -1642,12 +1733,13 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
             incar_dict['NSW']       = 0
             incar_dict['ISIF']      = 3
             incar_dict['POTIM']     = 0.5
-            incar_dict['ALGO']      = 'Fast'
+            incar_dict['ALGO']      = 'Normal'
             incar_dict['ISMEAR']    = -5
             incar_dict['SIGMA']     = 0.05
             incar_dict['LREAL']     = '.FALSE.'
             incar_dict['ISPIN']     = 2 
             incar_dict['NELM']      = 200
+            incar_dict['NELMIN']    = 6
             incar_dict['ICHARG']    = 11
             incar_dict['LWAVE']     = '.FALSE.'
             incar_dict['LCHARG']    = '.FALSE.'
@@ -1693,7 +1785,16 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
             # modify the KPOINTS
             kpoints_dict = vasp_read.read_kpoints(os.path.join(opt_dir, 'KPOINTS'))
             if kpoints_dict['scheme'] in ['g', 'G', 'm', 'M']:
-                subdivisions_arr = (kpoints_dict['subdivisions_arr'] * 2) + 3 
+                #subdivisions_arr = (kpoints_dict['subdivisions_arr'] * 2) + 3 
+                subdivisions_arr = (kpoints_dict['subdivisions_arr'] + 2) 
+                if os.path.exists(opt_poscar_file_path): 
+                    vacuum_in_xyz = vasp_tools.get_vacuum_status(opt_poscar_file_path)
+                    if vacuum_in_xyz[0] == True:
+                        subdivisions_arr[0] = num_kpt_in_vacuum_direction
+                    elif vacuum_in_xyz[1] == True:
+                        subdivisions_arr[1] = num_kpt_in_vacuum_direction
+                    elif vacuum_in_xyz[2] == True:
+                        subdivisions_arr[2] = num_kpt_in_vacuum_direction
                 kpoints_dict_temp = {}
                 kpoints_dict_temp['subdivisions_arr'] = subdivisions_arr
                 vasp_write.write_kpoints(os.path.join(dos_dir, 'KPOINTS'), kpoints_dict = kpoints_dict_temp, mode = 's')
@@ -1746,8 +1847,8 @@ def gen_inputs(poscar_file_path_list, project_name = None, task_type = 'VASP', e
             incar_dict['NSW']       = 0
             incar_dict['ISIF']      = 3
             incar_dict['POTIM']     = 0.5
-            incar_dict['ALGO']      = 'Fast'
-            incar_dict['ISMEAR']    = -5
+            incar_dict['ALGO']      = 'Normal'
+            incar_dict['ISMEAR']    = 0
             incar_dict['SIGMA']     = 0.05
             incar_dict['LREAL']     = '.FALSE.'
             incar_dict['ISPIN']     = 2 
@@ -1799,6 +1900,7 @@ def params_test(job_dir, variant_name = '$i', variant_value_list = None):
     job_dir: the directory of the calculation job.
     variant_value_list: a list of the variant values. 
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import default_params
@@ -1810,7 +1912,9 @@ def params_test(job_dir, variant_name = '$i', variant_value_list = None):
     funcs.mkdir(output_dir)
 
     job_dir = os.path.abspath(job_dir)
-    files_list, file_name_list = funcs.get_files(job_dir, extension = None)
+    flist = funcs.get_files(job_dir, extension = None)
+    files_list = flist[0] 
+    file_name_list = flist[1]
 
 ##    temp_list = []
 ##    for i_file in files_list:
@@ -1835,20 +1939,35 @@ def params_test(job_dir, variant_name = '$i', variant_value_list = None):
                 funcs.replace_file_content(dest_file, variant_name, str(variant_value_list[i]))
             except:
                 pass
-    funcs.write_log(logfile,
-        'task_manager.params_test(\n' +
-        '    job_dir = ' + 'r\'' + job_dir + '\'' + ',\n' +
-        '    variant_name = ' + '\'' + variant_name + '\'' + ',\n' + 
-        '    variant_value_list = ' + str(variant_value_list) + ',\n' 
-        '    )\n' +
-        '#############\n'
-        )
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    func_name = 'task_manager.params_test'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'job_dir':
+            arg_value_str = 'r\'' + job_dir + '\''
+        if i_arg == 'variant_name':
+            arg_value_str = '\'' + variant_name + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return 0
 
 def get_recommended_test_param(test_dir, fit_order = 6, plot_fitted_curve = True, suppress_warning = True):
     '''
     test_dir: the directory of the parameter test jobs.
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import default_params
@@ -1994,6 +2113,7 @@ def latt_const_test(job_dir, model_dimension = 2, increment = 0.005, num_points 
     num_points: the number of scaled systems (including the original one).
     latt_const_list: a list of the lattice constant. If this list is provided, the increment tag is omitted.
     '''
+    args_dict = locals()
     import os
     import numpy as np
     from .. import funcs
@@ -2088,16 +2208,28 @@ def latt_const_test(job_dir, model_dimension = 2, increment = 0.005, num_points 
                     #funcs.replace_file_content(dest_file, variant_name, str(variant_value_list[i]))
                 except:
                     pass
-    funcs.write_log(logfile,
-        'task_manager.latt_const_test(\n' +
-        '    job_dir = ' + 'r\'' + job_dir + '\'' + ',\n' +
-        '    model_dimension = ' + str(model_dimension) + ',\n' +
-        '    increment = ' + str(increment) + ',\n' +
-        '    num_points = ' + str(num_points) + ',\n' +
-        '    latt_const_list = ' + str(latt_const_list) + ',\n' 
-        '    )\n' +
-        '#############\n'
-        )
+    ##################################
+    # Determine the args string
+    ##################################
+    log_str = ''
+    func_name = 'task_manager.latt_const_test'
+    args_str = func_name + '(' + '\n'
+    for i_arg in args_dict.keys():
+        arg_value = args_dict[i_arg]
+        if isinstance(arg_value,str):
+            arg_value_str = '\'' + arg_value + '\''
+        else:
+            arg_value_str = str(arg_value)
+
+        if i_arg == 'job_dir':
+            arg_value_str = 'r\'' + job_dir + '\''
+        if i_arg == 'variant_name':
+            arg_value_str = '\'' + variant_name + '\''
+        args_str += '    ' + i_arg + ' = ' + arg_value_str + ',\n'
+    args_str += '    )\n'
+    args_str += '################################################\n'
+    log_str += args_str
+    funcs.write_log(logfile, log_str)
     return 0
 
 def gen_submit_script(task_dir, submit_script_path_dict = None, task_flow_list = None, queue_system = 'PBS'):
@@ -2109,6 +2241,7 @@ def gen_submit_script(task_dir, submit_script_path_dict = None, task_flow_list =
     submit_script_path_dict['universal'] = './submit_opt.sh'
     submit_script_path_dict['bs_soc'] = './submit_bs_soc.sh'
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import default_params
@@ -2186,6 +2319,8 @@ def gen_submit_script(task_dir, submit_script_path_dict = None, task_flow_list =
     return 0 
 
 def job_id_exists(job_id, queue_system = 'PBS'):
+    '''Check whether the job ID exists or not'''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import default_params
@@ -2220,6 +2355,7 @@ def job_submission_status(job_dir, job_kwd = 'R', queue_system = 'PBS'):
     job_kwd: user-defined job identifier
     queue_system: PBS, SLURM, LSF
     '''
+    args_dict = locals()
     import os
     from .. import funcs
     from .. import default_params
@@ -2293,6 +2429,7 @@ def check_job_type(job_dir):
     '''
     decide the task type of the directory.
     '''
+    args_dict = locals()
     import os
     job_type = 'VASP'
 
